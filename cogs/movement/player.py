@@ -26,6 +26,7 @@ class Player:
         self.soulsand = 0
         self.speed = 0
         self.slowness = 0
+        self.water = 0 # New water
     
     def move(self, ctx):
         args = ctx.args
@@ -48,10 +49,13 @@ class Player:
         speed = args.get('speed', self.speed)
         slowness = args.get('slowness', self.slowness)
         soulsand = args.get('soulsand', self.soulsand)
+        water = args.get('water', self.water)
         sprintjump_boost = fl(0.2)
 
         if airborne:
             slip = fl(1)
+        elif water: # The slip for water mathematically turns out to be 0.8/0.91 and is treated similar to air movement.
+            slip = fl(0.8/0.91)
         else:
             slip = args.get('slip', self.ground_slip)
         
@@ -88,10 +92,13 @@ class Player:
         # Calculating movement multiplier
         if airborne:
             movement = fl(0.02)
+            
             # Sprinting start/stop is (by default) delayed by a tick midair
             if (self.air_sprint_delay and self.prev_sprint) or (not self.air_sprint_delay and sprinting):
                 movement = fl(movement + movement * 0.3)
-        else:
+        elif water:
+            movement = fl(0.02)
+        else: # ground and jumping
             movement = fl(0.1)
             if speed > 0:
                 movement = fl(movement * (1.0 + fl(0.2) * float(speed)))
