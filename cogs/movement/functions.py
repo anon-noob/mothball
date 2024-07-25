@@ -490,7 +490,7 @@ def stopjump(ctx, duration = 1):
 
 ##### New water stuff ##### If anything goes wrong blame physiq not me :D
 @command(aliases=['walkwater', 'wwt', 'wt', 'water'])
-def walkwater(ctx, duration = 1):
+def walkwater(ctx, duration = 1, rotation: f32 = None):
     """
     `walkwater` and `sprintwater` are equivalent while in water, but beware of sprint air delay when exiting water.
     """
@@ -499,7 +499,7 @@ def walkwater(ctx, duration = 1):
     move(ctx)
 
 @command(aliases=['sprintwater', 'swt'])
-def sprintwater(ctx, duration = 1):
+def sprintwater(ctx, duration = 1, rotation: f32 = None):
     """
     `walkwater` and `sprintwater` are equivalent while in water, but beware of sprint air delay when exiting water.
     """
@@ -514,7 +514,7 @@ def stopwater(ctx, duration = 1):
     move(ctx)
 
 @command(aliases=['walkwater45', 'wwt45', 'water45', 'wt45')
-def walkwater45(ctx, duration = 1):
+def walkwater45(ctx, duration = 1, rotation: f32 = None):
     """
     `walkwater45` and `sprintwater45` are equivalent while in water, but beware of sprint air delay when exiting water.
     """
@@ -524,7 +524,7 @@ def walkwater45(ctx, duration = 1):
     ctx.args['function_offset'] = f32(45)
 
 @command(aliases=['sprintwater45', 'swt45'])
-def sprintwater45(ctx, duration = 1):
+def sprintwater45(ctx, duration = 1, rotation: f32 = None):
     """
     `waterwalk45` and `watersprint45` are equivalent while in water, but beware of sprint air delay when exiting water.
     """
@@ -536,13 +536,13 @@ def sprintwater45(ctx, duration = 1):
     move(ctx)
 
 @command(aliases=['sneakwater', 'snwt'])
-def sneakwater(ctx, duration = 1):
+def sneakwater(ctx, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('water', True)
     move(ctx)
 
 @command(aliases=['sneakwater45', 'snwt45'])
-def sneakwater45(ctx, duration = 1):
+def sneakwater45(ctx, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(1))
     ctx.args.setdefault('water', True)
@@ -550,14 +550,14 @@ def sneakwater45(ctx, duration = 1):
     move(ctx)
 
 @command(aliases=['sneaksprintwater', 'snswt'])
-def sneaksprintwater(ctx, duration = 1):
+def sneaksprintwater(ctx, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('water', True)
     ctx.args.setdefault('sprinting', True)
     move(ctx)
 
 @command(aliases=['sneaksprintwater45', 'snswt45'])
-def sneaksprintwater45(ctx, duration = 1):
+def sneaksprintwater45(ctx, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(1))
     ctx.args.setdefault('water', True)
