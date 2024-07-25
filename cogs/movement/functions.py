@@ -227,6 +227,7 @@ def sneaksprint45air(ctx, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sneaking', True)
     ctx.args.setdefault('strafe', f32(1))
+    ctx.args.setdefault('sprinting', True)
     ctx.args['function_offset'] = f32(45)
     ctx.args.setdefault('airborne', True)
     move(ctx)
