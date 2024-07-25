@@ -35,6 +35,7 @@ register_arg('airborne', bool, ['air'])
 register_arg('sprinting', bool, ['sprint'])
 register_arg('sneaking', bool, ['sneak', 'sn'])
 register_arg('jumping', bool, ['jump'])
+register_arg('water', bool, ['water']) # (New) Added water
 register_arg('speed', int, ['spd'])
 register_arg('slowness', int, ['slow', 'sl'])
 register_arg('soulsand', int, ['ss'])
@@ -485,6 +486,54 @@ def stopair(ctx, duration = 1):
 @command(aliases=['stj'])
 def stopjump(ctx, duration = 1):
     jump(ctx)
+
+##### New water stuff ##### If anything goes wrong blame physiq not me :D
+@command(aliases=['waterwalk', 'ww'])
+def waterwalk(ctx, duration = 1):
+    """
+    `waterwalk` and `watersprint` are equivalent while in water, but beware of sprint air delay when exiting water.
+    """
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('water', True)
+    move(ctx)
+
+@command(aliases=['watersprint', 'ws'])
+def watersprint(ctx, duration = 1):
+    """
+    `waterwalk` and `watersprint` are equivalent while in water, but beware of sprint air delay when exiting water.
+    """
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('water', True)
+    ctx.args.setdefault('sprinting', True)
+    move(ctx)
+
+@command(aliases=['stopwater', 'stw'])
+def stopwater(ctx, duration = 1):
+    ctx.args.setdefault('water', True)
+    move(ctx)
+
+@command(aliases=['waterwalk45', 'ww45'])
+def waterwalk45(ctx, duration = 1):
+    """
+    `waterwalk45` and `watersprint45` are equivalent while in water, but beware of sprint air delay when exiting water.
+    """
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('strafe', f32(1))
+    ctx.args.setdefault('water', True)
+    ctx.args['function_offset'] = f32(45)
+
+@command(aliases=['watersprint45', 'ws45'])
+def watersprint45(ctx, duration = 1):
+    """
+    `waterwalk45` and `watersprint45` are equivalent while in water, but beware of sprint air delay when exiting water.
+    """
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('strafe', f32(1))
+    ctx.args.setdefault('water', True)
+    ctx.args.setdefault('sprinting', True)
+    ctx.args['function_offset'] = f32(45)
+    move(ctx)
+##### End of new water stuff (for now) ###### (I'll add sneak later)
 
 @command(name='|')
 def reset_position(ctx):
