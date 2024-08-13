@@ -139,7 +139,11 @@ def sneak(ctx, duration = 1, rotation: f32 = None):
 
 @command(aliases=['sns'])
 def sneaksprint(ctx, duration = 1, rotation: f32 = None):
-    "Sneak and sprint on ground (1.14+ only)."
+    """
+    Sneak and sprint on ground.
+
+    NOTE: Only works for versions 1.14+. To sneak and sprint, the player must be sprinting on the tick before they sneak.
+    """
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sneaking', True)
     ctx.args.setdefault('sprinting', True)
@@ -147,17 +151,20 @@ def sneaksprint(ctx, duration = 1, rotation: f32 = None):
 
 @command(aliases=['w'])
 def walk(ctx, duration = 1, rotation: f32 = None):
+    "Walk on the ground"
     ctx.args.setdefault('forward', f32(1))
     move(ctx)
 
 @command(aliases=['s'])
 def sprint(ctx, duration = 1, rotation: f32 = None):
+    "Running on the ground"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sprinting', True)
     move(ctx)
 
 @command(aliases=['sn45'])
 def sneak45(ctx, duration = 1, rotation: f32 = None):
+    "Sneaking while 45 strafing"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sneaking', True)
     ctx.args.setdefault('strafe', f32(1))
@@ -166,6 +173,11 @@ def sneak45(ctx, duration = 1, rotation: f32 = None):
 
 @command(aliases=['sns45'])
 def sneaksprint45(ctx, duration = 1, rotation: f32 = None):
+    """
+    Sneak, sprint, and 45 strafe on ground.
+
+    NOTE: Only works for versions 1.14+. To sneak and sprint, the player must be sprinting on the tick before they sneak.
+    """
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sneaking', True)
     ctx.args.setdefault('sprinting', True)
@@ -175,6 +187,7 @@ def sneaksprint45(ctx, duration = 1, rotation: f32 = None):
 
 @command(aliases=['w45'])
 def walk45(ctx, duration = 1, rotation: f32 = None):
+    "Walk and 45 strafe on ground"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(1))
     ctx.args['function_offset'] = f32(45)
@@ -182,6 +195,7 @@ def walk45(ctx, duration = 1, rotation: f32 = None):
 
 @command(aliases=['s45'])
 def sprint45(ctx, duration = 1, rotation: f32 = None):
+    "Run and 45 strafe kn ground"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sprinting', True)
     ctx.args.setdefault('strafe', f32(1))
@@ -190,6 +204,7 @@ def sprint45(ctx, duration = 1, rotation: f32 = None):
 
 @command(aliases=['sna'])
 def sneakair(ctx, duration = 1, rotation: f32 = None):
+    "Sneak while midair. In 1.20+, activating sneak is delayed for 1 tick.
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sneaking', True)
     ctx.args.setdefault('airborne', True)
@@ -197,6 +212,15 @@ def sneakair(ctx, duration = 1, rotation: f32 = None):
 
 @command(aliases=['snsa'])
 def sneaksprintair(ctx, duration = 1, rotation: f32 = None):
+    """
+    Sneak and sprint while midair.
+
+    NOTES: Only works for versions 1.14+. To sneak and sprint, the player must be sprinting on the tick before they sneak.
+
+    Sprinting in midair is delayed by 1 tick for versions below 1.20.
+    
+    Additionally, sneak activation is delayed by 1 tick in 1.20+.
+    """
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sneaking', True)
     ctx.args.setdefault('sprinting', True)
@@ -205,12 +229,14 @@ def sneaksprintair(ctx, duration = 1, rotation: f32 = None):
 
 @command(aliases=['wa'])
 def walkair(ctx, duration = 1, rotation: f32 = None):
+    "Move midair without sprint"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('airborne', True)
     move(ctx)
 
 @command(aliases=['sa'])
 def sprintair(ctx, duration = 1, rotation: f32 = None):
+    "Move midair with sprint.
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sprinting', True)
     ctx.args.setdefault('airborne', True)
@@ -218,6 +244,7 @@ def sprintair(ctx, duration = 1, rotation: f32 = None):
 
 @command(aliases=['sneakair45', 'sn45a', 'sna45'])
 def sneak45air(ctx, duration = 1, rotation: f32 = None):
+    "Sneak and 45 strafe while midair"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sneaking', True)
     ctx.args.setdefault('strafe', f32(1))
@@ -227,6 +254,15 @@ def sneak45air(ctx, duration = 1, rotation: f32 = None):
 
 @command(aliases=['sneaksprintair45', 'sns45a', 'snsa45'])
 def sneaksprint45air(ctx, duration = 1, rotation: f32 = None):
+    """
+    Sneak, sprint, and 45 while midair.
+
+    NOTES: Only works for versions 1.14+. To sneak and sprint, the player must be sprinting on the tick before they sneak.
+
+    Sprinting in midair is delayed by 1 tick for versions below 1.20.
+    
+    Additionally, sneak activation is delayed by 1 tick in 1.20+.
+    """
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sneaking', True)
     ctx.args.setdefault('strafe', f32(1))
@@ -237,6 +273,7 @@ def sneaksprint45air(ctx, duration = 1, rotation: f32 = None):
 
 @command(aliases=['walkair45', 'w45a', 'wa45'])
 def walk45air(ctx, duration = 1, rotation: f32 = None):
+    "45 strafe midair without sprint"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(1))
     ctx.args['function_offset'] = f32(45)
@@ -245,6 +282,11 @@ def walk45air(ctx, duration = 1, rotation: f32 = None):
 
 @command(aliases=['sprintair45', 's45a', 'sa45'])
 def sprint45air(ctx, duration = 1, rotation: f32 = None):
+    """
+    45 strafe midair with sprint
+    
+    Note that activating sprint midair is 1 tick delayed for versions below 1.20.
+    """
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sprinting', True)
     ctx.args.setdefault('strafe', f32(1))
@@ -484,11 +526,13 @@ def stop(ctx, duration = 1):
 
 @command(aliases=['sta'])
 def stopair(ctx, duration = 1):
+    "Inputless ticks while airborne"
     ctx.args.setdefault('airborne', True)
     move(ctx)
 
 @command(aliases=['stj'])
 def stopjump(ctx, duration = 1):
+    "Inputless jump"
     jump(ctx)
 
 ##### New water stuff ##### If anything goes wrong blame physiq not me :D
