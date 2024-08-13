@@ -539,6 +539,7 @@ def sprintwater45(ctx, duration = 1, rotation: f32 = None):
 def sneakwater(ctx, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('water', True)
+    ctx.argd.setdefault('sneaking', True)
     move(ctx)
 
 @command(aliases=['sneakwater45', 'snwt45'])
@@ -547,6 +548,7 @@ def sneakwater45(ctx, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('strafe', f32(1))
     ctx.args.setdefault('water', True)
     ctx.args['function_offset'] = f32(45)
+    ctx.argd.setdefault('sneaking', True)
     move(ctx)
 
 @command(aliases=['sneaksprintwater', 'snswt'])
@@ -554,6 +556,7 @@ def sneaksprintwater(ctx, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('water', True)
     ctx.args.setdefault('sprinting', True)
+    ctx.argd.setdefault('sneaking', True)
     move(ctx)
 
 @command(aliases=['sneaksprintwater45', 'snswt45'])
@@ -563,6 +566,7 @@ def sneaksprintwater45(ctx, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('water', True)
     ctx.args.setdefault('sprinting', True)
     ctx.args['function_offset'] = f32(45)
+    ctx.argd.setdefault('sneaking', True)
     move(ctx)
 ##### End of new water stuff ######
 
