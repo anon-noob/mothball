@@ -513,7 +513,7 @@ def stopwater(ctx, duration = 1):
     ctx.args.setdefault('water', True)
     move(ctx)
 
-@command(aliases=['walkwater45', 'wwt45', 'water45', 'wt45')
+@command(aliases=['walkwater45', 'wwt45', 'water45', 'wt45'])
 def walkwater45(ctx, duration = 1, rotation: f32 = None):
     """
     `walkwater45` and `sprintwater45` are equivalent while in water, but beware of sprint air delay when exiting water.
