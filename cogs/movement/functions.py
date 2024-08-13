@@ -101,6 +101,7 @@ b_to_dist    = dist_to_mm
 
 @command(aliases=['rep', 'r'])
 def repeat(ctx, inputs = '', n = 1):
+    "Executes `inputs` `n` times"
     commands_args = parsers.string_to_args(inputs)
 
     for _ in range(n):
@@ -131,12 +132,14 @@ def var(ctx, name = '', input = ''):
 
 @command(aliases=['sn'])
 def sneak(ctx, duration = 1, rotation: f32 = None):
+    "Sneak on ground"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sneaking', True)
     move(ctx)
 
 @command(aliases=['sns'])
 def sneaksprint(ctx, duration = 1, rotation: f32 = None):
+    "Sneak and sprint on ground (1.14+ only)."
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sneaking', True)
     ctx.args.setdefault('sprinting', True)
@@ -489,7 +492,7 @@ def stopjump(ctx, duration = 1):
     jump(ctx)
 
 ##### New water stuff ##### If anything goes wrong blame physiq not me :D
-@command(aliases=['walkwater', 'wwt', 'wt', 'water'])
+@command(aliases=['wwt', 'wt', 'water'])
 def walkwater(ctx, duration = 1, rotation: f32 = None):
     """
     `walkwater` and `sprintwater` are equivalent while in water, but beware of sprint air delay when exiting water.
@@ -498,7 +501,7 @@ def walkwater(ctx, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('water', True)
     move(ctx)
 
-@command(aliases=['sprintwater', 'swt'])
+@command(aliases=['swt'])
 def sprintwater(ctx, duration = 1, rotation: f32 = None):
     """
     `walkwater` and `sprintwater` are equivalent while in water, but beware of sprint air delay when exiting water.
@@ -508,12 +511,13 @@ def sprintwater(ctx, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('sprinting', True)
     move(ctx)
 
-@command(aliases=['stopwater', 'stwt'])
+@command(aliases=['stwt'])
 def stopwater(ctx, duration = 1):
+    "Inputless tick while in water"
     ctx.args.setdefault('water', True)
     move(ctx)
 
-@command(aliases=['walkwater45', 'wwt45', 'water45', 'wt45'])
+@command(aliases=['wwt45', 'water45', 'wt45'])
 def walkwater45(ctx, duration = 1, rotation: f32 = None):
     """
     `walkwater45` and `sprintwater45` are equivalent while in water, but beware of sprint air delay when exiting water.
@@ -523,7 +527,7 @@ def walkwater45(ctx, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('water', True)
     ctx.args['function_offset'] = f32(45)
 
-@command(aliases=['sprintwater45', 'swt45'])
+@command(aliases=['swt45'])
 def sprintwater45(ctx, duration = 1, rotation: f32 = None):
     """
     `waterwalk45` and `watersprint45` are equivalent while in water, but beware of sprint air delay when exiting water.
@@ -535,15 +539,17 @@ def sprintwater45(ctx, duration = 1, rotation: f32 = None):
     ctx.args['function_offset'] = f32(45)
     move(ctx)
 
-@command(aliases=['sneakwater', 'snwt'])
+@command(aliases=['snwt'])
 def sneakwater(ctx, duration = 1, rotation: f32 = None):
+    "Sneak while in water"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('water', True)
     ctx.argd.setdefault('sneaking', True)
     move(ctx)
 
-@command(aliases=['sneakwater45', 'snwt45'])
+@command(aliases=['snwt45'])
 def sneakwater45(ctx, duration = 1, rotation: f32 = None):
+    "Sneak and 45 while in water"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(1))
     ctx.args.setdefault('water', True)
@@ -551,16 +557,18 @@ def sneakwater45(ctx, duration = 1, rotation: f32 = None):
     ctx.argd.setdefault('sneaking', True)
     move(ctx)
 
-@command(aliases=['sneaksprintwater', 'snswt'])
+@command(aliases=['snswt'])
 def sneaksprintwater(ctx, duration = 1, rotation: f32 = None):
+    "Sneak and sprint while in water"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('water', True)
     ctx.args.setdefault('sprinting', True)
     ctx.argd.setdefault('sneaking', True)
     move(ctx)
 
-@command(aliases=['sneaksprintwater45', 'snswt45'])
+@command(aliases=['snswt45'])
 def sneaksprintwater45(ctx, duration = 1, rotation: f32 = None):
+    "Sneak, sprint, and 45 while in water"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(1))
     ctx.args.setdefault('water', True)
