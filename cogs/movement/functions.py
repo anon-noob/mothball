@@ -385,8 +385,10 @@ def sneaksprintjump45(ctx, duration = 1, rotation: f32 = None):
     Only works for versions 1.14+. To sneak and sprint, the player must be sprinting on the tick before they sneak.
     """
     ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('strafe', f32(1))
     ctx.args.setdefault('sneaking', True)
     ctx.args.setdefault('sprinting', True)
+    ctx.args['function_offset'] = f32(9.1148519592841453)
 
     def update():
         ctx.args.setdefault('strafe', f32(1))
@@ -572,6 +574,41 @@ def stopjump(ctx, duration = 1):
     "Inputless jump, `stj(x)` being equivalent to `st sta(x-1)`"
     jump(ctx)
 
+@command(aliases=['stfj'])
+def sprintstrafejump(ctx, duration = 1, rotation: f32 = None):
+    """
+    It is NOT called "Shut The Fuck Jump".
+
+    Strafejump with sprint at the optimal angle for distance. This is weaker than normal sprint jumping.
+    """
+    ctx.args.setdefault('sprinting', True)
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('strafe', f32(1))
+    ctx args['function_offset'] = f32(17.4786857811690446)
+
+    def update():
+        ctx.args['strafe'] = f32(0)
+        ctx.args['function_offset'] = f32(0)
+    
+    jump(ctx, after_jump_tick = update)
+
+@command(aliases=['stfj45'])
+def sprintstrafejump45(ctx, duration = 1, rotation: f32 = None):
+    """
+    It is NOT called "Shut The Fuck Jump 45".
+
+    Strafejump with sprint at the optimal angle for distance. This is weaker than normal sprint jumping.
+    """
+    ctx.args.setdefault('sprinting', True)
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('strafe', f32(1))
+    ctx args['function_offset'] = f32(17.4786857811690446)
+
+    def update():
+        ctx.args['function_offset'] = f32(45)
+    
+    jump(ctx, after_jump_tick = update)
+
 ##### New water stuff ##### If anything goes wrong blame physiq not me :D
 @command(aliases=['wwt', 'wt', 'water'])
 def walkwater(ctx, duration = 1, rotation: f32 = None):
@@ -640,7 +677,13 @@ def sneakwater45(ctx, duration = 1, rotation: f32 = None):
 
 @command(aliases=['snswt'])
 def sneaksprintwater(ctx, duration = 1, rotation: f32 = None):
-    "Sneak and sprint while in water"
+    """
+    Sneak and sprint while in water
+
+    Only works for versions 1.14+. The player can only sneak sprint if the tick before was sprinted. 
+    
+    That also means you must be outside of water in order to be able to snesk sprint in water.
+    """
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('water', True)
     ctx.args.setdefault('sprinting', True)
@@ -649,7 +692,13 @@ def sneaksprintwater(ctx, duration = 1, rotation: f32 = None):
 
 @command(aliases=['snswt45'])
 def sneaksprintwater45(ctx, duration = 1, rotation: f32 = None):
-    "Sneak, sprint, and 45 while in water"
+    """
+    Sneak, sprint, and 45 strafe while in water
+
+    Only works for versions 1.14+. The player can only sneak sprint if the tick before was sprinted. 
+    
+    That also means you must be outside of water in order to be able to snesk sprint in water.
+    """
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(1))
     ctx.args.setdefault('water', True)
@@ -797,6 +846,7 @@ def turnqueue(ctx):
 
 @command()
 def macro(ctx, name = 'macro'):
+    "Makes an mpk (not cyv) macro file named `name.csv`"
     ctx.macro = name
 
 def zeroed_formatter(ctx, num, zero):
@@ -862,7 +912,9 @@ def possibilities(ctx, inputs = 'sj45(100)', mindistance = 0.01, offset = f32(0.
     Water/Web = 0.599
     Slime/Ladder = 0.3
     Avoid = 0.0
-    Neo = -0.6 
+    Neo = -0.6
+
+    IMPORTANT: As of right now, `possibilities()` only works in the positive z direction (facing 0).
     """
     
     old_move = ctx.player.move
@@ -896,7 +948,7 @@ def possibilities(ctx, inputs = 'sj45(100)', mindistance = 0.01, offset = f32(0.
 @command(aliases=['ji'])
 def jumpinfo(ctx, z = 0.0, x = 0.0):
     """
-    Displays the dimensions, real and block distance, and optimal angle for a distance jump.
+    Displays the dimensions, real and block distance, and angle of the shortest distance for a distance jump.
     """
 
     if abs(z) < 0.6:
