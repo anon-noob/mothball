@@ -1029,11 +1029,11 @@ def possibilities(ctx, inputs = 'sj45(100)', mindistance = 0.01, offset = f32(0.
         old_move(ctx)
 
         player_blocks = self.z + offset
-        jump_pixels = int(player_blocks / 0.0625)
-        jump_blocks = jump_pixels * 0.0625
-        poss_by = player_blocks - jump_blocks
+        jump_pixels = int(abs(player_blocks) / 0.0625)
+        jump_blocks = jump_pixels * 0.0625 * copysign(1, self.z)
+        poss_by = (abs(player_blocks) - abs(jump_blocks)) * copysign(1, self.z)
 
-        if poss_by < mindistance:
+        if abs(poss_by) < mindistance:
             ctx.out += f'Tick {tick}: {ctx.format(poss_by)} ({ctx.format(jump_blocks)}b)\n'
         
         tick += 1
