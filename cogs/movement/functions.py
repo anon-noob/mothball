@@ -889,7 +889,7 @@ def zeroed_formatter(ctx, num, zero):
     return f'{ctx.format(zero)} {formatted_offset}'
 
 @command()
-def outx(ctx, zero: f64 = None):
+def outx(ctx, zero: f64 = None, label: str = "X"):
     """
     Outputs the player's x displacement.
 
@@ -899,9 +899,9 @@ def outx(ctx, zero: f64 = None):
 
     `zero` will also be truncated by the current decimal precision.
     """
-    ctx.out += f'X: {zeroed_formatter(ctx, ctx.player.x, zero)}\n'
+    ctx.out += f'{label.strip()}: {zeroed_formatter(ctx, ctx.player.x, zero)}\n'
 @command()
-def outz(ctx, zero: f64 = None):
+def outz(ctx, zero: f64 = None, label: str = "Z"):
     """
     Outputs the player's z displacement.
 
@@ -911,10 +911,10 @@ def outz(ctx, zero: f64 = None):
 
     `zero` will also be truncated by the current decimal precision.
     """
-    ctx.out += f'Z: {zeroed_formatter(ctx, ctx.player.z, zero)}\n'
+    ctx.out += f'{label.strip()}: {zeroed_formatter(ctx, ctx.player.z, zero)}\n'
 
 @command()
-def outvx(ctx, zero: f64 = None):
+def outvx(ctx, zero: f64 = None, label: str = "Vx"):
     """
     Outputs the player's x velocity.
 
@@ -924,9 +924,9 @@ def outvx(ctx, zero: f64 = None):
 
     `zero` will also be truncated by the current decimal precision.
     """
-    ctx.out += f'Vx: {zeroed_formatter(ctx, ctx.player.vx, zero)}\n'
+    ctx.out += f'{label.strip()}: {zeroed_formatter(ctx, ctx.player.vx, zero)}\n'
 @command()
-def outvz(ctx, zero: f64 = None):
+def outvz(ctx, zero: f64 = None, label: str = "Vz"):
     """
     Outputs the player's z velocity.
 
@@ -936,10 +936,10 @@ def outvz(ctx, zero: f64 = None):
 
     `zero` will also be truncated by the current decimal precision.
     """
-    ctx.out += f'Vz: {zeroed_formatter(ctx, ctx.player.vz, zero)}\n'
+    ctx.out += f'{label.strip()}: {zeroed_formatter(ctx, ctx.player.vz, zero)}\n'
 
 @command(name='outxmm', aliases=['xmm'])
-def x_mm(ctx, zero: f64 = None):
+def x_mm(ctx, zero: f64 = None, label: str = "X mm"):
     """
     Outputs the player's x position in terms of momentum.
 
@@ -949,9 +949,9 @@ def x_mm(ctx, zero: f64 = None):
 
     `zero` will also be truncated by the current decimal precision.
     """
-    ctx.out += f'X mm: {zeroed_formatter(ctx, dist_to_mm(ctx.player.x), zero)}\n'
+    ctx.out += f'{label.strip()}: {zeroed_formatter(ctx, dist_to_mm(ctx.player.x), zero)}\n'
 @command(name='outzmm', aliases=['zmm'])
-def z_mm(ctx, zero: f64 = None):
+def z_mm(ctx, zero: f64 = None, label: str = "Z mm"):
     """
     Outputs the player's z position in terms of momentum.
 
@@ -961,10 +961,10 @@ def z_mm(ctx, zero: f64 = None):
 
     `zero` will also be truncated by the current decimal precision.
     """
-    ctx.out += f'Z mm: {zeroed_formatter(ctx, dist_to_mm(ctx.player.z), zero)}\n'
+    ctx.out += f'{label.strip()}: {zeroed_formatter(ctx, dist_to_mm(ctx.player.z), zero)}\n'
 
 @command(name='outxb', aliases=['xb'])
-def x_b(ctx, zero: f64 = None):
+def x_b(ctx, zero: f64 = None, label: str = "X b"):
     """
     Outputs the player's x position in terms of blocks.
 
@@ -974,9 +974,9 @@ def x_b(ctx, zero: f64 = None):
 
     `zero` will also be truncated by the current decimal precision.
     """
-    ctx.out += f'X b: {zeroed_formatter(ctx, dist_to_b(ctx.player.x), zero)}\n'
+    ctx.out += f'{label.strip()}: {zeroed_formatter(ctx, dist_to_b(ctx.player.x), zero)}\n'
 @command(name='outzb', aliases=['zb'])
-def z_b(ctx, zero: f64 = None):
+def z_b(ctx, zero: f64 = None, label: str = "Z b"):
     """
     Outputs the player's z position in terms of blocks.
 
@@ -986,7 +986,7 @@ def z_b(ctx, zero: f64 = None):
 
     `zero` will also be truncated by the current decimal precision.
     """
-    ctx.out += f'Z b: {zeroed_formatter(ctx, dist_to_b(ctx.player.z), zero)}\n'
+    ctx.out += f'{label.strip()}: {zeroed_formatter(ctx, dist_to_b(ctx.player.z), zero)}\n'
     
 @command(aliases = ['speedvec', 'vector', 'vec'])
 def speedvector(ctx):
