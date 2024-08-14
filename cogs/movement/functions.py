@@ -710,6 +710,11 @@ def sneaksprintwater45(ctx, duration = 1, rotation: f32 = None):
 
 @command(name='|')
 def reset_position(ctx):
+    """
+    Alias of `setposx(0) setposz(0)`
+
+    Resets the player's position to (0,0)
+    """
     ctx.player.x = 0
     ctx.player.modx = 0
     ctx.player.z = 0
@@ -717,11 +722,17 @@ def reset_position(ctx):
 
 @command(name='b')
 def output_blocks(ctx):
+    """
+    Outputs the players position in terms of blocks
+    """
     ctx.player.modx += f32(copysign(0.6, ctx.player.x))
     ctx.player.modz += f32(copysign(0.6, ctx.player.z))
 
 @command(name='mm')
 def output_mm(ctx):
+    """
+    Outputs the players position in terms of momentum
+    """
     ctx.player.modx -= f32(copysign(0.6, ctx.player.x))
     ctx.player.modz -= f32(copysign(0.6, ctx.player.z))
 
@@ -740,45 +751,55 @@ def zeroz(ctx):
 
 @command(aliases = ['v'])
 def setv(ctx, vx = 0.0, vz = 0.0):
+    "Sets the player's velocity"
     ctx.player.vx = vx
     ctx.player.vz = vz
 
 @command(aliases = ['vx'])
 def setvx(ctx, vx = 0.0):
+    "Sets the player's x velocity"
     ctx.player.vx = vx
 
 @command(aliases = ['vz'])
 def setvz(ctx, vz = 0.0):
+    "Sets the player's z velocity"
     ctx.player.vz = vz
 
 @command(aliases = ['pos', 'xz'])
 def setpos(ctx, x = 0.0, z = 0.0):
+    "Sets the player's position"
     ctx.player.x = x
     ctx.player.z = z
 
 @command(aliases = ['posx', 'x'])
 def setposx(ctx, x = 0.0):
+    "Sets the player's x position"
     ctx.player.x = x
 
 @command(aliases = ['posz', 'z'])
 def setposz(ctx, z = 0.0):
+    "Sets the player's z position"
     ctx.player.z = z
 
 @command()
 def setvec(ctx, speed = 0.0, angle = 0.0):
+    "Sets the players speed and angle. A negative speed will flip the angle 180 degrees"
     ctx.player.vx = -speed * sin(radians(angle))
     ctx.player.vz = speed * cos(radians(angle))
 
 @command()
 def speed(ctx, speed = 0):
+    "Sets the player's speed potion amplifier (range 0 to 256)"
     ctx.player.speed = speed
 
 @command(aliases = ['slow'])
 def slowness(ctx, slowness = 0):
+    "Sets the player's slow potion amplifier (range 0 to 256). Slow 7 and beyond are equivalent and result in a speed multiplier of 0 regardless of speed (affects ground movement)."
     ctx.player.slowness = slowness
 
 @command(aliases = ['slip'])
 def setslip(ctx, slip = f32(0)):
+    "Sets the player's default ground slipperiness"
     ctx.player.ground_slip = slip
 
 @command(aliases = ['a'])
@@ -808,18 +829,22 @@ def inertia(ctx, inertia = 0.005):
 
 @command(aliases = ['pre'])
 def precision(ctx, precision = 6):
+    "Sets the number of digits to truncate the output"
     ctx.print_precision = precision
 
 @command(aliases = ['facing', 'face', 'f'])
 def rotation(ctx, angle = f32(0)):
+    "Sets the player's default facing to `angle`"
     ctx.player.default_rotation = angle
 
 @command(aliases = ['offrotation', 'or', 'offsetfacing', 'of'])
 def offsetrotation(ctx, angle = f32(0)):
+    "Sets the player's rotation offset to `angle`. This will add `angle` to its default rotation for each tick, but it will not set the new facing to be the default rotation."
     ctx.player.rotation_offset = angle
 
 @command(aliases = ['turn'])
 def turn(ctx, angle = f32(0)):
+    "Turn the player `angle` degrees AND set that new rotation to be default"
     ctx.player.default_rotation += angle
 
 @command(aliases = ['ssand', 'ss'])
@@ -828,6 +853,7 @@ def soulsand(ctx, soulsand = 1):
 
 @command(aliases = ['aq', 'qa'])
 def anglequeue(ctx):
+    "Queues angles, each subsequent tick, the player sets the next angle in queue to be the default angle it faces."
     def to_f32(val):
         try:
             return f32(val)
@@ -837,6 +863,7 @@ def anglequeue(ctx):
 
 @command(aliases = ['tq', 'qt'])
 def turnqueue(ctx):
+    "Queues angles, each subsequent tick, the player adds the next angle in queue to its default rotation AND sets it to be the default rotation."
     def to_f32(val):
         try:
             return f32(val)
@@ -863,30 +890,102 @@ def zeroed_formatter(ctx, num, zero):
 
 @command()
 def outx(ctx, zero: f64 = None):
+    """
+    Outputs the player's x displacement.
+
+    If `zero` is a nonzero number, the output will be expressed as an expression centered at `zero`.
+
+    Example: If `outx` outputs `X: 0.9311`, then `outx(1)` outputs `X: 1 - 0.0689`
+
+    `zero` will also be truncated by the current decimal precision.
+    """
     ctx.out += f'X: {zeroed_formatter(ctx, ctx.player.x, zero)}\n'
 @command()
 def outz(ctx, zero: f64 = None):
+    """
+    Outputs the player's z displacement.
+
+    If `zero` is a nonzero number, the output will be expressed as an expression centered at `zero`.
+
+    Example: If `outz` outputs `Z: 0.9311`, then `outz(1)` outputs `Z: 1 - 0.0689`
+
+    `zero` will also be truncated by the current decimal precision.
+    """
     ctx.out += f'Z: {zeroed_formatter(ctx, ctx.player.z, zero)}\n'
 
 @command()
 def outvx(ctx, zero: f64 = None):
+    """
+    Outputs the player's x velocity.
+
+    If `zero` is a nonzero number, the output will be expressed as an expression centered at `zero`.
+
+    Example: If `outvx` outputs `Vx: -0.072`, then `outvx(-0.0615)` outputs `Vx: -0.0615 - 0.0105`
+
+    `zero` will also be truncated by the current decimal precision.
+    """
     ctx.out += f'Vx: {zeroed_formatter(ctx, ctx.player.vx, zero)}\n'
 @command()
 def outvz(ctx, zero: f64 = None):
+    """
+    Outputs the player's z velocity.
+
+    If `zero` is a nonzero number, the output will be expressed as an expression centered at `zero`.
+
+    Example: If `outvz` outputs `Vz: 0.252`, then `outvz(0.25)` outputs `Vz: 0.25 + 0.002`
+
+    `zero` will also be truncated by the current decimal precision.
+    """
     ctx.out += f'Vz: {zeroed_formatter(ctx, ctx.player.vz, zero)}\n'
 
 @command(name='outxmm', aliases=['xmm'])
 def x_mm(ctx, zero: f64 = None):
+    """
+    Outputs the player's x position in terms of momentum.
+
+    If `zero` is a nonzero number, the output will be expressed as an expression centered at `zero`.
+
+    Example: If `xmm` outputs `Xmm: 0.9992`, then `xmm(1)` outputs `Xmm: 1 - 0.0008`
+
+    `zero` will also be truncated by the current decimal precision.
+    """
     ctx.out += f'X mm: {zeroed_formatter(ctx, dist_to_mm(ctx.player.x), zero)}\n'
 @command(name='outzmm', aliases=['zmm'])
 def z_mm(ctx, zero: f64 = None):
+    """
+    Outputs the player's z position in terms of momentum.
+
+    If `zero` is a nonzero number, the output will be expressed as an expression centered at `zero`.
+
+    Example: If `zmm` outputs `Zmm: 1.976`, then `zmm(2)` outputs `Zmm: 2 - 0.024`
+
+    `zero` will also be truncated by the current decimal precision.
+    """
     ctx.out += f'Z mm: {zeroed_formatter(ctx, dist_to_mm(ctx.player.z), zero)}\n'
 
 @command(name='outxb', aliases=['xb'])
 def x_b(ctx, zero: f64 = None):
+    """
+    Outputs the player's x position in terms of blocks.
+
+    If `zero` is a nonzero number, the output will be expressed as an expression centered at `zero`.
+
+    Example: If `xb` outputs `Xb: -4.133`, then `xb(-4.125)` outputs `Xb: -4.125 - 0.008`
+
+    `zero` will also be truncated by the current decimal precision.
+    """
     ctx.out += f'X b: {zeroed_formatter(ctx, dist_to_b(ctx.player.x), zero)}\n'
 @command(name='outzb', aliases=['zb'])
 def z_b(ctx, zero: f64 = None):
+    """
+    Outputs the player's z position in terms of blocks.
+
+    If `zero` is a nonzero number, the output will be expressed as an expression centered at `zero`.
+
+    Example: If `zb` outputs `Zb: 5.000003`, then `zb(5)` outputs `Zb: 5 + 0.000003`
+
+    `zero` will also be truncated by the current decimal precision.
+    """
     ctx.out += f'Z b: {zeroed_formatter(ctx, dist_to_b(ctx.player.z), zero)}\n'
     
 @command(aliases = ['speedvec', 'vector', 'vec'])
@@ -899,7 +998,11 @@ def speedvector(ctx):
 
 @command(aliases = ['sprintdelay', 'sdel'])
 def air_sprint_delay(ctx, sprint_delay = True):
-    """Change the air sprint delay, which is present in 1.19.3-"""
+    """
+    Change the air sprint delay, which is present in 1.19.3-
+    
+    If air sprint delay is toggled on, activating and deactivating sprint in midair is 1 tick delayed.
+    """
     ctx.player.air_sprint_delay = sprint_delay
 
 @command(aliases = ['poss'])
@@ -1139,6 +1242,10 @@ def z_bwmm(ctx, mm = 1.0, strat = 'sj45(12)'):
     Performs `strat` with an initial speed such that `mm`bm is covered while performing it.
 
     If the strat runs into inertia while being performed with the optimal speed, then the distance will be incorrect.
+
+    By default, it assumes the player starts on the ground. Prefix it with `sta` to indicate starting while midair, or `stwt` to indicate starting in water. 
+    
+    Example: `stopair zbwmm(1, sprintjump(6))`
     """
 
     vx, vz = inv_helper(ctx, mm_to_dist, None, mm, strat)
@@ -1152,6 +1259,10 @@ def z_inv(ctx, goal = 1.6, strat = 'sj45(12)'):
     Performs `strat` with an initial speed such that `goal` is covered while performing it.
 
     If the strat runs into inertia while being performed with the optimal speed, then the distance will be incorrect.
+
+    By default, it assumes the player starts on the ground. Prefix it with `sta` to indicate starting while midair, or `stwt` to indicate starting in water. 
+    
+    Example: `zinv(1, fmm45(12) sprint45)`
     """
 
     vx, vz = inv_helper(ctx, dist_to_dist, None, goal, strat)
@@ -1164,8 +1275,11 @@ def z_speedreq(ctx, blocks = 5.0, strat = 'sj45(12)'):
     """
     Performs `strat` with an initial speed such that `blocks`b is covered while performing it.
 
-    If the tick before `strat` is midair, be sure to prefix `speedreq` with `sta`
     If the strat runs into inertia while being performed with the optimal speed, then the distance will be incorrect.
+
+    By default, it assumes the player starts on the ground. Prefix it with `sta` to indicate starting while midair, or `stwt` to indicate starting in water. 
+    
+    Example: `stopair zspeedreq(5, sprintjump45(14))`
     """
 
     vx, vz = inv_helper(ctx, b_to_dist, None, blocks, strat)
@@ -1282,7 +1396,7 @@ def help(ctx, cmd_name = 'help'):
     Get help with a function by displaying it's name, aliases, arguments, and defaults.
     arg_name: data_type = default_value
 
-    Ex: help(help) help(s) help(bwmm)
+    Example: help(help) help(s) help(bwmm)
     """
 
     if cmd_name not in commands_by_name:
