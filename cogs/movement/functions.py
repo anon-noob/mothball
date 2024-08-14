@@ -296,12 +296,18 @@ def sprint45air(ctx, duration = 1, rotation: f32 = None):
 
 @command(aliases=['snj'])
 def sneakjump(ctx, duration = 1, rotation: f32 = None):
+    "Jump while sneaking"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sneaking', True)
     jump(ctx)
 
 @command(aliases=['snsj'])
 def sneaksprintjump(ctx, duration = 1, rotation: f32 = None):
+    """
+    Jump while sneaking and sprinting
+    
+    Only works for versions 1.14+. To sneak and sprint, the player must be sprinting on the tick before they sneak.
+    """
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sneaking', True)
     ctx.args.setdefault('sprinting', True)
@@ -309,6 +315,7 @@ def sneaksprintjump(ctx, duration = 1, rotation: f32 = None):
 
 @command(aliases=['wj'])
 def walkjump(ctx, duration = 1, rotation: f32 = None):
+    "Jump without sprint"
     ctx.args.setdefault('forward', f32(1))
     jump(ctx)
 
@@ -334,6 +341,7 @@ def rwalkjump(ctx, duration = 1, rotation: f32 = None):
 
 @command(aliases=['sj'])
 def sprintjump(ctx, duration = 1, rotation: f32 = None):
+    "Jump with sprint"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sprinting', True)
     jump(ctx)
@@ -362,6 +370,7 @@ def rsprintjump(ctx, duration = 1, rotation: f32 = None):
 
 @command(aliases=['snj45'])
 def sneakjump45(ctx, duration = 1, rotation: f32 = None):
+    "Sneak and jump while 45 strafing"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sneaking', True)
     ctx.args.setdefault('strafe', f32(1))
@@ -370,6 +379,11 @@ def sneakjump45(ctx, duration = 1, rotation: f32 = None):
 
 @command(aliases=['snsj45'])
 def sneaksprintjump45(ctx, duration = 1, rotation: f32 = None):
+    """
+    Jump while sneaking, sprinting, and 45 strafing.
+    
+    Only works for versions 1.14+. To sneak and sprint, the player must be sprinting on the tick before they sneak.
+    """
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sneaking', True)
     ctx.args.setdefault('sprinting', True)
@@ -382,6 +396,7 @@ def sneaksprintjump45(ctx, duration = 1, rotation: f32 = None):
 
 @command(aliases=['wj45'])
 def walkjump45(ctx, duration = 1, rotation: f32 = None):
+    "Jump and 45 strafe without sprint"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(1))
     ctx.args['function_offset'] = f32(45)
@@ -389,6 +404,15 @@ def walkjump45(ctx, duration = 1, rotation: f32 = None):
 
 @command(aliases=['sj45'])
 def sprintjump45(ctx, duration = 1, rotation: f32 = None):
+    """
+    Jump and 45 strafe with sprint.
+
+    Note that the best way to 45 strafe eith sprint is to jump facing straight and then 45 strafe while midair.
+
+    Hence `sprintjump45(1)` is equivalent to `sprintjump(1)`,
+
+    likewise, `sj45(5)` is equivalent to `sj(1) sa45(4)`
+    """
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sprinting', True)
     
@@ -496,7 +520,13 @@ def sprintpessi45(ctx, duration = 1, delay = 1, rotation: f32 = None):
 
 @command(aliases=['forcemomentum', 'fmm'])
 def force_momentum(ctx, duration = 1, delay = 1, rotation: f32 = None):
+    """
+    Jump without sprint, then activate sprint midair.
 
+    fmm(x,y) = walkjump(y) sprintair(x-y)
+
+    Be aware of sprint air delay in versions 1.8-1.19.
+    """
     ctx.args['duration'] = delay
     ctx.args.setdefault('forward', f32(1))
     jump(ctx)
@@ -508,7 +538,13 @@ def force_momentum(ctx, duration = 1, delay = 1, rotation: f32 = None):
 
 @command(aliases=['forcemomentum45', 'fmm45'])
 def force_momentum45(ctx, duration = 1, delay = 1, rotation: f32 = None):
+    """
+    While 45 strafing, jump without sprint, then activate sprint midair.
 
+    fmm45(x,y) = walkjump45(y) sprintair45(x-y)
+
+    Be aware of sprint air delay in versions 1.8-1.19.
+    """
     ctx.args['duration'] = delay
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(1))
@@ -522,6 +558,7 @@ def force_momentum45(ctx, duration = 1, delay = 1, rotation: f32 = None):
 
 @command(aliases=['st'])
 def stop(ctx, duration = 1):
+    "Inputless ticks while on the ground"
     move(ctx)
 
 @command(aliases=['sta'])
@@ -532,7 +569,7 @@ def stopair(ctx, duration = 1):
 
 @command(aliases=['stj'])
 def stopjump(ctx, duration = 1):
-    "Inputless jump"
+    "Inputless jump, `stj(x)` being equivalent to `st sta(x-1)`"
     jump(ctx)
 
 ##### New water stuff ##### If anything goes wrong blame physiq not me :D
