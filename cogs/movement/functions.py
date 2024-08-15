@@ -195,7 +195,7 @@ def walk45(ctx, duration = 1, rotation: f32 = None):
 
 @command(aliases=['s45'])
 def sprint45(ctx, duration = 1, rotation: f32 = None):
-    "Run and 45 strafe kn ground"
+    "Run and 45 strafe on ground"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sprinting', True)
     ctx.args.setdefault('strafe', f32(1))
@@ -236,7 +236,7 @@ def walkair(ctx, duration = 1, rotation: f32 = None):
 
 @command(aliases=['sa'])
 def sprintair(ctx, duration = 1, rotation: f32 = None):
-    "Move midair with sprint.
+    "Move midair with sprint."
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sprinting', True)
     ctx.args.setdefault('airborne', True)
@@ -584,7 +584,7 @@ def sprintstrafejump(ctx, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('sprinting', True)
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(1))
-    ctx args['function_offset'] = f32(17.4786857811690446)
+    ctx.args['function_offset'] = f32(17.4786857811690446)
 
     def update():
         ctx.args['strafe'] = f32(0)
@@ -602,7 +602,7 @@ def sprintstrafejump45(ctx, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('sprinting', True)
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(1))
-    ctx args['function_offset'] = f32(17.4786857811690446)
+    ctx.args['function_offset'] = f32(17.4786857811690446)
 
     def update():
         ctx.args['function_offset'] = f32(45)
