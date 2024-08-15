@@ -204,7 +204,7 @@ def sprint45(ctx, duration = 1, rotation: f32 = None):
 
 @command(aliases=['sna'])
 def sneakair(ctx, duration = 1, rotation: f32 = None):
-    "Sneak while midair. In 1.20+, activating sneak is delayed for 1 tick.
+    "Sneak while midair. In 1.20+, activating sneak is delayed for 1 tick."
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sneaking', True)
     ctx.args.setdefault('airborne', True)
