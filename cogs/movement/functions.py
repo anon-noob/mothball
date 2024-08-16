@@ -1006,7 +1006,7 @@ def air_sprint_delay(ctx, sprint_delay = True):
     ctx.player.air_sprint_delay = sprint_delay
 
 @command(aliases = ['poss', 'zposs'])
-def possibilities(ctx, inputs = 'sj45(100)', mindistance: float = 0.01, offset:f32 = f32(0.6)):
+def possibilities(ctx, inputs = 'sj45(100)', mindistance: float = 0.01, offset:f32 = f32(0.6), miss: float = None):
     """
     Performs `inputs` and displays ticks where z is within `mindistance` above a pixel.
 
@@ -1018,6 +1018,8 @@ def possibilities(ctx, inputs = 'sj45(100)', mindistance: float = 0.01, offset:f
     Neo = -0.6
 
     The `mindistance` must be less than a pixel (0.0625).
+
+    If `miss` is a nonzero number, displays ticks where x is within `miss` below a pixel.
     """
     mindistance = abs(mindistance) # only dealing with positive offsets
     if mindistance >= 0.0625:
@@ -1038,7 +1040,12 @@ def possibilities(ctx, inputs = 'sj45(100)', mindistance: float = 0.01, offset:f
 
         if abs(poss_by) < mindistance:
             ctx.out += f'Tick {tick}: {ctx.format(poss_by)} ({ctx.format(jump_blocks)}b)\n'
-        # insert "offset miss" code here
+        elif miss:
+            jump_blocks += 0.0625 * copysign(1, jump_blocks)
+            miss_by = (abs(player_blocks) - abs(jump_blocks)) * copysign(1, self.z)
+            if abs(miss_by) < miss:
+                ctx.out += f'Tick {tick}: {ctx.format(miss_by)} miss from {ctx.format(jump_blocks)}'
+        
         tick += 1
     
     ctx.player.move = MethodType(move, ctx.player)
@@ -1052,7 +1059,7 @@ def possibilities(ctx, inputs = 'sj45(100)', mindistance: float = 0.01, offset:f
     ctx.player.move = old_move
 
 @command(aliases = ['xposs'])
-def xpossibilities(ctx, inputs = 'sj45(100)', mindistance: float = 0.01, offset:f32 = f32(0.6)):
+def xpossibilities(ctx, inputs = 'sj45(100)', mindistance: float = 0.01, offset:f32 = f32(0.6), miss: float = None):
     """
     Performs `inputs` and displays ticks where x is within `mindistance` above a pixel.
 
@@ -1064,6 +1071,8 @@ def xpossibilities(ctx, inputs = 'sj45(100)', mindistance: float = 0.01, offset:
     Neo = -0.6
 
     The `mindistance` must be less than a pixel (0.0625).
+
+    If `miss` is a nonzero number, displays ticks where x is within `miss` below a pixel.
     """
     mindistance = abs(mindistance) # only dealing with positive offsets
     if mindistance >= 0.0625:
@@ -1084,6 +1093,11 @@ def xpossibilities(ctx, inputs = 'sj45(100)', mindistance: float = 0.01, offset:
 
         if abs(poss_by) < mindistance:
             ctx.out += f'Tick {tick}: {ctx.format(poss_by)} ({ctx.format(jump_blocks)}b)\n'
+        elif miss:
+            jump_blocks += 0.0625 * copysign(1, jump_blocks)
+            miss_by = (abs(player_blocks) - abs(jump_blocks)) * copysign(1, self.z)
+            if abs(miss_by) < miss:
+                ctx.out += f'Tick {tick}: {ctx.format(miss_by)} miss from {ctx.format(jump_blocks)}'
         
         tick += 1
     
@@ -1468,3 +1482,8 @@ def help(ctx, cmd_name = 'help'):
     ctx.out += '' if cmd.__doc__ is None else f'\n```{cleandoc(cmd.__doc__)}```'
     ctx.out += f'```\nAliases:\n{newln.join(map(lambda x: "  "+x, cmd._aliases))}'
     ctx.out += f'\nArgs:\n{newln.join(params)}```\n'
+
+@command(aliases=['print'])
+def println(ctx, string: str = '\n'):
+    "Print any basic text to your heart's desire"
+    ctx.out += string + '\n'
