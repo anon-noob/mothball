@@ -1484,6 +1484,7 @@ def help(ctx, cmd_name = 'help'):
     ctx.out += f'\nArgs:\n{newln.join(params)}```\n'
 
 @command(aliases=['print'])
-def println(ctx, string: str = '\n'):
+def println(ctx, *strings: str = ('\n')):
     "Print any basic text to your heart's desire"
-    ctx.out += string + '\n'
+    ctx.out += ",".join(strings) + '\n'
+    # if it doesn't work: ctx.out += strings
