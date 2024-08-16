@@ -1005,8 +1005,8 @@ def air_sprint_delay(ctx, sprint_delay = True):
     """
     ctx.player.air_sprint_delay = sprint_delay
 
-@command(aliases = ['poss'])
-def possibilities(ctx, inputs = 'sj45(100)', mindistance = 0.01, offset = f32(0.6)):
+@command(aliases = ['poss', 'zposs'])
+def possibilities(ctx, inputs = 'sj45(100)', mindistance: float = 0.01, offset:f32 = f32(0.6)):
     """
     Performs `inputs` and displays ticks where z is within `mindistance` above a pixel.
 
@@ -1017,8 +1017,11 @@ def possibilities(ctx, inputs = 'sj45(100)', mindistance = 0.01, offset = f32(0.
     Avoid = 0.0
     Neo = -0.6
 
-    IMPORTANT: As of right now, `possibilities()` only works in the positive z direction (facing 0).
+    The `mindistance` must be less than a pixel (0.0625).
     """
+    mindistance = abs(mindistance) # only dealing with positive offsets
+    if mindistance >= 0.0625:
+        raise SimError(f"Minimum distance must be less than 0.0625, got {mindistance} instead")
     
     old_move = ctx.player.move
 
@@ -1029,6 +1032,52 @@ def possibilities(ctx, inputs = 'sj45(100)', mindistance = 0.01, offset = f32(0.
         old_move(ctx)
 
         player_blocks = self.z + offset
+        jump_pixels = int(abs(player_blocks) / 0.0625)
+        jump_blocks = jump_pixels * 0.0625 * copysign(1, self.z)
+        poss_by = (abs(player_blocks) - abs(jump_blocks)) * copysign(1, self.z)
+
+        if abs(poss_by) < mindistance:
+            ctx.out += f'Tick {tick}: {ctx.format(poss_by)} ({ctx.format(jump_blocks)}b)\n'
+        # insert "offset miss" code here
+        tick += 1
+    
+    ctx.player.move = MethodType(move, ctx.player)
+    ctx.out += '```'
+    
+    commands_args = parsers.string_to_args(inputs)
+    for command, cmd_args in commands_args:
+        parsers.execute_command(ctx, command, cmd_args)
+    
+    ctx.out += '```'
+    ctx.player.move = old_move
+
+@command(aliases = ['xposs'])
+def xpossibilities(ctx, inputs = 'sj45(100)', mindistance: float = 0.01, offset:f32 = f32(0.6)):
+    """
+    Performs `inputs` and displays ticks where x is within `mindistance` above a pixel.
+
+    Offsets:
+    Blocks = 0.6 
+    Water/Web = 0.599
+    Slime/Ladder = 0.3
+    Avoid = 0.0
+    Neo = -0.6
+
+    The `mindistance` must be less than a pixel (0.0625).
+    """
+    mindistance = abs(mindistance) # only dealing with positive offsets
+    if mindistance >= 0.0625:
+        raise SimError(f"Minimum distance must be less than 0.0625, got {mindistance} instead")
+    
+    old_move = ctx.player.move
+
+    tick = 1
+    def move(self, ctx):
+        nonlocal tick, old_move
+
+        old_move(ctx)
+
+        player_blocks = self.x + offset
         jump_pixels = int(abs(player_blocks) / 0.0625)
         jump_blocks = jump_pixels * 0.0625 * copysign(1, self.z)
         poss_by = (abs(player_blocks) - abs(jump_blocks)) * copysign(1, self.z)
@@ -1047,7 +1096,7 @@ def possibilities(ctx, inputs = 'sj45(100)', mindistance = 0.01, offset = f32(0.
     
     ctx.out += '```'
     ctx.player.move = old_move
-
+    
 @command(aliases=['ji'])
 def jumpinfo(ctx, z = 0.0, x = 0.0):
     """
