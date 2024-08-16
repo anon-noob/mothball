@@ -1044,7 +1044,7 @@ def possibilities(ctx, inputs = 'sj45(100)', mindistance: float = 0.01, offset:f
             jump_blocks += 0.0625 * copysign(1, jump_blocks)
             miss_by = (abs(player_blocks) - abs(jump_blocks)) * copysign(1, self.z)
             if abs(miss_by) < miss:
-                ctx.out += f'Tick {tick}: {ctx.format(miss_by)} miss from {ctx.format(jump_blocks)}'
+                ctx.out += f'Tick {tick}: {ctx.format(miss_by)} miss from {ctx.format(jump_blocks)}\n'
         
         tick += 1
     
@@ -1097,7 +1097,7 @@ def xpossibilities(ctx, inputs = 'sj45(100)', mindistance: float = 0.01, offset:
             jump_blocks += 0.0625 * copysign(1, jump_blocks)
             miss_by = (abs(player_blocks) - abs(jump_blocks)) * copysign(1, self.z)
             if abs(miss_by) < miss:
-                ctx.out += f'Tick {tick}: {ctx.format(miss_by)} miss from {ctx.format(jump_blocks)}'
+                ctx.out += f'Tick {tick}: {ctx.format(miss_by)} miss from {ctx.format(jump_blocks)}\n'
         
         tick += 1
     
