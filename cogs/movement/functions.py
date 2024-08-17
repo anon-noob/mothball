@@ -1487,4 +1487,4 @@ def help(ctx, cmd_name = 'help'):
 def println(ctx, string: str = "\n"):
     "Print any basic text to your heart's desire (commas dont work atm)"
     
-    ctx.out += string
+    ctx.out += string + "\n"
