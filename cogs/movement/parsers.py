@@ -2,6 +2,7 @@ from re import match, search
 import cogs.movement.functions as functions
 from cogs.movement.utils import SimError
 from numpy import float32 as fl
+from collections import Counter
 from evalidate import Expr, base_eval_model
 
 if 'USub' not in base_eval_model.nodes:
@@ -78,7 +79,31 @@ def execute_command(context, command, args):
         user_func = fetch(context.envs, command)
         
         if user_func is None:
-            raise SimError(f'Command `{command}` not found')
+            # Smart feedback here
+            suggestions = []
+            possible_cmds = list(commands_by_name.keys())
+            # 1. Matches start of command
+            for valid_cmd in possible_cmds:
+                if valid_cmd.startswith(command):
+                    suggestions.append(valid_cmd)
+                else:
+                    # 2. Matches character count
+                    valid_cmd_char_count = Counter(valid_cmd)
+                    cmd_char_count = Counter(command)
+                    for char in cmd_char_count:
+                        try:
+                            if cmd_char_count[char] <= valid_cmd_char_count[char]:
+                                suggestions.append(valid_cmd)
+                        except KeyError:
+                            continue
+            # Picks top suggestion
+            error_msg = f'Command `{command}` not found. '
+            if suggestions: 
+                suggestion = suggestions[0]
+                error_msg += f"Did you mean `{suggestion}`?"
+            else:
+                error_msg += f"I dont know what you're trying to do..."
+            raise SimError(error_msg)
         
         new_env = dict([(var, val) for var, val in zip(user_func.arg_names, args)])
 
