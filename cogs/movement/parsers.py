@@ -90,7 +90,7 @@ def execute_command(context, command, args):
                 # 2. Matches character count
                 valid_cmd_char_count = Counter(valid_cmd)
                 cmd_char_count = Counter(command)
-                for char in cmd_char_count:
+                for char in valid_cmd_char_count:
                     try:
                         if cmd_char_count[char] > valid_cmd_char_count[char]:
                             continue
