@@ -86,16 +86,22 @@ def execute_command(context, command, args):
             for valid_cmd in possible_cmds:
                 if valid_cmd.startswith(command):
                     suggestions.append(valid_cmd)
-                else:
-                    # 2. Matches character count
-                    valid_cmd_char_count = Counter(valid_cmd)
-                    cmd_char_count = Counter(command)
-                    for char in cmd_char_count:
-                        try:
-                            if cmd_char_count[char] <= valid_cmd_char_count[char]:
-                                suggestions.append(valid_cmd)
-                        except KeyError:
+            for valid_cmd in possible_cmds:
+                # 2. Matches character count
+                valid_cmd_char_count = Counter(valid_cmd)
+                cmd_char_count = Counter(command)
+                for char in cmd_char_count:
+                    try:
+                        if cmd_char_count[char] > valid_cmd_char_count[char]:
                             continue
+                        
+                            
+                    except KeyError:
+                        continue
+
+                    if valid_cmd not in suggestions:
+                        suggestions.append(valid_cmd)
+            
             # Picks top suggestion
             error_msg = f'Command `{command}` not found. '
             if suggestions: 
