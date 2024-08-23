@@ -1504,7 +1504,7 @@ def version(ctx, string: str = "1.8"):
     """
     versioning_regex = r"(\d+)\.(\d+)(?:\.(\d+))?(.*)?"
     result = re.findall(versioning_regex, string.strip(),flags=re.DOTALL)
-    if not result[0]:
+    if not result or not result[0]:
         raise SimError(f"Invalid version string {string}")
 
     major, minor, patch, error = result[0]
