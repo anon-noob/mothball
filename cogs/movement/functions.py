@@ -1514,10 +1514,10 @@ def version(ctx, string: str = "1.8"):
         raise SimError(f"Invalid version string {string}")
 
     if 9 <= int(minor) <= 21: # Deal with inertia of 0.003
-        inertia(ctx, 0.003)
+        ctx.player.inertia_threshold = 0.003
     elif int(minor) > 21:
         raise SimError(f"The `minor` number (`major.minor.patch`) should be `21` or less, not {minor}.")
 
     if (int(minor) == 19 and int(patch) > 3) or (int(minor) > 19): # Dealing with air sprint delay
-        air_sprint_delay(ctx, False)
+        ctx.player.air_sprint_delay = False 
     
