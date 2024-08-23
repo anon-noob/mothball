@@ -1502,9 +1502,9 @@ def version(ctx, string: str = "1.8"):
 
     Pro tip: `major` will always be 1 unless some update happens (never).
     """
-    versioning_regex = r"(\d+)\.(\d+)(?:\.(\d+))?([\S]*)?"
-    result = re.findall(versioning_regex, string.strip())
-    if not result:
+    versioning_regex = r"(\d+)\.(\d+)(?:\.(\d+))?(.*)?"
+    result = re.findall(versioning_regex, string.strip(),flags=re.DOTALL)
+    if not result[0]:
         raise SimError(f"Invalid version string {string}")
 
     major, minor, patch, error = result[0]
