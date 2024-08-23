@@ -40,7 +40,6 @@ def string_to_args(text):
     return commands_args
 
 def execute_command(context, command, args):
-
     # Handle command modifiers
     modifiers = {}
     if command.startswith('-'):
@@ -66,7 +65,7 @@ def execute_command(context, command, args):
         command = command.replace(key_modifier.group(0), '', 1)
     # End handling command modifiers
 
-    
+    # pp(commands_by_name)
     if command in commands_by_name: # Normal execution
         command_function = commands_by_name[command]
 
@@ -82,31 +81,44 @@ def execute_command(context, command, args):
             # Smart feedback here
             suggestions = []
             possible_cmds = list(commands_by_name.keys())
+            
             # 1. Matches start of command
             for valid_cmd in possible_cmds:
                 if valid_cmd.startswith(command):
                     suggestions.append(valid_cmd)
+
+            # 2. Matches entire string anywhere
             for valid_cmd in possible_cmds:
-                # 2. Matches character count
+                if valid_cmd not in suggestions and command in valid_cmd:
+                    suggestions.append(valid_cmd)
+
+            # 3. Matches character count
+            for valid_cmd in possible_cmds:
                 valid_cmd_char_count = Counter(valid_cmd)
                 cmd_char_count = Counter(command)
-                for char in valid_cmd_char_count:
+                for char in cmd_char_count:
                     try:
                         if cmd_char_count[char] > valid_cmd_char_count[char]:
-                            continue
+                            break
                         
-                            
                     except KeyError:
-                        continue
+                        break
 
+                else:
                     if valid_cmd not in suggestions:
                         suggestions.append(valid_cmd)
             
-            # Picks top suggestion
             error_msg = f'Command `{command}` not found. '
-            if suggestions: 
-                suggestion = suggestions[0]
-                error_msg += f"Did you mean `{suggestion}`?"
+
+            suggestion = []
+            if suggestions:
+                suggestion_count = min(4, len(suggestions))
+                for i in range(suggestion_count):
+                    suggestion.append(f"`{suggestions[i]}`")
+                if suggestion_count > 1:
+                    error_msg += f"Did you mean any of the following: {', '.join(suggestion)}?"
+                else:
+                    error_msg += f"Did you mean {suggestion[0]}?"
             else:
                 error_msg += f"I dont know what you're trying to do..."
             raise SimError(error_msg)
@@ -117,7 +129,6 @@ def execute_command(context, command, args):
             context.envs.append(new_env)
             execute_command(context, command, args)
             context.envs.pop()
-
 
 
 def separate_commands(text):
