@@ -9,6 +9,7 @@ from evalidate import Expr, EvalException
 import cogs.movement.parsers as parsers
 from cogs.movement.utils import Function, SimError, fastmath_sin_table
 from cogs.movement.player import Player
+import re
 
 f64 = float
 f32 = float32
@@ -749,7 +750,7 @@ def zerox(ctx):
 def zeroz(ctx):
     ctx.player.modz -= ctx.player.z
 
-@command(aliases = ['v'])
+@command(aliases = ['vel'])
 def setv(ctx, vx = 0.0, vz = 0.0):
     "Sets the player's velocity"
     ctx.player.vx = vx
@@ -1488,3 +1489,35 @@ def println(ctx, string: str = "\n"):
     "Print any basic text to your heart's desire (commas dont work atm)"
     
     ctx.out += string + "\n"
+
+@command(aliases=['ver','v'])
+def version(ctx, string: str = "1.8"):
+    """
+    Sets the version of the simulation. This can toggle the appropriate functions for the inputted version, namely sprint air delay and inertia.
+
+    Version 1.8 and below has inertia set to 0.005, while later versions are set to 0.003. \
+    Version 1.19.3 and below has sprint air delay while later versions don't.
+    
+    The version should be either in the form `major.minor` or `major.minor.patch`. For example, `1.21.2`
+
+    Pro tip: `major` will always be 1 unless some update happens (never).
+    """
+    versioning_regex = r"(\d+)\.(\d+)(?:\.(\d+))?([\S]*)?"
+    result = re.findall(versioning_regex, string.strip())
+    if not result:
+        raise SimError(f"Invalid version string {string}")
+
+    major, minor, patch, error = result[0]
+    if major != "1":
+        raise SimError(f"The `major` number (`major.minor.patch`) should be `1`, not {major}.")
+    if error:
+        raise SimError(f"Invalid version string {string}")
+
+    if 9 <= int(minor) <= 21: # Deal with inertia of 0.003
+        inertia(ctx, 0.003)
+    elif int(minor) > 21:
+        raise SimError(f"The `minor` number (`major.minor.patch`) should be `21` or less, not {minor}.")
+
+    if (int(minor) == 19 and int(patch) > 3) or (int(minor) > 19): # Dealing with air sprint delay
+        air_sprint_delay(ctx, False)
+    
