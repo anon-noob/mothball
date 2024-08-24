@@ -267,7 +267,7 @@ def cast(envs, type, val):
             try:
                 local_env[k] = type(v)
             except:
-                continue
+                local_env[k] = safe_eval(v, local_env)
         return type(safe_eval(val, local_env))
     else:
         return type(val)
@@ -278,7 +278,14 @@ def fetch(envs, name):
             return env[name]
 
 def safe_eval(val, env):
-    return Expr(val.replace('^', '**'), model=base_eval_model).eval(env)
+    eval_model = base_eval_model
+
+    # DANGEROUS, use at your own risk
+    base_eval_model.nodes.append("Mult")
+    base_eval_model.nodes.append("FloorDiv")
+    base_eval_model.nodes.append("Pow")
+    return Expr(val, model=eval_model).eval(env)
+
 
 aliases = functions.aliases
 commands_by_name = functions.commands_by_name
