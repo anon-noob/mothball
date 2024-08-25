@@ -267,7 +267,8 @@ def cast(envs, type, val):
             try:
                 local_env[k] = type(v)
             except:
-                local_env[k] = safe_eval(v, local_env)
+                continue
+                # local_env[k] = safe_eval(v, local_env)
         return type(safe_eval(val, local_env))
     else:
         return type(val)
