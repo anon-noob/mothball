@@ -10,6 +10,7 @@ import cogs.movement.parsers as parsers
 from cogs.movement.utils import Function, SimError, fastmath_sin_table
 from cogs.movement.player import Player
 import re
+import random
 
 f64 = float
 f32 = float32
@@ -1486,7 +1487,11 @@ def help(ctx, cmd_name = 'help'):
 
 @command(aliases=['print'])
 def println(ctx, string: str = "\n"):
-    "Print any basic text to your heart's desire (commas dont work atm)"
+    """
+    Print any basic text to your heart's desire. To print backslashes, place a \ before the comma.
+
+    Example: print(It's been 9 hours without HPK\, I can’t stop shaking and I’m having severe mental breakdowns. I woke up today trying to log onto HPK but the site was down\, I had a major panic attack but managed to calm down after a few hours. I couldn’t go to school today\, I am so worried that I even took my dad's gun from the shed\, thinking of killing myself. I am nothing without HPK\, it is my life\, it is my destiny\, without HPK\, I wouldn't be able to do anything. HPK is the best thing ever made and I can't get rid of my addiction to it\, it is the best server in existence. I can't stop trembling and crying\, I am very worried\. I used all of my money on HPK\, I bought the ibis checkpoint\, and bought extra worlds in map maker for my girlfriend CoolGurl666. I don't know what to do. HPK can't be gone any longer cause if it does then I'll go insane again.. breaking my mouse\, chair\, house\, and everything I own. HPK is very amazing and I can't lose it. HPK is my life\, I met my amazing girlfriend john there\, in onejump\, I was grinding 5-1s\, when I saw this amazingly attractive woman named\, CoolGurl666\, she was so cute\, I flushed. I found her home later then and tried to talk to her\, she was so kind and cute that I accidentally typed my thoughts out "mind: she's so cute.." and she flushed than I got nervous\, we then went in and made out\, after that\, we went on many dates to Valor 7\, where we adopted 2 boys named DemonicLuciferr\, and RedDoflaming0. Demonic and Red were so cute that I even took them out of town and took them to the famous 5-1 triple neo. after that we had our child in anon's stratfinding basement\, named laser lamps. Our kids were so cute and amazing that I even fed them my special milk\, they liked it so much that they wanted it again. and the day after... HPK was down and I went through my panic attack\, Shivering in fear of losing my fiance and kids. I am so scared that I might just lose my mind and go insane... I want my kids back...)
+    """
     
     ctx.out += string + "\n"
 
@@ -1519,5 +1524,16 @@ def version(ctx, string: str = "1.8"):
         raise SimError(f"The `minor` number (`major.minor.patch`) should be `21` or less, not {minor}.")
 
     if (int(minor) == 19 and int(patch) > 3) or (int(minor) > 19): # Dealing with air sprint delay
-        ctx.player.air_sprint_delay = False 
+        ctx.player.air_sprint_delay = False
+
+@command(aliases=["lang"])
+def language(ctx, string: str = "english"):
+    """
+    Did you really think this would be implemented...
+    """
     
+    if string.lower() != "english":
+        ctx.out += f"Sorry but `{string}` not supported, we only have: \n`english`"
+    else:
+        insults = ["idiot sandwich", "buffoon", "illiterate freak", "succubus", "homosapien of the low IQ variant", "bitch", "idot", "uncultured swine", "smelly bedwars player", "smelly league player, go take a shower and touch grass", "smelly valorant player, go take a shower and touch grass", "lonely virgin gamer, consider this: 🚿","nincompoop","pillock","🤢 🎮", "fat fuck", "despicable being","loveless loser","muppet","submissive and breedable human", "glutenous glob", "disgusting douche", "karen", "normie","literally are the definition of 1984", "wicket witch", "charlatan", "normie \*laughs in poor gamer e-girl\*", "sexual spring breaking degenerate. Get out of my server, i own this place.","sussy baka uWu \*nudges and soft vores you\*\n\n\n\n\nWC","lil husbando, come give mommy a huggy", "lazy linguistic lacking logic loveless ludicrous livid lamentable leeching loser", "tier 20 twitch troller", "gold wings enthusiast", "'\n\n\n\n\nwc", "hoe, i bet u watch tik tok"]
+        ctx.out += f"This is already in english you {random.choice(insults)}."
