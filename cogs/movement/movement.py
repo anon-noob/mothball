@@ -56,12 +56,12 @@ class Movement(commands.Cog):
 
         if context.macro:
             buffer = BytesIO(context.macro_csv().encode('utf8'))
-            kwargs = {'content': results, 'file': discord.File(fp=buffer, filename=f'{context.macro}.csv')}
+            kwargs = {'content': results, 'file': discord.File(fp=buffer, filename=f'{context.macro}.csv'), "allowed_mentions": discord.AllowedMentions.none()}
         elif len(results) > 1990:
             buffer = BytesIO(results.encode('utf8'))
-            kwargs = {'content': 'Uploaded output to file since output was too long.', 'file': discord.File(fp=buffer, filename='output.txt')}
+            kwargs = {'content': 'Uploaded output to file since output was too long.', 'file': discord.File(fp=buffer, filename='output.txt'), "allowed_mentions": discord.AllowedMentions.none()}
         else:
-            kwargs = {'content': results}
+            kwargs = {'content': results, "allowed_mentions": discord.AllowedMentions.none()}
 
         if errored:
             kwargs.pop('file', None)
