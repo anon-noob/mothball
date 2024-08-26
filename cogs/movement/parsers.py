@@ -196,15 +196,21 @@ def argumentatize_command(command):
     args = []
     start = divider + 1
     depth = 0
+    after_backslash = False
     for i in range(divider + 1, len(command) - 1):
         char = command[i]
-        if depth == 0 and char == ',':
+        if char == '\\' and not after_backslash:
+            after_backslash = True
+            continue
+        if depth == 0 and char == ',' and not after_backslash:
             args.append(command[start:i].strip())
             start = i + 1
         elif char == '(':
             depth += 1
         elif char == ')':
             depth -= 1
+
+        after_backslash = False
 
     command_name = command[:divider].lower()
     final_arg = command[start:-1].strip()
