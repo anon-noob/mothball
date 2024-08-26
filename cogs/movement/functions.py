@@ -104,6 +104,8 @@ b_to_dist    = dist_to_mm
 @command(aliases=['rep', 'r'])
 def repeat(ctx, inputs = '', n = 1):
     "Executes `inputs` `n` times"
+    if ("print" in inputs or "println" in inputs) and n > 3:
+        raise SimError(f"Looks like you're trying to do some heavy duty printing, unfortunately we are low on electrons, so please wait 2 years.")
     commands_args = parsers.string_to_args(inputs)
 
     for _ in range(n):
