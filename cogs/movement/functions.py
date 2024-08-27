@@ -1540,7 +1540,7 @@ def language(ctx, string: str = "english"):
     """
     
     if string.lower() != "english":
-        ctx.out += f"Sorry but `{string}` not supported, we only have: \n`english`"
+        ctx.out += f"Sorry but `{string}` not supported, we only have: \n`english`\n"
     else:
         insults = ["idiot sandwich", "buffoon", "illiterate freak", "succubus", "homosapien of the low IQ variant", "bitch", "idot", "uncultured swine", "smelly bedwars player", "smelly league player, go take a shower and touch grass", "smelly valorant player, go take a shower and touch grass", "lonely virgin gamer, consider this: 🚿","nincompoop","pillock","🤢 🎮", "fat fuck", "despicable being","loveless loser","muppet","submissive and breedable human", "glutenous glob", "disgusting douche", "karen", "normie","literally are the definition of 1984", "wicket witch", "charlatan", "normie \*laughs in poor gamer e-girl\*", "sexual spring breaking degenerate. Get out of my server, i own this place.","sussy baka uWu \*nudges and soft vores you\*\n\n\n\n\nWC","lil husbando, come give mommy a huggy", "lazy linguistic lacking logic loveless ludicrous livid lamentable leeching loser", "tier 20 twitch troller", "gold wings enthusiast", "'\n\n\n\n\nwc", "hoe, i bet u watch tik tok"]
-        ctx.out += f"This is already in english you {random.choice(insults)}."
+        ctx.out += f"This is already in english you {random.choice(insults)}.\n"
