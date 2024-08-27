@@ -1490,7 +1490,7 @@ def help(ctx, cmd_name = 'help'):
 @command(aliases=['print'])
 def println(ctx, string: str = "\n"):
     """
-    Print any basic text to your heart's desire. To print backslashes, place a \ before the comma.
+    Print any basic text to your heart's desire. To print commas, place a \ before the comma.
 
     Example: print(It's been 9 hours without HPK\, I can’t stop shaking and I’m having severe mental breakdowns. I woke up today trying to log onto HPK but the site was down\, I had a major panic attack but managed to calm down after a few hours. I couldn’t go to school today\, I am so worried that I even took my dad's gun from the shed\, thinking of killing myself. I am nothing without HPK\, it is my life\, it is my destiny\, without HPK\, I wouldn't be able to do anything. 
     
