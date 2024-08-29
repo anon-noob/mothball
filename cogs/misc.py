@@ -167,7 +167,7 @@ class Misc(commands.Cog):
     @commands.max_concurrency(2, per=commands.BucketType.user)
     async def quote(self, ctx, msg: typing.Union[discord.Message, str] = None):
         if type(msg) != discord.Message:
-            oldest = 1609488000
+            oldest = datetime.timestamp(ctx.guild.created_at)
             target = datetime.fromtimestamp(oldest + random() * (datetime.now(timezone.utc).timestamp() - oldest), tz=timezone.utc)
 
             tasks = []
