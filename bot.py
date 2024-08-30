@@ -37,7 +37,7 @@ bot = Mothball(command_prefix=command_prefix, intents=intents, help_command=None
 
 @bot.command()
 async def help(ctx):
-    await ctx.send('Read the readme!\n<https://github.com/anon-noob/mothball/blob/main/README.md>\n(Original Mothball by CyrenArkade)')
+    await ctx.send('Read the wiki!\n<https://github.com/anon-noob/mothball/wiki#welcome-to-the-mothball-wiki>\n(Original Mothball by CyrenArkade)')
 
 if __name__ == '__main__':
 
