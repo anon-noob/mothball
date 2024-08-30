@@ -108,13 +108,14 @@ def get_optimal_sprint_strafe_jump_angle(ctx, is_sneaking = False):
     ctx1.player.z = 0.0
     ctx1.player.vx = 0.0
     ctx1.player.vz = 0.0
+    
     if is_sneaking:
         parsers.execute_string(ctx1, "snsj.wa")
     else:
         parsers.execute_string(ctx1, "sj.wa")
 
-return abs(degrees(atan2(-ctx1.player.vx, ctx1.player.vz)))
-# End of Helper Function
+    return abs(degrees(atan2(-ctx1.player.vx, ctx1.player.vz)))
+    # End of Helper Function
     
 
 @command(aliases=['rep', 'r'])
