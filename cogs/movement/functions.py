@@ -100,6 +100,22 @@ dist_to_b    = lambda dist: dist + f32(copysign(0.6, dist))
 mm_to_dist   = dist_to_b
 b_to_dist    = dist_to_mm
 
+# Helper Function
+def get_optimal_sprint_strafe_jump_angle(ctx, is_sneaking = False):
+    "Gets optimal sprint strafe jump angle to maximize distance"
+    ctx1 = ctx.child()
+    ctx1.player.x = 0.0
+    ctx1.player.z = 0.0
+    ctx1.player.vx = 0.0
+    ctx1.player.vz = 0.0
+    if is_sneaking:
+        parsers.execute_string(ctx1, "snsj.wa")
+    else:
+        parsers.execute_string(ctx1, "sj.wa")
+
+return abs(degrees(atan2(-ctx1.player.vx, ctx1.player.vz)))
+# End of Helper Function
+    
 
 @command(aliases=['rep', 'r'])
 def repeat(ctx, inputs = '', n = 1):
@@ -392,7 +408,8 @@ def sneaksprintjump45(ctx, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('strafe', f32(1))
     ctx.args.setdefault('sneaking', True)
     ctx.args.setdefault('sprinting', True)
-    ctx.args['function_offset'] = f32(9.1148519592841453)
+    # ctx.args['function_offset'] = f32(9.1148519592841453)
+    ctx.args['function_offset'] = get_optimal_sprint_strafe_jump_angle(ctx, True)
 
     def update():
         ctx.args.setdefault('strafe', f32(1))
@@ -588,7 +605,8 @@ def sprintstrafejump(ctx, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('sprinting', True)
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(1))
-    ctx.args['function_offset'] = f32(17.4786857811690446)
+    # ctx.args['function_offset'] = f32(17.4786857811690446)
+    ctx.args['function_offset'] = get_optimal_sprint_strafe_jump_angle(ctx)
 
     def update():
         ctx.args['strafe'] = f32(0)
@@ -606,7 +624,8 @@ def sprintstrafejump45(ctx, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('sprinting', True)
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(1))
-    ctx.args['function_offset'] = f32(17.4786857811690446)
+    # ctx.args['function_offset'] = f32(17.4786857811690446)
+    ctx.args['function_offset'] = get_optimal_sprint_strafe_jump_angle(ctx)
 
     def update():
         ctx.args['function_offset'] = f32(45)
