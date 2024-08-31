@@ -82,16 +82,16 @@ def move(ctx):
         ctx.player.move(ctx)
 
 def jump(ctx, after_jump_tick = lambda: None):
-    
-    ctx.args['jumping'] = True
-    ctx.player.move(ctx)
-    ctx.args['jumping'] = False
-
-    after_jump_tick()
-    
-    ctx.args.setdefault('airborne', True)
-    for i in range(abs(ctx.args['duration']) - 1):
+    if ctx.args['duration'] > 0:
+        ctx.args['jumping'] = True
         ctx.player.move(ctx)
+        ctx.args['jumping'] = False
+    
+        after_jump_tick()
+        
+        ctx.args.setdefault('airborne', True)
+        for i in range(abs(ctx.args['duration']) - 1):
+            ctx.player.move(ctx)
 
 
 dist_to_dist = lambda dist: dist
