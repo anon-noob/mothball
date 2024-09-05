@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands, tasks
 from sys import float_info
 from datetime import datetime, timezone
-from random import random
+import random
 import asyncio, typing
 import math
 import typing
@@ -168,7 +168,7 @@ class Misc(commands.Cog):
     async def quote(self, ctx, msg: typing.Union[discord.Message, str] = None):
         if type(msg) != discord.Message:
             oldest = datetime.timestamp(ctx.guild.created_at)
-            target = datetime.fromtimestamp(oldest + random() * (datetime.now(timezone.utc).timestamp() - oldest), tz=timezone.utc)
+            target = datetime.fromtimestamp(oldest + random.random() * (datetime.now(timezone.utc).timestamp() - oldest), tz=timezone.utc)
 
             tasks = []
             messages = []
@@ -244,29 +244,31 @@ class Misc(commands.Cog):
 
     @commands.command()
     async def love(self, ctx, user: typing.Optional[discord.User] = None, target: int = 100):
-
-        if user == None:
-            user = ctx.author
-
-        base = str(user.id)
-
-        mates = []
-        a = base[len(base)-3:len(base)]
-        for mem in ctx.guild.members:
-            try:
-                b = str(mem.id)
-                b = b[len(b)-3:len(b)]
-
-                val = str(int(a) * int(b))
-                val = int(val[len(a)-2:len(a)]) + 1
-
-                if val == target:
-                    mates.append(f'<@{mem.id}> {mem.display_name}')
-            except:
-                pass
-
-        em = discord.Embed(description='\n'.join(mates))
-        em.title = f'{user.display_name}\'s matches with love {target}'
+        if user in ["me","me?","me!"]:
+            await ctx.send(random.choice(["No", "Never", "Ew", "Nah"]))
+        else:
+            if user == None:
+                user = ctx.author
+    
+            base = str(user.id)
+    
+            mates = []
+            a = base[len(base)-3:len(base)]
+            for mem in ctx.guild.members:
+                try:
+                    b = str(mem.id)
+                    b = b[len(b)-3:len(b)]
+    
+                    val = str(int(a) * int(b))
+                    val = int(val[len(a)-2:len(a)]) + 1
+    
+                    if val == target:
+                        mates.append(f'<@{mem.id}> {mem.display_name}')
+                except:
+                    pass
+    
+            em = discord.Embed(description='\n'.join(mates))
+            em.title = f'{user.display_name}\'s matches with love {target}'
 
         await ctx.send(embed=em)
     
