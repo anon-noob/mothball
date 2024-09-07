@@ -284,6 +284,52 @@ def fetch(envs, name):
         if name in env:
             return env[name]
 
+def formatted(env, string: str):
+    "Formats the string just like a python f-string, with expressions inside curly braces {}. Pairs of curly braces {{}} are treated like strings inside, so {{hey}} would print {hey}"
+    formatted_string = ""
+
+    item_to_eval = ""
+    in_expr = False
+    depth = 0
+
+    for char in string:
+        if char == "{":
+            in_expr = not in_expr
+            if not in_expr:
+                item_to_eval = ""
+                formatted_string += char
+            else:
+                item_to_eval += char
+            depth += 1
+
+        elif char == "}":
+            if depth == 0:
+                raise SimError("Unmatched Brackets")
+
+            depth -= 1
+            if in_expr:
+                item_to_eval += char
+
+                item_to_eval = item_to_eval[1:len(item_to_eval) - 1]
+                x = str(safe_eval(item_to_eval, env)) if item_to_eval else item_to_eval
+
+                formatted_string += x
+                item_to_eval = ''
+            else: 
+                formatted_string += item_to_eval + char
+                item_to_eval = ''
+
+            in_expr = not in_expr
+        elif in_expr:
+            item_to_eval += char
+        else:
+            formatted_string += char
+    
+    if depth != 0:
+        raise SimError("Unmatched Brackets")
+
+    return formatted_string
+
 def safe_eval(val, env):
     eval_model = base_eval_model
 
