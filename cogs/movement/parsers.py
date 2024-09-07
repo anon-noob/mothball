@@ -279,7 +279,12 @@ def cast(envs, type, val):
                 # local_env[k] = safe_eval(v, local_env)
         return type(safe_eval(val, local_env))
     elif type == str:
-        return formatted(local_env, val)
+        val = formatted(local_env, val)
+        link_regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
+        result = re.findall(link_regex, val)
+        if result and result[0]:
+            raise SimError(f"Looks like you're trying to print some links. Why do you want to label an output with a link?")
+        return val
     else:
         return type(val)
 
