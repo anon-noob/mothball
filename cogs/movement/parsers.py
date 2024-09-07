@@ -40,6 +40,7 @@ def string_to_args(text):
     return commands_args
 
 def execute_command(context, command, args):
+
     # Handle command modifiers
     modifiers = {}
     if command.startswith('-'):
@@ -131,6 +132,7 @@ def execute_command(context, command, args):
             context.envs.pop()
 
 
+
 def separate_commands(text):
     
     # States:
@@ -193,23 +195,23 @@ def argumentatize_command(command):
     except ValueError:
         return (command.lower(), [])
 
+    after_backslash = False # tracks any '\' character
+
     args = []
     start = divider + 1
     depth = 0
-    after_backslash = False
     for i in range(divider + 1, len(command) - 1):
         char = command[i]
-        if char == '\\' and not after_backslash:
+        if char == "\\" and not after_backslash:
             after_backslash = True
             continue
-        if depth == 0 and char == ',' and not after_backslash:
+        elif depth == 0 and char == ',' and not after_backslash:
             args.append(command[start:i].strip())
             start = i + 1
         elif char == '(':
             depth += 1
         elif char == ')':
             depth -= 1
-
         after_backslash = False
 
     command_name = command[:divider].lower()
@@ -278,8 +280,10 @@ def cast(envs, type, val):
                 continue
         return type(safe_eval(val, local_env))
     elif type == str:
+        print("TYPE WAS STRING")
         
         # CONVERT ARGS FIRST
+        print(f"THE ENVS ARE {local_env}")
         new_local_env = {}
 
         for var_name, value in local_env.items():
@@ -291,16 +295,18 @@ def cast(envs, type, val):
                 except ValueError:
                     new_local_env[var_name] = value
 
-        link_regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
-        result = re.findall(link_regex, val)
-        if result and result[0]:
-            raise SimError(f"Looks like you're trying to print some links. Why do you want me to post a link and not you??")
+
         
+        # except Exception as e:
+            # print(e)
+            # raise SimError(f"There was an error, please read: {e}")
+        # print(f"the string = {a}")
         return formatted(new_local_env, val)
     else:
         return type(val)
 
 def fetch(envs, name):
+    # print(envs)
     for env in envs[::-1]:
         if name in env:
             return env[name]
@@ -332,7 +338,8 @@ def formatted(env, string: str):
                 item_to_eval += char
 
                 item_to_eval = item_to_eval[1:len(item_to_eval) - 1]
-                x = str(safe_eval(item_to_eval, env)) if item_to_eval else item_to_eval
+                try: x = str(safe_eval(item_to_eval, env)) if item_to_eval else item_to_eval
+                except Exception as e: raise SimError(f"ERROR HERE IN FORMATTER, {e}, attempted to do {item_to_eval}")
 
                 formatted_string += x
                 item_to_eval = ''
@@ -353,13 +360,11 @@ def formatted(env, string: str):
 
 def safe_eval(val, env):
     eval_model = base_eval_model
-
-    # DANGEROUS, use at your own risk
+    # DANGEROUS, use at your own
     base_eval_model.nodes.append("Mult")
     base_eval_model.nodes.append("FloorDiv")
     base_eval_model.nodes.append("Pow")
     return Expr(val, model=eval_model).eval(env)
-
 
 aliases = functions.aliases
 commands_by_name = functions.commands_by_name
