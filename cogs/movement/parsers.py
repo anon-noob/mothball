@@ -265,12 +265,12 @@ def cast(envs, type, val):
         return val.lower() not in ('f', 'false', 'no', 'n', '0')
     if val.lower() in ('none', 'null'):
         return None
-
-    local_env = {}
-    for env in envs:
-        local_env.update(env)
-    
+        
     if type in (int, float, fl):
+        local_env = {}
+        for env in envs:
+            local_env.update(env)
+            
         for k, v in local_env.items():
             try:
                 local_env[k] = type(v)
@@ -278,13 +278,13 @@ def cast(envs, type, val):
                 continue
                 # local_env[k] = safe_eval(v, local_env)
         return type(safe_eval(val, local_env))
-    elif type == str:
-        val = formatted(local_env, val)
-        link_regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
-        result = re.findall(link_regex, val)
-        if result and result[0]:
-            raise SimError(f"Looks like you're trying to print some links. Why do you want to label an output with a link?")
-        return val
+    # elif type == str:
+    #     val = formatted(local_env, val)
+    #     link_regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
+    #     result = re.findall(link_regex, val)
+    #     if result and result[0]:
+    #         raise SimError(f"Looks like you're trying to print some links. Why do you want to label an output with a link?")
+    #     return val
     else:
         return type(val)
 
