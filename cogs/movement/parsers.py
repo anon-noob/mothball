@@ -265,10 +265,12 @@ def cast(envs, type, val):
         return val.lower() not in ('f', 'false', 'no', 'n', '0')
     if val.lower() in ('none', 'null'):
         return None
+
+    local_env = {}
+    for env in envs:
+        local_env.update(env)
+    
     if type in (int, float, fl):
-        local_env = {}
-        for env in envs:
-            local_env.update(env)
         for k, v in local_env.items():
             try:
                 local_env[k] = type(v)
@@ -276,6 +278,8 @@ def cast(envs, type, val):
                 continue
                 # local_env[k] = safe_eval(v, local_env)
         return type(safe_eval(val, local_env))
+    elif type == str:
+        return formatted(local_env, val)
     else:
         return type(val)
 
