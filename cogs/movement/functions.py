@@ -1521,8 +1521,8 @@ def println(ctx, string: str = "\n"):
     if result and result[0]:
         raise SimError(f"Looks like you're trying to print some links. For safety reasons (and for the convenience of {random.randint(100,1000000)} electrons), I cannot print this.")
     
-    if ctx.args['reverse']:
-        string = "".join([x for x in reversed(string)])
+    # if ctx.args['reverse']:
+    #     string = "".join([x for x in reversed(string)])
     ctx.out += string + "\n"
 
 @command(aliases=['ver','v'])
