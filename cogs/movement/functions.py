@@ -1533,7 +1533,7 @@ def help(ctx: Context, cmd_name = 'help'):
     """
 
     if cmd_name not in commands_by_name:
-        ctx.out += f'Command `{cmd_name}` not found\n'
+        ctx.out += f'Command `{cmd_name}` not found. This could be a custom defined function (help does not support it at the moment).\n'
         return
 
     cmd = commands_by_name[cmd_name]
