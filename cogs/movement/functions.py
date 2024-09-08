@@ -1083,7 +1083,8 @@ def possibilities(ctx: Context, inputs = 'sj45(100)', mindistance: float = 0.01,
     mindistance = abs(mindistance) # only dealing with positive offsets
     if mindistance > 0.0625:
         raise SimError(f"Minimum distance must be less than or equal to 0.0625, got {mindistance} instead")
-    miss = abs(miss) # only dealing with negative misses (going towards the positive z direction)
+    if miss is not None: # only dealing with negative misses (going towards the positive z direction)
+        miss = abs(miss)
     if miss > 0.0625:
         raise SimError(f"Miss distance must be less than or equal to 0.0625, got {miss} instead")
     
@@ -1141,7 +1142,8 @@ def xpossibilities(ctx: Context, inputs = 'sj45(100)', mindistance: float = 0.01
     mindistance = abs(mindistance) # only dealing with positive offsets
     if mindistance > 0.0625:
         raise SimError(f"Minimum distance must be less than or equal to 0.0625, got {mindistance} instead")
-    miss = abs(miss) # only dealing with negative misses (going towards the positive x direction)
+    if miss is not None: # only dealing with negative misses (going towards the positive x direction)
+        miss = abs(miss)
     if miss > 0.0625:
         raise SimError(f"Miss distance must be less than or equal to 0.0625, got {miss} instead")
     
