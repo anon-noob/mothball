@@ -41,8 +41,7 @@ async def help(ctx):
 
 @bot.command()
 async def version(ctx):
-    v = bot.params['version']
-    s = f"""Mothball version {v}
+    s = f"""Mothball version 2.0.1
 Recent changes:
 - A mini wiki has been created to document all simulation functions (type `;help`)
 - Texts are now formatted so you can use curly braces to evaluate anything inside {'{}.'}
