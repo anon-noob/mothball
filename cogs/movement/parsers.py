@@ -4,6 +4,8 @@ from cogs.movement.utils import SimError
 from numpy import float32 as fl
 from collections import Counter
 from evalidate import Expr, base_eval_model
+import re
+import random
 
 if 'USub' not in base_eval_model.nodes:
     base_eval_model.nodes.append('USub')
@@ -11,6 +13,52 @@ if 'USub' not in base_eval_model.nodes:
     base_eval_model.nodes.append('Mult')
     base_eval_model.nodes.append('FloorDiv')
     base_eval_model.nodes.append('Pow')
+
+# This function is purely for error handling scenarios
+def get_suggestions(context, string: str):
+    """
+    Given `string`, return a list of suggestions from all possible mothball commands that best matches `string`.
+
+    For example, if `wtrsprint` was inputted, a possible suggestion is `sprintwater`.
+    """
+    
+    matches_start = []
+    matches_part = [] # If string in word
+    matches_char_count = {}
+
+    envs = {}
+    for env in context.envs:
+        envs.update(env)
+    envs = {a:envs[a] for a in envs if type(envs[a]) == functions.Function}
+
+    all_cmds = envs | commands_by_name
+
+    for command in list(all_cmds.keys()):
+        # 1. Matches start
+        if command.startswith(string):
+            matches_start.append(command)
+        # 2. Matches part
+        elif string in command:
+            matches_part.append(command)
+        else:
+            cmd_count = Counter(command)
+            str_count = Counter(string)
+
+            off_by = 0
+            for char, count in str_count.items():
+                try:
+                    if count == cmd_count[char]:
+                        off_by -= 1
+                    else:
+                        off_by += count - cmd_count[char]
+                except KeyError: # character not found in the command 
+                    off_by += 1
+            off_by += abs(len(command) - len(string))
+            if off_by < len(command): matches_char_count[command] = off_by
+
+    matches_char_count = sorted(matches_char_count, key=lambda e: matches_char_count[e])
+
+    return matches_start + matches_part + matches_char_count
 
 def execute_string(context, text):
 
@@ -29,10 +77,10 @@ def execute_string(context, text):
             execute_command(context, command, args)
         except SimError:
             raise
-        except Exception:
+        except Exception as e:
             if context.is_dev:
                 raise
-            raise SimError(f'Something went wrong while executing `{command}`.')
+            raise SimError(f'Something went wrong while executing `{command}`.\nDetails: {e}')
     
 def string_to_args(text):
     commands_str_list = separate_commands(text)
@@ -64,9 +112,8 @@ def execute_command(context, command, args):
         modifiers.setdefault('strafe', fl(0))
 
         command = command.replace(key_modifier.group(0), '', 1)
-    # End handling command modifiers
-
-    # pp(commands_by_name)
+    # End handling command modifiers   
+    
     if command in commands_by_name: # Normal execution
         command_function = commands_by_name[command]
 
@@ -79,36 +126,8 @@ def execute_command(context, command, args):
         user_func = fetch(context.envs, command)
         
         if user_func is None:
-            # Smart feedback here
-            suggestions = []
-            possible_cmds = list(commands_by_name.keys())
-            
-            # 1. Matches start of command
-            for valid_cmd in possible_cmds:
-                if valid_cmd.startswith(command):
-                    suggestions.append(valid_cmd)
+            suggestions = get_suggestions(context, command)
 
-            # 2. Matches entire string anywhere
-            for valid_cmd in possible_cmds:
-                if valid_cmd not in suggestions and command in valid_cmd:
-                    suggestions.append(valid_cmd)
-
-            # 3. Matches character count
-            for valid_cmd in possible_cmds:
-                valid_cmd_char_count = Counter(valid_cmd)
-                cmd_char_count = Counter(command)
-                for char in cmd_char_count:
-                    try:
-                        if cmd_char_count[char] > valid_cmd_char_count[char]:
-                            break
-                        
-                    except KeyError:
-                        break
-
-                else:
-                    if valid_cmd not in suggestions:
-                        suggestions.append(valid_cmd)
-            
             error_msg = f'Command `{command}` not found. '
 
             suggestion = []
@@ -116,12 +135,14 @@ def execute_command(context, command, args):
                 suggestion_count = min(4, len(suggestions))
                 for i in range(suggestion_count):
                     suggestion.append(f"`{suggestions[i]}`")
+
                 if suggestion_count > 1:
                     error_msg += f"Did you mean any of the following: {', '.join(suggestion)}?"
                 else:
                     error_msg += f"Did you mean {suggestion[0]}?"
+            
             else:
-                error_msg += f"I dont know what you're trying to do..."
+                error_msg += f"I couldn't guess what command you wanted..."
             raise SimError(error_msg)
         
         new_env = dict([(var, val) for var, val in zip(user_func.arg_names, args)])
@@ -130,8 +151,6 @@ def execute_command(context, command, args):
             context.envs.append(new_env)
             execute_command(context, command, args)
             context.envs.pop()
-
-
 
 def separate_commands(text):
     
@@ -258,11 +277,19 @@ def convert(envs, command, arg_name, val):
     else:
         raise SimError(f'Unknown argument `{arg_name}`')
     try:
-        return cast(envs, type, val) # if normal value
-    except:
-        raise SimError(f'Error in `{command.__name__}` converting `{val}` to type `{arg_name}:{type.__name__}`')
+        return cast(envs, command, type, val) # if normal value
+    except Exception as e:
+        if "Node type 'Call'" in str(e): # Expected int or float, got function call instead
+            e = f"Argument type should be `{type.__name__}`, not a function call."
+        elif "Node type 'Pow'" in str(e): # Exponents are not allowed
+            e = f"Exponents are not allowed."
+        elif "invalid syntax" in str(e): # Wrong syntax in expression 
+            e = f"Expression contains invalid syntax."
+        
+        raise SimError(f'Error in `{command.__name__}` converting `{val}` to type `{arg_name}:{type.__name__}`.\nDetails: {e}')
 
-def cast(envs, type, val):
+def cast(envs, command, type, val):
+
     if type == bool:
         return val.lower() not in ('f', 'false', 'no', 'n', '0')
     if val.lower() in ('none', 'null'):
@@ -279,34 +306,22 @@ def cast(envs, type, val):
             except:
                 continue
         return type(safe_eval(val, local_env))
-    elif type == str:
-        print("TYPE WAS STRING")
-        
-        # CONVERT ARGS FIRST
-        print(f"THE ENVS ARE {local_env}")
-        new_local_env = {}
-
-        for var_name, value in local_env.items():
-            try:
-                new_local_env[var_name] = int(value)
-            except ValueError:
-                try:
-                    new_local_env[var_name] = float(value)
-                except ValueError:
-                    new_local_env[var_name] = value
-
-
-        
-        # except Exception as e:
-            # print(e)
-            # raise SimError(f"There was an error, please read: {e}")
-        # print(f"the string = {a}")
-        return formatted(new_local_env, val)
+    
+    # Do not format the string immediately if it is inside these functions
+    elif type == str and command.__name__ not in ('define', 'repeat', 'z_bwmm', 'x_bwmm', 'xz_bwmm', 'z_inv','x_inv', 'xz_inv', 'z_speedreq', 'x_speedreq', 'xz_speedreq', 'possibilities', 'xpossibilities'):
+        try:
+            val = formatted(local_env, val)
+            link_regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
+            result = re.findall(link_regex, val)
+            if result and result[0]:
+                raise SimError(f"Looks like you're trying to print some links. For safety reasons (and for the convenience of {random.randint(100,1000000)} electrons), I cannot print this.")
+            return val
+        except Exception as e:
+            raise SimError(e)
     else:
         return type(val)
 
 def fetch(envs, name):
-    # print(envs)
     for env in envs[::-1]:
         if name in env:
             return env[name]
@@ -339,7 +354,7 @@ def formatted(env, string: str):
 
                 item_to_eval = item_to_eval[1:len(item_to_eval) - 1]
                 try: x = str(safe_eval(item_to_eval, env)) if item_to_eval else item_to_eval
-                except Exception as e: raise SimError(f"ERROR HERE IN FORMATTER, {e}, attempted to do {item_to_eval}")
+                except Exception as e: raise ValueError(f"Attempted to evaluate `{item_to_eval}` but {e}.")
 
                 formatted_string += x
                 item_to_eval = ''
@@ -360,11 +375,14 @@ def formatted(env, string: str):
 
 def safe_eval(val, env):
     eval_model = base_eval_model
-    # DANGEROUS, use at your own
+
+    # DANGEROUS, use at your own risk
     base_eval_model.nodes.append("Mult")
     base_eval_model.nodes.append("FloorDiv")
-    base_eval_model.nodes.append("Pow")
-    return Expr(val, model=eval_model).eval(env)
+    # base_eval_model.nodes.append("Pow")
+    
+    result = Expr(val, model=eval_model).eval(env)
+    return result
 
 aliases = functions.aliases
 commands_by_name = functions.commands_by_name
