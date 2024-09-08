@@ -11,6 +11,7 @@ from cogs.movement.utils import Function, SimError, fastmath_sin_table
 from cogs.movement.player import Player
 import re
 import random
+from cogs.movement.context import Context # for type hinting
 
 f64 = float
 f32 = float32
@@ -77,21 +78,21 @@ def command(name=None, aliases=[]):
     return deco
 
 
-def move(ctx):
+def move(ctx: Context):
     for _ in range(abs(ctx.args['duration'])):
         ctx.player.move(ctx)
 
-def jump(ctx, after_jump_tick = lambda: None):
-    if ctx.args['duration'] > 0:
-        ctx.args['jumping'] = True
-        ctx.player.move(ctx)
-        ctx.args['jumping'] = False
+def jump(ctx: Context, after_jump_tick = lambda: None):
     
-        after_jump_tick()
-        
-        ctx.args.setdefault('airborne', True)
-        for i in range(abs(ctx.args['duration']) - 1):
-            ctx.player.move(ctx)
+    ctx.args['jumping'] = True
+    ctx.player.move(ctx)
+    ctx.args['jumping'] = False
+
+    after_jump_tick()
+    
+    ctx.args.setdefault('airborne', True)
+    for i in range(abs(ctx.args['duration']) - 1):
+        ctx.player.move(ctx)
 
 
 dist_to_dist = lambda dist: dist
@@ -101,13 +102,16 @@ mm_to_dist   = dist_to_b
 b_to_dist    = dist_to_mm
 
 # Helper Function
-def get_optimal_sprint_strafe_jump_angle(ctx, is_sneaking = False):
+def get_optimal_sprint_strafe_jump_angle(ctx: Context, is_sneaking = False):
     "Gets optimal sprint strafe jump angle to maximize distance"
     ctx1 = ctx.child()
     ctx1.player.x = 0.0
     ctx1.player.z = 0.0
     ctx1.player.vx = 0.0
     ctx1.player.vz = 0.0
+    ctx1.player.ground_slip = ctx.player.ground_slip
+    ctx1.player.speed = ctx.player.speed
+    ctx1.player.slowness = ctx.player.slowness
     
     if is_sneaking:
         parsers.execute_string(ctx1, "snsj.wa")
@@ -115,14 +119,19 @@ def get_optimal_sprint_strafe_jump_angle(ctx, is_sneaking = False):
         parsers.execute_string(ctx1, "sj.wa")
 
     return abs(degrees(atan2(-ctx1.player.vx, ctx1.player.vz)))
-    # End of Helper Function
-    
+# End of Helper Function
+
+def get_local_env(ctx: Context):
+    local_env = {}
+    for env in ctx.envs:
+        local_env.update(env)
+    return local_env 
 
 @command(aliases=['rep', 'r'])
-def repeat(ctx, inputs = '', n = 1):
+def repeat(ctx: Context, inputs: str = '', n: int = 1):
     "Executes `inputs` `n` times"
-    if ("print" in inputs or "println" in inputs) and n > 3:
-        raise SimError(f"Looks like you're trying to do some heavy duty printing, unfortunately we are low on electrons, so please wait 2 years.")
+    if ("print" in inputs or "println" in inputs) and n > 100:
+        raise SimError(f"Looks like you're trying to do some heavy duty printing. Unfortunately we are low on electrons, so until then, we can't print this many times.")
     commands_args = parsers.string_to_args(inputs)
 
     for _ in range(n):
@@ -130,7 +139,7 @@ def repeat(ctx, inputs = '', n = 1):
             parsers.execute_command(ctx, command, cmd_args)
 
 @command(aliases=['def'])
-def define(ctx, name = '', input = ''):
+def define(ctx: Context, name = '', input = ''):
 
     dictized = parsers.string_to_args(input)
     new_function = Function(name, dictized, ctx.pos_args[2:])
@@ -139,27 +148,45 @@ def define(ctx, name = '', input = ''):
     lowest_env[name] = new_function
 
 @command()
-def var(ctx, name = '', input = ''):
+def var(ctx: Context, name = '', input = ''):
+    """
+    Assigns `input` to `name`
+    
+    A valid variable `name` is any sequence of alphabet letters a-z or A-Z, numerical digits (0-9), an underscore `_`, and any combination of them with only one restriction. \\
+    A number cannot be the first character in the variable name.
+
+    `var()` will attempt to convert the value to the appropiate datatype, which only supports
+    ```py
+    int | float | str
+    ```
+    """
+    var_regex = r"^([a-zA-Z_][a-zA-Z0-9_]*)$"
+    if not re.findall(var_regex, name): # Either has one match or no matches
+        raise SyntaxError(f"'{name}' is not a valid variable name")
+
     lowest_env = ctx.envs[-1]
+    
+    local_env = {}
+    for env in ctx.envs:
+        local_env.update(env)
+
     try:
-        local_env = {}
-        for env in ctx.envs:
-            local_env.update(env)
-        input = parsers.safe_eval(input, local_dict=local_env)
+        input = parsers.safe_eval(input, local_env)
     except:
-        pass
+        input = parsers.formatted(local_env, input)
+
     lowest_env[name] = input
 
 
 @command(aliases=['sn'])
-def sneak(ctx, duration = 1, rotation: f32 = None):
+def sneak(ctx: Context, duration = 1, rotation: f32 = None):
     "Sneak on ground"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sneaking', True)
     move(ctx)
 
 @command(aliases=['sns'])
-def sneaksprint(ctx, duration = 1, rotation: f32 = None):
+def sneaksprint(ctx: Context, duration = 1, rotation: f32 = None):
     """
     Sneak and sprint on ground.
 
@@ -171,20 +198,20 @@ def sneaksprint(ctx, duration = 1, rotation: f32 = None):
     move(ctx)
 
 @command(aliases=['w'])
-def walk(ctx, duration = 1, rotation: f32 = None):
+def walk(ctx: Context, duration = 1, rotation: f32 = None):
     "Walk on the ground"
     ctx.args.setdefault('forward', f32(1))
     move(ctx)
 
 @command(aliases=['s'])
-def sprint(ctx, duration = 1, rotation: f32 = None):
+def sprint(ctx: Context, duration = 1, rotation: f32 = None):
     "Running on the ground"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sprinting', True)
     move(ctx)
 
 @command(aliases=['sn45'])
-def sneak45(ctx, duration = 1, rotation: f32 = None):
+def sneak45(ctx: Context, duration = 1, rotation: f32 = None):
     "Sneaking while 45 strafing"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sneaking', True)
@@ -193,7 +220,7 @@ def sneak45(ctx, duration = 1, rotation: f32 = None):
     move(ctx)
 
 @command(aliases=['sns45'])
-def sneaksprint45(ctx, duration = 1, rotation: f32 = None):
+def sneaksprint45(ctx: Context, duration = 1, rotation: f32 = None):
     """
     Sneak, sprint, and 45 strafe on ground.
 
@@ -207,7 +234,7 @@ def sneaksprint45(ctx, duration = 1, rotation: f32 = None):
     move(ctx)
 
 @command(aliases=['w45'])
-def walk45(ctx, duration = 1, rotation: f32 = None):
+def walk45(ctx: Context, duration = 1, rotation: f32 = None):
     "Walk and 45 strafe on ground"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(1))
@@ -215,7 +242,7 @@ def walk45(ctx, duration = 1, rotation: f32 = None):
     move(ctx)
 
 @command(aliases=['s45'])
-def sprint45(ctx, duration = 1, rotation: f32 = None):
+def sprint45(ctx: Context, duration = 1, rotation: f32 = None):
     "Run and 45 strafe on ground"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sprinting', True)
@@ -224,7 +251,7 @@ def sprint45(ctx, duration = 1, rotation: f32 = None):
     move(ctx)
 
 @command(aliases=['sna'])
-def sneakair(ctx, duration = 1, rotation: f32 = None):
+def sneakair(ctx: Context, duration = 1, rotation: f32 = None):
     "Sneak while midair. In 1.20+, activating sneak is delayed for 1 tick."
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sneaking', True)
@@ -232,7 +259,7 @@ def sneakair(ctx, duration = 1, rotation: f32 = None):
     move(ctx)
 
 @command(aliases=['snsa'])
-def sneaksprintair(ctx, duration = 1, rotation: f32 = None):
+def sneaksprintair(ctx: Context, duration = 1, rotation: f32 = None):
     """
     Sneak and sprint while midair.
 
@@ -249,14 +276,14 @@ def sneaksprintair(ctx, duration = 1, rotation: f32 = None):
     move(ctx)
 
 @command(aliases=['wa'])
-def walkair(ctx, duration = 1, rotation: f32 = None):
+def walkair(ctx: Context, duration = 1, rotation: f32 = None):
     "Move midair without sprint"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('airborne', True)
     move(ctx)
 
 @command(aliases=['sa'])
-def sprintair(ctx, duration = 1, rotation: f32 = None):
+def sprintair(ctx: Context, duration = 1, rotation: f32 = None):
     "Move midair with sprint."
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sprinting', True)
@@ -264,7 +291,7 @@ def sprintair(ctx, duration = 1, rotation: f32 = None):
     move(ctx)
 
 @command(aliases=['sneakair45', 'sn45a', 'sna45'])
-def sneak45air(ctx, duration = 1, rotation: f32 = None):
+def sneak45air(ctx: Context, duration = 1, rotation: f32 = None):
     "Sneak and 45 strafe while midair"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sneaking', True)
@@ -274,7 +301,7 @@ def sneak45air(ctx, duration = 1, rotation: f32 = None):
     move(ctx)
 
 @command(aliases=['sneaksprintair45', 'sns45a', 'snsa45'])
-def sneaksprint45air(ctx, duration = 1, rotation: f32 = None):
+def sneaksprint45air(ctx: Context, duration = 1, rotation: f32 = None):
     """
     Sneak, sprint, and 45 while midair.
 
@@ -293,7 +320,7 @@ def sneaksprint45air(ctx, duration = 1, rotation: f32 = None):
     move(ctx)
 
 @command(aliases=['walkair45', 'w45a', 'wa45'])
-def walk45air(ctx, duration = 1, rotation: f32 = None):
+def walk45air(ctx: Context, duration = 1, rotation: f32 = None):
     "45 strafe midair without sprint"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(1))
@@ -302,7 +329,7 @@ def walk45air(ctx, duration = 1, rotation: f32 = None):
     move(ctx)
 
 @command(aliases=['sprintair45', 's45a', 'sa45'])
-def sprint45air(ctx, duration = 1, rotation: f32 = None):
+def sprint45air(ctx: Context, duration = 1, rotation: f32 = None):
     """
     45 strafe midair with sprint
     
@@ -316,14 +343,14 @@ def sprint45air(ctx, duration = 1, rotation: f32 = None):
     move(ctx)
 
 @command(aliases=['snj'])
-def sneakjump(ctx, duration = 1, rotation: f32 = None):
+def sneakjump(ctx: Context, duration = 1, rotation: f32 = None):
     "Jump while sneaking"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sneaking', True)
     jump(ctx)
 
 @command(aliases=['snsj'])
-def sneaksprintjump(ctx, duration = 1, rotation: f32 = None):
+def sneaksprintjump(ctx: Context, duration = 1, rotation: f32 = None):
     """
     Jump while sneaking and sprinting
     
@@ -335,13 +362,13 @@ def sneaksprintjump(ctx, duration = 1, rotation: f32 = None):
     jump(ctx)
 
 @command(aliases=['wj'])
-def walkjump(ctx, duration = 1, rotation: f32 = None):
+def walkjump(ctx: Context, duration = 1, rotation: f32 = None):
     "Jump without sprint"
     ctx.args.setdefault('forward', f32(1))
     jump(ctx)
 
 @command(aliases=['lwj'])
-def lwalkjump(ctx, duration = 1, rotation: f32 = None):
+def lwalkjump(ctx: Context, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(1))
 
@@ -351,7 +378,7 @@ def lwalkjump(ctx, duration = 1, rotation: f32 = None):
     jump(ctx, after_jump_tick = update)
 
 @command(aliases=['rwj'])
-def rwalkjump(ctx, duration = 1, rotation: f32 = None):
+def rwalkjump(ctx: Context, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(-1))
 
@@ -361,14 +388,14 @@ def rwalkjump(ctx, duration = 1, rotation: f32 = None):
     jump(ctx, after_jump_tick = update)
 
 @command(aliases=['sj'])
-def sprintjump(ctx, duration = 1, rotation: f32 = None):
+def sprintjump(ctx: Context, duration = 1, rotation: f32 = None):
     "Jump with sprint"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sprinting', True)
     jump(ctx)
 
 @command(aliases=['lsj'])
-def lsprintjump(ctx, duration = 1, rotation: f32 = None):
+def lsprintjump(ctx: Context, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(1))
     ctx.args.setdefault('sprinting', True)
@@ -379,7 +406,7 @@ def lsprintjump(ctx, duration = 1, rotation: f32 = None):
     jump(ctx, after_jump_tick = update)
 
 @command(aliases=['rsj'])
-def rsprintjump(ctx, duration = 1, rotation: f32 = None):
+def rsprintjump(ctx: Context, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(-1))
     ctx.args.setdefault('sprinting', True)
@@ -390,7 +417,7 @@ def rsprintjump(ctx, duration = 1, rotation: f32 = None):
     jump(ctx, after_jump_tick = update)
 
 @command(aliases=['snj45'])
-def sneakjump45(ctx, duration = 1, rotation: f32 = None):
+def sneakjump45(ctx: Context, duration = 1, rotation: f32 = None):
     "Sneak and jump while 45 strafing"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('sneaking', True)
@@ -399,7 +426,7 @@ def sneakjump45(ctx, duration = 1, rotation: f32 = None):
     jump(ctx)
 
 @command(aliases=['snsj45'])
-def sneaksprintjump45(ctx, duration = 1, rotation: f32 = None):
+def sneaksprintjump45(ctx: Context, duration = 1, rotation: f32 = None):
     """
     Jump while sneaking, sprinting, and 45 strafing.
     
@@ -419,7 +446,7 @@ def sneaksprintjump45(ctx, duration = 1, rotation: f32 = None):
     jump(ctx, after_jump_tick = update)
 
 @command(aliases=['wj45'])
-def walkjump45(ctx, duration = 1, rotation: f32 = None):
+def walkjump45(ctx: Context, duration = 1, rotation: f32 = None):
     "Jump and 45 strafe without sprint"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(1))
@@ -427,7 +454,7 @@ def walkjump45(ctx, duration = 1, rotation: f32 = None):
     jump(ctx)
 
 @command(aliases=['sj45'])
-def sprintjump45(ctx, duration = 1, rotation: f32 = None):
+def sprintjump45(ctx: Context, duration = 1, rotation: f32 = None):
     """
     Jump and 45 strafe with sprint.
 
@@ -447,7 +474,7 @@ def sprintjump45(ctx, duration = 1, rotation: f32 = None):
     jump(ctx, after_jump_tick = update)
 
 @command(aliases=['lsj45'])
-def lsprintjump45(ctx, duration = 1, rotation: f32 = None):
+def lsprintjump45(ctx: Context, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(1))
     ctx.args.setdefault('sprinting', True)
@@ -457,7 +484,7 @@ def lsprintjump45(ctx, duration = 1, rotation: f32 = None):
     jump(ctx)
 
 @command(aliases=['rsj45'])
-def rsprintjump45(ctx, duration = 1, rotation: f32 = None):
+def rsprintjump45(ctx: Context, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(-1))
     ctx.args.setdefault('sprinting', True)
@@ -467,7 +494,7 @@ def rsprintjump45(ctx, duration = 1, rotation: f32 = None):
     jump(ctx)
 
 @command(aliases=['snp'])
-def sneakpessi(ctx, duration = 1, delay = 1, rotation: f32 = None):
+def sneakpessi(ctx: Context, duration = 1, delay = 1, rotation: f32 = None):
 
     ctx.args['duration'] = delay
     jump(ctx)
@@ -479,7 +506,7 @@ def sneakpessi(ctx, duration = 1, delay = 1, rotation: f32 = None):
     move(ctx)
 
 @command(aliases=['wp'])
-def walkpessi(ctx, duration = 1, delay = 1, rotation: f32 = None):
+def walkpessi(ctx: Context, duration = 1, delay = 1, rotation: f32 = None):
 
     ctx.args['duration'] = delay
     jump(ctx)
@@ -490,7 +517,7 @@ def walkpessi(ctx, duration = 1, delay = 1, rotation: f32 = None):
     move(ctx)
 
 @command(aliases=['sp'])
-def sprintpessi(ctx, duration = 1, delay = 1, rotation: f32 = None):
+def sprintpessi(ctx: Context, duration = 1, delay = 1, rotation: f32 = None):
 
     ctx.args['duration'] = delay
     jump(ctx)
@@ -502,7 +529,7 @@ def sprintpessi(ctx, duration = 1, delay = 1, rotation: f32 = None):
     move(ctx)
 
 @command(aliases=['snp45'])
-def sneakpessi45(ctx, duration = 1, delay = 1, rotation: f32 = None):
+def sneakpessi45(ctx: Context, duration = 1, delay = 1, rotation: f32 = None):
 
     ctx.args['duration'] = delay
     jump(ctx)
@@ -516,7 +543,7 @@ def sneakpessi45(ctx, duration = 1, delay = 1, rotation: f32 = None):
     move(ctx)
 
 @command(aliases=['wp45'])
-def walkpessi45(ctx, duration = 1, delay = 1, rotation: f32 = None):
+def walkpessi45(ctx: Context, duration = 1, delay = 1, rotation: f32 = None):
 
     ctx.args['duration'] = delay
     jump(ctx)
@@ -529,7 +556,7 @@ def walkpessi45(ctx, duration = 1, delay = 1, rotation: f32 = None):
     move(ctx)
 
 @command(aliases=['sp45'])
-def sprintpessi45(ctx, duration = 1, delay = 1, rotation: f32 = None):
+def sprintpessi45(ctx: Context, duration = 1, delay = 1, rotation: f32 = None):
 
     ctx.args['duration'] = delay
     jump(ctx)
@@ -543,7 +570,7 @@ def sprintpessi45(ctx, duration = 1, delay = 1, rotation: f32 = None):
     move(ctx)
 
 @command(aliases=['forcemomentum', 'fmm'])
-def force_momentum(ctx, duration = 1, delay = 1, rotation: f32 = None):
+def force_momentum(ctx: Context, duration = 1, delay = 1, rotation: f32 = None):
     """
     Jump without sprint, then activate sprint midair.
 
@@ -561,7 +588,7 @@ def force_momentum(ctx, duration = 1, delay = 1, rotation: f32 = None):
     move(ctx)
 
 @command(aliases=['forcemomentum45', 'fmm45'])
-def force_momentum45(ctx, duration = 1, delay = 1, rotation: f32 = None):
+def force_momentum45(ctx: Context, duration = 1, delay = 1, rotation: f32 = None):
     """
     While 45 strafing, jump without sprint, then activate sprint midair.
 
@@ -581,23 +608,23 @@ def force_momentum45(ctx, duration = 1, delay = 1, rotation: f32 = None):
     move(ctx)
 
 @command(aliases=['st'])
-def stop(ctx, duration = 1):
+def stop(ctx: Context, duration = 1):
     "Inputless ticks while on the ground"
     move(ctx)
 
 @command(aliases=['sta'])
-def stopair(ctx, duration = 1):
+def stopair(ctx: Context, duration = 1):
     "Inputless ticks while airborne"
     ctx.args.setdefault('airborne', True)
     move(ctx)
 
 @command(aliases=['stj'])
-def stopjump(ctx, duration = 1):
+def stopjump(ctx: Context, duration = 1):
     "Inputless jump, `stj(x)` being equivalent to `st sta(x-1)`"
     jump(ctx)
 
 @command(aliases=['stfj'])
-def sprintstrafejump(ctx, duration = 1, rotation: f32 = None):
+def sprintstrafejump(ctx: Context, duration = 1, rotation: f32 = None):
     """
     It is NOT called "Shut The Fuck Jump".
 
@@ -616,7 +643,7 @@ def sprintstrafejump(ctx, duration = 1, rotation: f32 = None):
     jump(ctx, after_jump_tick = update)
 
 @command(aliases=['stfj45'])
-def sprintstrafejump45(ctx, duration = 1, rotation: f32 = None):
+def sprintstrafejump45(ctx: Context, duration = 1, rotation: f32 = None):
     """
     It is NOT called "Shut The Fuck Jump 45".
 
@@ -635,7 +662,7 @@ def sprintstrafejump45(ctx, duration = 1, rotation: f32 = None):
 
 ##### New water stuff ##### If anything goes wrong blame physiq not me :D
 @command(aliases=['wwt', 'wt', 'water'])
-def walkwater(ctx, duration = 1, rotation: f32 = None):
+def walkwater(ctx: Context, duration = 1, rotation: f32 = None):
     """
     `walkwater` and `sprintwater` are equivalent while in water, but beware of sprint air delay when exiting water.
     """
@@ -644,7 +671,7 @@ def walkwater(ctx, duration = 1, rotation: f32 = None):
     move(ctx)
 
 @command(aliases=['swt'])
-def sprintwater(ctx, duration = 1, rotation: f32 = None):
+def sprintwater(ctx: Context, duration = 1, rotation: f32 = None):
     """
     `walkwater` and `sprintwater` are equivalent while in water, but beware of sprint air delay when exiting water.
     """
@@ -654,13 +681,13 @@ def sprintwater(ctx, duration = 1, rotation: f32 = None):
     move(ctx)
 
 @command(aliases=['stwt'])
-def stopwater(ctx, duration = 1):
+def stopwater(ctx: Context, duration = 1):
     "Inputless tick while in water"
     ctx.args.setdefault('water', True)
     move(ctx)
 
 @command(aliases=['wwt45', 'water45', 'wt45'])
-def walkwater45(ctx, duration = 1, rotation: f32 = None):
+def walkwater45(ctx: Context, duration = 1, rotation: f32 = None):
     """
     `walkwater45` and `sprintwater45` are equivalent while in water, but beware of sprint air delay when exiting water.
     """
@@ -670,7 +697,7 @@ def walkwater45(ctx, duration = 1, rotation: f32 = None):
     ctx.args['function_offset'] = f32(45)
 
 @command(aliases=['swt45'])
-def sprintwater45(ctx, duration = 1, rotation: f32 = None):
+def sprintwater45(ctx: Context, duration = 1, rotation: f32 = None):
     """
     `waterwalk45` and `watersprint45` are equivalent while in water, but beware of sprint air delay when exiting water.
     """
@@ -682,7 +709,7 @@ def sprintwater45(ctx, duration = 1, rotation: f32 = None):
     move(ctx)
 
 @command(aliases=['snwt'])
-def sneakwater(ctx, duration = 1, rotation: f32 = None):
+def sneakwater(ctx: Context, duration = 1, rotation: f32 = None):
     "Sneak while in water"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('water', True)
@@ -690,7 +717,7 @@ def sneakwater(ctx, duration = 1, rotation: f32 = None):
     move(ctx)
 
 @command(aliases=['snwt45'])
-def sneakwater45(ctx, duration = 1, rotation: f32 = None):
+def sneakwater45(ctx: Context, duration = 1, rotation: f32 = None):
     "Sneak and 45 while in water"
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(1))
@@ -700,7 +727,7 @@ def sneakwater45(ctx, duration = 1, rotation: f32 = None):
     move(ctx)
 
 @command(aliases=['snswt'])
-def sneaksprintwater(ctx, duration = 1, rotation: f32 = None):
+def sneaksprintwater(ctx: Context, duration = 1, rotation: f32 = None):
     """
     Sneak and sprint while in water
 
@@ -715,7 +742,7 @@ def sneaksprintwater(ctx, duration = 1, rotation: f32 = None):
     move(ctx)
 
 @command(aliases=['snswt45'])
-def sneaksprintwater45(ctx, duration = 1, rotation: f32 = None):
+def sneaksprintwater45(ctx: Context, duration = 1, rotation: f32 = None):
     """
     Sneak, sprint, and 45 strafe while in water
 
@@ -733,7 +760,7 @@ def sneaksprintwater45(ctx, duration = 1, rotation: f32 = None):
 ##### End of new water stuff ######
 
 @command(name='|')
-def reset_position(ctx):
+def reset_position(ctx: Context):
     """
     Alias of `setposx(0) setposz(0)`
 
@@ -745,7 +772,7 @@ def reset_position(ctx):
     ctx.player.modz = 0
 
 @command(name='b')
-def output_blocks(ctx):
+def output_blocks(ctx: Context):
     """
     Outputs the players position in terms of blocks
     """
@@ -753,7 +780,7 @@ def output_blocks(ctx):
     ctx.player.modz += f32(copysign(0.6, ctx.player.z))
 
 @command(name='mm')
-def output_mm(ctx):
+def output_mm(ctx: Context):
     """
     Outputs the players position in terms of momentum
     """
@@ -761,73 +788,73 @@ def output_mm(ctx):
     ctx.player.modz -= f32(copysign(0.6, ctx.player.z))
 
 @command(aliases=['$'])
-def zero(ctx):
+def zero(ctx: Context):
     ctx.player.modx -= ctx.player.x
     ctx.player.modz -= ctx.player.z
 
 @command()
-def zerox(ctx):
+def zerox(ctx: Context):
     ctx.player.modx -= ctx.player.x
 
 @command()
-def zeroz(ctx):
+def zeroz(ctx: Context):
     ctx.player.modz -= ctx.player.z
 
 @command(aliases = ['vel'])
-def setv(ctx, vx = 0.0, vz = 0.0):
+def setv(ctx: Context, vx = 0.0, vz = 0.0):
     "Sets the player's velocity"
     ctx.player.vx = vx
     ctx.player.vz = vz
 
 @command(aliases = ['vx'])
-def setvx(ctx, vx = 0.0):
+def setvx(ctx: Context, vx = 0.0):
     "Sets the player's x velocity"
     ctx.player.vx = vx
 
 @command(aliases = ['vz'])
-def setvz(ctx, vz = 0.0):
+def setvz(ctx: Context, vz = 0.0):
     "Sets the player's z velocity"
     ctx.player.vz = vz
 
 @command(aliases = ['pos', 'xz'])
-def setpos(ctx, x = 0.0, z = 0.0):
+def setpos(ctx: Context, x = 0.0, z = 0.0):
     "Sets the player's position"
     ctx.player.x = x
     ctx.player.z = z
 
 @command(aliases = ['posx', 'x'])
-def setposx(ctx, x = 0.0):
+def setposx(ctx: Context, x = 0.0):
     "Sets the player's x position"
     ctx.player.x = x
 
 @command(aliases = ['posz', 'z'])
-def setposz(ctx, z = 0.0):
+def setposz(ctx: Context, z = 0.0):
     "Sets the player's z position"
     ctx.player.z = z
 
 @command()
-def setvec(ctx, speed = 0.0, angle = 0.0):
+def setvec(ctx: Context, speed = 0.0, angle = 0.0):
     "Sets the players speed and angle. A negative speed will flip the angle 180 degrees"
     ctx.player.vx = -speed * sin(radians(angle))
     ctx.player.vz = speed * cos(radians(angle))
 
 @command()
-def speed(ctx, speed = 0):
+def speed(ctx: Context, speed = 0):
     "Sets the player's speed potion amplifier (range 0 to 256)"
     ctx.player.speed = speed
 
 @command(aliases = ['slow'])
-def slowness(ctx, slowness = 0):
+def slowness(ctx: Context, slowness = 0):
     "Sets the player's slow potion amplifier (range 0 to 256). Slow 7 and beyond are equivalent and result in a speed multiplier of 0 regardless of speed (affects ground movement)."
     ctx.player.slowness = slowness
 
 @command(aliases = ['slip'])
-def setslip(ctx, slip = f32(0)):
+def setslip(ctx: Context, slip = f32(0)):
     "Sets the player's default ground slipperiness"
     ctx.player.ground_slip = slip
 
 @command(aliases = ['a'])
-def angles(ctx, angles = -1):
+def angles(ctx: Context, angles = -1):
     """
     Approximates how the game would behave if Minecraft had `angles` significant angles.
     
@@ -837,12 +864,12 @@ def angles(ctx, angles = -1):
     ctx.player.angles = angles
 
 @command()
-def fastmath(ctx):
+def fastmath(ctx: Context):
     """Changes the simulation to use old optifine fast math. An alias of `angles(4096)`."""
     ctx.player.angles = 4096
 
 @command()
-def inertia(ctx, inertia = 0.005):
+def inertia(ctx: Context, inertia = 0.005):
     """
     Sets the inertia threshold.
     
@@ -852,55 +879,57 @@ def inertia(ctx, inertia = 0.005):
     ctx.player.inertia_threshold = inertia
 
 @command(aliases = ['pre'])
-def precision(ctx, precision = 6):
+def precision(ctx: Context, precision = 6):
     "Sets the number of digits to truncate the output"
     ctx.print_precision = precision
 
 @command(aliases = ['facing', 'face', 'f'])
-def rotation(ctx, angle = f32(0)):
+def rotation(ctx: Context, angle = f32(0)):
     "Sets the player's default facing to `angle`"
     ctx.player.default_rotation = angle
 
 @command(aliases = ['offrotation', 'or', 'offsetfacing', 'of'])
-def offsetrotation(ctx, angle = f32(0)):
+def offsetrotation(ctx: Context, angle = f32(0)):
     "Sets the player's rotation offset to `angle`. This will add `angle` to its default rotation for each tick, but it will not set the new facing to be the default rotation."
     ctx.player.rotation_offset = angle
 
 @command(aliases = ['turn'])
-def turn(ctx, angle = f32(0)):
+def turn(ctx: Context, angle = f32(0)):
     "Turn the player `angle` degrees AND set that new rotation to be default"
     ctx.player.default_rotation += angle
 
 @command(aliases = ['ssand', 'ss'])
-def soulsand(ctx, soulsand = 1):
+def soulsand(ctx: Context, soulsand = 1):
     ctx.player.soulsand = soulsand
 
 @command(aliases = ['aq', 'qa'])
-def anglequeue(ctx):
+def anglequeue(ctx: Context):
     "Queues angles, each subsequent tick, the player sets the next angle in queue to be the default angle it faces."
+    
     def to_f32(val):
         try:
-            return f32(val)
-        except:
+            return f32(parsers.safe_eval(val, get_local_env(ctx)))
+        except Exception as e:
+            print(e)
             raise SimError(f'Error in `anglequeue` converting `{val}` to type `rotation:float32`')
     ctx.player.rotation_queue.extend(map(to_f32, ctx.pos_args))
 
 @command(aliases = ['tq', 'qt'])
-def turnqueue(ctx):
+def turnqueue(ctx: Context):
     "Queues angles, each subsequent tick, the player adds the next angle in queue to its default rotation AND sets it to be the default rotation."
     def to_f32(val):
         try:
-            return f32(val)
+            return f32(parsers.safe_eval(val, get_local_env(ctx)))
         except:
             raise SimError(f'Error in `turnqueue` converting `{val}` to type `rotation:float32`')
     ctx.player.turn_queue.extend(map(to_f32, ctx.pos_args))
 
 @command()
-def macro(ctx, name = 'macro'):
+def macro(ctx: Context, name = 'macro'):
     "Makes an mpk (not cyv) macro file named `name.csv`"
     ctx.macro = name
 
-def zeroed_formatter(ctx, num, zero):
+def zeroed_formatter(ctx: Context, num, zero):
     if zero is None:
         return ctx.format(num)
     
@@ -912,8 +941,9 @@ def zeroed_formatter(ctx, num, zero):
     
     return f'{ctx.format(zero)} {formatted_offset}'
 
+
 @command()
-def outx(ctx, zero: f64 = None, label: str = "X"):
+def outx(ctx: Context, zero: f64 = None, label: str = "X"):
     """
     Outputs the player's x displacement.
 
@@ -924,8 +954,9 @@ def outx(ctx, zero: f64 = None, label: str = "X"):
     `zero` will also be truncated by the current decimal precision.
     """
     ctx.out += f'{label.strip()}: {zeroed_formatter(ctx, ctx.player.x, zero)}\n'
+
 @command()
-def outz(ctx, zero: f64 = None, label: str = "Z"):
+def outz(ctx: Context, zero: f64 = None, label: str = "Z"):
     """
     Outputs the player's z displacement.
 
@@ -938,7 +969,7 @@ def outz(ctx, zero: f64 = None, label: str = "Z"):
     ctx.out += f'{label.strip()}: {zeroed_formatter(ctx, ctx.player.z, zero)}\n'
 
 @command()
-def outvx(ctx, zero: f64 = None, label: str = "Vx"):
+def outvx(ctx: Context, zero: f64 = None, label: str = "Vx"):
     """
     Outputs the player's x velocity.
 
@@ -950,7 +981,7 @@ def outvx(ctx, zero: f64 = None, label: str = "Vx"):
     """
     ctx.out += f'{label.strip()}: {zeroed_formatter(ctx, ctx.player.vx, zero)}\n'
 @command()
-def outvz(ctx, zero: f64 = None, label: str = "Vz"):
+def outvz(ctx: Context, zero: f64 = None, label: str = "Vz"):
     """
     Outputs the player's z velocity.
 
@@ -963,7 +994,7 @@ def outvz(ctx, zero: f64 = None, label: str = "Vz"):
     ctx.out += f'{label.strip()}: {zeroed_formatter(ctx, ctx.player.vz, zero)}\n'
 
 @command(name='outxmm', aliases=['xmm'])
-def x_mm(ctx, zero: f64 = None, label: str = "X mm"):
+def x_mm(ctx: Context, zero: f64 = None, label: str = "X mm"):
     """
     Outputs the player's x position in terms of momentum.
 
@@ -975,7 +1006,7 @@ def x_mm(ctx, zero: f64 = None, label: str = "X mm"):
     """
     ctx.out += f'{label.strip()}: {zeroed_formatter(ctx, dist_to_mm(ctx.player.x), zero)}\n'
 @command(name='outzmm', aliases=['zmm'])
-def z_mm(ctx, zero: f64 = None, label: str = "Z mm"):
+def z_mm(ctx: Context, zero: f64 = None, label: str = "Z mm"):
     """
     Outputs the player's z position in terms of momentum.
 
@@ -988,7 +1019,7 @@ def z_mm(ctx, zero: f64 = None, label: str = "Z mm"):
     ctx.out += f'{label.strip()}: {zeroed_formatter(ctx, dist_to_mm(ctx.player.z), zero)}\n'
 
 @command(name='outxb', aliases=['xb'])
-def x_b(ctx, zero: f64 = None, label: str = "X b"):
+def x_b(ctx: Context, zero: f64 = None, label: str = "X b"):
     """
     Outputs the player's x position in terms of blocks.
 
@@ -1000,7 +1031,7 @@ def x_b(ctx, zero: f64 = None, label: str = "X b"):
     """
     ctx.out += f'{label.strip()}: {zeroed_formatter(ctx, dist_to_b(ctx.player.x), zero)}\n'
 @command(name='outzb', aliases=['zb'])
-def z_b(ctx, zero: f64 = None, label: str = "Z b"):
+def z_b(ctx: Context, zero: f64 = None, label: str = "Z b"):
     """
     Outputs the player's z position in terms of blocks.
 
@@ -1013,7 +1044,7 @@ def z_b(ctx, zero: f64 = None, label: str = "Z b"):
     ctx.out += f'{label.strip()}: {zeroed_formatter(ctx, dist_to_b(ctx.player.z), zero)}\n'
     
 @command(aliases = ['speedvec', 'vector', 'vec'])
-def speedvector(ctx):
+def speedvector(ctx: Context):
     """Displays the magnitude and direction of the player's speed vector."""
     speed = sqrt(ctx.player.vx**2 + ctx.player.vz**2)
     angle = degrees(atan2(-ctx.player.vx, ctx.player.vz))
@@ -1021,16 +1052,18 @@ def speedvector(ctx):
     ctx.out += f'Angle: {ctx.format(angle)}\n'
 
 @command(aliases = ['sprintdelay', 'sdel'])
-def air_sprint_delay(ctx, sprint_delay = True):
+def air_sprint_delay(ctx: Context, sprint_delay = True):
     """
     Change the air sprint delay, which is present in 1.19.3-
     
     If air sprint delay is toggled on, activating and deactivating sprint in midair is 1 tick delayed.
+
+    To toggle off, use sdel(false), sdel(f), or sdel(0)
     """
     ctx.player.air_sprint_delay = sprint_delay
 
 @command(aliases = ['poss', 'zposs'])
-def possibilities(ctx, inputs = 'sj45(100)', mindistance: float = 0.01, offset:f32 = f32(0.6), miss: float = None):
+def possibilities(ctx: Context, inputs = 'sj45(100)', mindistance: float = 0.01, offset:f32 = f32(0.6), miss: float = None):
     """
     Performs `inputs` and displays ticks where z is within `mindistance` above a pixel.
 
@@ -1041,13 +1074,18 @@ def possibilities(ctx, inputs = 'sj45(100)', mindistance: float = 0.01, offset:f
     Avoid = 0.0
     Neo = -0.6
 
-    The `mindistance` must be less than a pixel (0.0625).
+    The `mindistance` must be less than or equal to a pixel (0.0625).
 
     If `miss` is a nonzero number, displays ticks where x is within `miss` below a pixel.
+
+    `mindistance` must also be less than or equal to a pixel.
     """
     mindistance = abs(mindistance) # only dealing with positive offsets
-    if mindistance >= 0.0625:
-        raise SimError(f"Minimum distance must be less than 0.0625, got {mindistance} instead")
+    if mindistance > 0.0625:
+        raise SimError(f"Minimum distance must be less than or equal to 0.0625, got {mindistance} instead")
+    miss = abs(miss) # only dealing with negative misses (going towards the positive z direction)
+    if miss > 0.0625:
+        raise SimError(f"Miss distance must be less than or equal to 0.0625, got {miss} instead")
     
     old_move = ctx.player.move
 
@@ -1062,12 +1100,12 @@ def possibilities(ctx, inputs = 'sj45(100)', mindistance: float = 0.01, offset:f
         jump_blocks = jump_pixels * 0.0625 * copysign(1, self.z)
         poss_by = (abs(player_blocks) - abs(jump_blocks)) * copysign(1, self.z)
 
-        if abs(poss_by) < mindistance:
+        if abs(poss_by) <= mindistance:
             ctx.out += f'Tick {tick}: {ctx.format(poss_by)} ({ctx.format(jump_blocks)}b)\n'
         elif miss:
             jump_blocks += 0.0625 * copysign(1, jump_blocks)
             miss_by = (abs(player_blocks) - abs(jump_blocks)) * copysign(1, self.z)
-            if abs(miss_by) < miss:
+            if abs(miss_by) <= miss:
                 ctx.out += f'Tick {tick}: {ctx.format(miss_by)} miss from {ctx.format(jump_blocks)}b\n'
         
         tick += 1
@@ -1083,7 +1121,7 @@ def possibilities(ctx, inputs = 'sj45(100)', mindistance: float = 0.01, offset:f
     ctx.player.move = old_move
 
 @command(aliases = ['xposs'])
-def xpossibilities(ctx, inputs = 'sj45(100)', mindistance: float = 0.01, offset:f32 = f32(0.6), miss: float = None):
+def xpossibilities(ctx: Context, inputs = 'sj45(100)', mindistance: float = 0.01, offset:f32 = f32(0.6), miss: float = None):
     """
     Performs `inputs` and displays ticks where x is within `mindistance` above a pixel.
 
@@ -1094,13 +1132,18 @@ def xpossibilities(ctx, inputs = 'sj45(100)', mindistance: float = 0.01, offset:
     Avoid = 0.0
     Neo = -0.6
 
-    The `mindistance` must be less than a pixel (0.0625).
+    The `mindistance` must be less than or equal to a pixel (0.0625).
 
     If `miss` is a nonzero number, displays ticks where x is within `miss` below a pixel.
+
+    `mindistance` must also be less than or equal to a pixel.
     """
     mindistance = abs(mindistance) # only dealing with positive offsets
-    if mindistance >= 0.0625:
-        raise SimError(f"Minimum distance must be less than 0.0625, got {mindistance} instead")
+    if mindistance > 0.0625:
+        raise SimError(f"Minimum distance must be less than or equal to 0.0625, got {mindistance} instead")
+    miss = abs(miss) # only dealing with negative misses (going towards the positive x direction)
+    if miss > 0.0625:
+        raise SimError(f"Miss distance must be less than or equal to 0.0625, got {miss} instead")
     
     old_move = ctx.player.move
 
@@ -1115,12 +1158,12 @@ def xpossibilities(ctx, inputs = 'sj45(100)', mindistance: float = 0.01, offset:
         jump_blocks = jump_pixels * 0.0625 * copysign(1, self.z)
         poss_by = (abs(player_blocks) - abs(jump_blocks)) * copysign(1, self.z)
 
-        if abs(poss_by) < mindistance:
+        if abs(poss_by) <= mindistance:
             ctx.out += f'Tick {tick}: {ctx.format(poss_by)} ({ctx.format(jump_blocks)}b)\n'
         elif miss:
             jump_blocks += 0.0625 * copysign(1, jump_blocks)
             miss_by = (abs(player_blocks) - abs(jump_blocks)) * copysign(1, self.z)
-            if abs(miss_by) < miss:
+            if abs(miss_by) <= miss:
                 ctx.out += f'Tick {tick}: {ctx.format(miss_by)} miss from {ctx.format(jump_blocks)}b\n'
         
         tick += 1
@@ -1136,7 +1179,7 @@ def xpossibilities(ctx, inputs = 'sj45(100)', mindistance: float = 0.01, offset:
     ctx.player.move = old_move
     
 @command(aliases=['ji'])
-def jumpinfo(ctx, z = 0.0, x = 0.0):
+def jumpinfo(ctx: Context, z = 0.0, x = 0.0):
     """
     Displays the dimensions, real and block distance, and angle of the shortest distance for a distance jump.
     """
@@ -1170,7 +1213,7 @@ def jumpinfo(ctx, z = 0.0, x = 0.0):
     ctx.out += '\n'.join(lines) + '\n'
 
 @command()
-def duration(ctx, floor = 0.0, ceiling = 0.0, inertia = 0.005, jump_boost = 0):
+def duration(ctx: Context, floor = 0.0, ceiling = 0.0, inertia = 0.005, jump_boost = 0):
     """
     Displays the duration of a `floor` jump.
     """
@@ -1201,7 +1244,7 @@ def duration(ctx, floor = 0.0, ceiling = 0.0, inertia = 0.005, jump_boost = 0):
     ctx.out += f'Duration of a {floor}b{ceiling} jump:\n**{ticks} ticks**\n'
 
 @command()
-def height(ctx, duration = 12, ceiling = 0.0, inertia = 0.005, jump_boost = 0):
+def height(ctx: Context, duration = 12, ceiling = 0.0, inertia = 0.005, jump_boost = 0):
     """
     Displays the player's height `duration` ticks after jumping.
     """
@@ -1226,7 +1269,7 @@ def height(ctx, duration = 12, ceiling = 0.0, inertia = 0.005, jump_boost = 0):
     ctx.out += (f'Height after {duration} ticks{ceiling}:\n**{round(y, 6)}**\n')
 
 @command()
-def blip(ctx, blips = 1, blip_height = 0.0625, init_height: f64 = None, init_vy: f64 = None, inertia = 0.005, jump_boost = 0):
+def blip(ctx: Context, blips = 1, blip_height = 0.0625, init_height: f64 = None, init_vy: f64 = None, inertia = 0.005, jump_boost = 0):
     """
     Calculates the heights of each blip while blipping.
 
@@ -1293,7 +1336,7 @@ def blip(ctx, blips = 1, blip_height = 0.0625, init_height: f64 = None, init_vy:
     
     ctx.out += out
 
-def inv_helper(ctx, transform, goal_x, goal_z, strat):
+def inv_helper(ctx: Context, transform, goal_x, goal_z, strat):
 
     # Perform the first simulation
     ctx1 = ctx.child()
@@ -1324,7 +1367,7 @@ def inv_helper(ctx, transform, goal_x, goal_z, strat):
     return vx, vz
 
 @command(aliases=['zbwmm', 'bwmm'])
-def z_bwmm(ctx, mm = 1.0, strat = 'sj45(12)'):
+def z_bwmm(ctx: Context, mm = 1.0, strat = 'sj45(12)'):
     """
     Performs `strat` with an initial speed such that `mm`bm is covered while performing it.
 
@@ -1332,7 +1375,8 @@ def z_bwmm(ctx, mm = 1.0, strat = 'sj45(12)'):
 
     By default, it assumes the player starts on the ground. Prefix it with `sta` to indicate starting while midair, or `stwt` to indicate starting in water. 
     
-    Example: `stopair zbwmm(1, sprintjump(6))`
+    Example: stopair zbwmm(1, sprintjump(6))
+
     """
 
     vx, vz = inv_helper(ctx, mm_to_dist, None, mm, strat)
@@ -1341,7 +1385,7 @@ def z_bwmm(ctx, mm = 1.0, strat = 'sj45(12)'):
     ctx.pre_out += f'MM: {ctx.format(dist_to_mm(ctx.player.z))}\n'
 
 @command(aliases=['zinv', 'inv'])
-def z_inv(ctx, goal = 1.6, strat = 'sj45(12)'):
+def z_inv(ctx: Context, goal = 1.6, strat = 'sj45(12)'):
     """
     Performs `strat` with an initial speed such that `goal` is covered while performing it.
 
@@ -1349,7 +1393,8 @@ def z_inv(ctx, goal = 1.6, strat = 'sj45(12)'):
 
     By default, it assumes the player starts on the ground. Prefix it with `sta` to indicate starting while midair, or `stwt` to indicate starting in water. 
     
-    Example: `zinv(1, fmm45(12) sprint45)`
+    Example: zinv(1, fmm45(12) sprint45)
+
     """
 
     vx, vz = inv_helper(ctx, dist_to_dist, None, goal, strat)
@@ -1358,7 +1403,7 @@ def z_inv(ctx, goal = 1.6, strat = 'sj45(12)'):
     ctx.pre_out += f'Dist: {ctx.format(ctx.player.z)}\n'
 
 @command(aliases=['zspeedreq', 'speedreq'])
-def z_speedreq(ctx, blocks = 5.0, strat = 'sj45(12)'):
+def z_speedreq(ctx: Context, blocks = 5.0, strat = 'sj45(12)'):
     """
     Performs `strat` with an initial speed such that `blocks`b is covered while performing it.
 
@@ -1366,7 +1411,8 @@ def z_speedreq(ctx, blocks = 5.0, strat = 'sj45(12)'):
 
     By default, it assumes the player starts on the ground. Prefix it with `sta` to indicate starting while midair, or `stwt` to indicate starting in water. 
     
-    Example: `stopair zspeedreq(5, sprintjump45(14))`
+    Example: stopair zspeedreq(5, sprintjump45(14))
+
     """
 
     vx, vz = inv_helper(ctx, b_to_dist, None, blocks, strat)
@@ -1375,7 +1421,7 @@ def z_speedreq(ctx, blocks = 5.0, strat = 'sj45(12)'):
     ctx.pre_out += f'Blocks: {ctx.format(dist_to_b(ctx.player.z))}\n'
 
 @command(aliases=['xbwmm'])
-def x_bwmm(ctx, mm = 1.0, strat = 'sj45(12)'):
+def x_bwmm(ctx: Context, mm = 1.0, strat = 'sj45(12)'):
     """A version of bwmm that optimizes x instead of z."""
 
     vx, vz = inv_helper(ctx, mm_to_dist, mm, None, strat)
@@ -1384,7 +1430,7 @@ def x_bwmm(ctx, mm = 1.0, strat = 'sj45(12)'):
     ctx.pre_out += f'MM: {ctx.format(dist_to_mm(ctx.player.x))}\n'
 
 @command(aliases=['xinv'])
-def x_inv(ctx, goal = 1.6, strat = 'sj45(12)'):
+def x_inv(ctx: Context, goal = 1.6, strat = 'sj45(12)'):
     """A version of inv that optimizes x instead of z."""
 
     vx, vz = inv_helper(ctx, dist_to_dist, goal, None, strat)
@@ -1393,7 +1439,7 @@ def x_inv(ctx, goal = 1.6, strat = 'sj45(12)'):
     ctx.pre_out += f'Dist: {ctx.format(ctx.player.x)}\n'
 
 @command(aliases=['xspeedreq'])
-def x_speedreq(ctx, blocks = 5.0, strat = 'sj45(12)'):
+def x_speedreq(ctx: Context, blocks = 5.0, strat = 'sj45(12)'):
     """A version of speedreq that optimizes x instead of z."""
 
     vx, vz = inv_helper(ctx, b_to_dist, blocks, None, strat)
@@ -1402,7 +1448,7 @@ def x_speedreq(ctx, blocks = 5.0, strat = 'sj45(12)'):
     ctx.pre_out += f'Blocks: {ctx.format(dist_to_b(ctx.player.x))}\n'
 
 @command(aliases=['xzbwmm'])
-def xz_bwmm(ctx, x_mm = 1.0, z_mm = 1.0, strat = 'sj45(12)'):
+def xz_bwmm(ctx: Context, x_mm = 1.0, z_mm = 1.0, strat = 'sj45(12)'):
     """A version of bwmm that optimizes both x and z."""
 
     vx, vz = inv_helper(ctx, mm_to_dist, x_mm, z_mm, strat)
@@ -1411,7 +1457,7 @@ def xz_bwmm(ctx, x_mm = 1.0, z_mm = 1.0, strat = 'sj45(12)'):
     ctx.pre_out += f'MM: {ctx.format(dist_to_mm(ctx.player.x))}/{ctx.format(dist_to_mm(ctx.player.z))}\n'
 
 @command(aliases=['xzinv'])
-def xz_inv(ctx, x_goal = 1.6, z_goal = 1.6, strat = 'sj45(12)'):
+def xz_inv(ctx: Context, x_goal = 1.6, z_goal = 1.6, strat = 'sj45(12)'):
     """A version of inv that optimizes both x and z."""
 
     vx, vz = inv_helper(ctx, dist_to_dist, x_goal, z_goal, strat)
@@ -1420,7 +1466,7 @@ def xz_inv(ctx, x_goal = 1.6, z_goal = 1.6, strat = 'sj45(12)'):
     ctx.pre_out += f'Dist: {ctx.format(ctx.player.x)}/{ctx.format(ctx.player.z)}\n'
 
 @command(aliases=['xzspeedreq'])
-def xz_speedreq(ctx, x_blocks = 3.0, z_blocks = 4.0, strat = 'sj45(12)'):
+def xz_speedreq(ctx: Context, x_blocks = 3.0, z_blocks = 4.0, strat = 'sj45(12)'):
     """A version of speedreq that optimizes both x and z."""
 
     vx, vz = inv_helper(ctx, b_to_dist, x_blocks, z_blocks, strat)
@@ -1429,7 +1475,7 @@ def xz_speedreq(ctx, x_blocks = 3.0, z_blocks = 4.0, strat = 'sj45(12)'):
     ctx.pre_out += f'Blocks: {ctx.format(dist_to_b(ctx.player.x))}/{ctx.format(dist_to_b(ctx.player.z))}\n'
 
 @command(aliases=['angle', 'ai'])
-def angleinfo(ctx, angle = f32(0.0), mode = 'vanilla'):
+def angleinfo(ctx: Context, angle = f32(0.0), mode = 'vanilla'):
     """
     Get the trig value, significant angle, sin table index, and normal of some angle.
     Mode can be: ['vanilla', 'optifine']
@@ -1478,7 +1524,7 @@ def angleinfo(ctx, angle = f32(0.0), mode = 'vanilla'):
     ctx.out += '```'
 
 @command()
-def help(ctx, cmd_name = 'help'):
+def help(ctx: Context, cmd_name = 'help'):
     """
     Get help with a function by displaying it's name, aliases, arguments, and defaults.
     arg_name: data_type = default_value
@@ -1508,7 +1554,7 @@ def help(ctx, cmd_name = 'help'):
     ctx.out += f'\nArgs:\n{newln.join(params)}```\n'
 
 @command(aliases=['print'])
-def println(ctx, string: str = "\n"):
+def println(ctx: Context, string: str = "\n"):
     """
     Print any basic text to your heart's desire. To print commas, place a \ before the comma.
 
@@ -1516,17 +1562,10 @@ def println(ctx, string: str = "\n"):
     
     Pings and links will not print.
     """
-    link_regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
-    result = re.findall(link_regex, string)
-    if result and result[0]:
-        raise SimError(f"Looks like you're trying to print some links. For safety reasons (and for the convenience of {random.randint(100,1000000)} electrons), I cannot print this.")
-    
-    # if ctx.args['reverse']:
-    #     string = "".join([x for x in reversed(string)])
     ctx.out += string + "\n"
 
 @command(aliases=['ver','v'])
-def version(ctx, string: str = "1.8"):
+def version(ctx: Context, string: str = "1.8"):
     """
     Sets the version of the simulation. This can toggle the appropriate functions for the inputted version, namely sprint air delay and inertia.
 
@@ -1557,7 +1596,7 @@ def version(ctx, string: str = "1.8"):
         ctx.player.air_sprint_delay = False
 
 @command(aliases=["lang"])
-def language(ctx, string: str = "english"):
+def language(ctx: Context, string: str = "english"):
     """
     Did you really think this would be implemented...
     """
