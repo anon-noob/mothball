@@ -39,6 +39,21 @@ bot = Mothball(command_prefix=command_prefix, intents=intents, help_command=None
 async def help(ctx):
     await ctx.send('Read the wiki!\n<https://github.com/anon-noob/mothball/wiki#welcome-to-the-mothball-wiki>\n(Original Mothball by CyrenArkade)')
 
+@bot.command()
+async def version(ctx):
+    v = bot.params['version']
+    s = f"""Mothball version {v}
+Recent changes:
+- A mini wiki has been created to document all simulation functions (type `;help`)
+- Texts are now formatted so you can use curly braces to evaluate anything inside {'{}.'}
+  - For example `outz(label=greater than {{0.0625-0.001}})` would result in `greater than 0.0615: 0`
+- `var()` works properly now and converts to the appriopiate datatype instead of just a string
+- More detailed error messages.
+- **Bug Fix:** Expressions work inside `anglequeue` and `turnqueue`. Now you can do `aq(1, 1+1, 1+1+1)`.
+- **Bonus Addon:** Multiplication is allowed (but not exponents).
+"""
+    await ctx.send(s)
+
 if __name__ == '__main__':
 
     with open('params.json', 'r') as input:
