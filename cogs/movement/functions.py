@@ -1085,8 +1085,8 @@ def possibilities(ctx: Context, inputs = 'sj45(100)', mindistance: float = 0.01,
         raise SimError(f"Minimum distance must be less than or equal to 0.0625, got {mindistance} instead")
     if miss is not None: # only dealing with negative misses (going towards the positive z direction)
         miss = abs(miss)
-    if miss > 0.0625:
-        raise SimError(f"Miss distance must be less than or equal to 0.0625, got {miss} instead")
+        if miss > 0.0625:
+            raise SimError(f"Miss distance must be less than or equal to 0.0625, got {miss} instead")
     
     old_move = ctx.player.move
 
@@ -1144,8 +1144,8 @@ def xpossibilities(ctx: Context, inputs = 'sj45(100)', mindistance: float = 0.01
         raise SimError(f"Minimum distance must be less than or equal to 0.0625, got {mindistance} instead")
     if miss is not None: # only dealing with negative misses (going towards the positive x direction)
         miss = abs(miss)
-    if miss > 0.0625:
-        raise SimError(f"Miss distance must be less than or equal to 0.0625, got {miss} instead")
+        if miss > 0.0625:
+            raise SimError(f"Miss distance must be less than or equal to 0.0625, got {miss} instead")
     
     old_move = ctx.player.move
 
