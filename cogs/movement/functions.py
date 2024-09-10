@@ -127,6 +127,98 @@ def get_local_env(ctx: Context):
         local_env.update(env)
     return local_env 
 
+def colorize_number(number, remove_negative = False):
+    if float(number) < 0: # negative (red)
+        return f'[0m{"-" if not remove_negative else ""}[31m{number[1:]}'
+    else: # positive (green)
+        return f'[32m{number}'
+
+def add_to_pre_output_as_normal_string(ctx: Context, string = ''):
+    """
+    Handles adding to the pre outout (`ctx.pre_out`) which is anything that should be displayed first on top before standard output.
+    """
+    ctx.adding_pre_output = False
+    ctx.pre_out += string + '\n'
+
+    # For noncolored pre output as backup
+    ctx.uncolored_pre_out += f"{string}\n"
+
+def add_to_pre_output(ctx: Context, label = None, string = '', label_color = "cyan"):
+    label_colors = {
+        "gray": 30,
+        "yellow": 33,
+        "blue": 34,
+        "pink": 35,
+        "cyan": 36,
+        "white": 0
+    }
+
+    # For noncolored pre output as backup
+    ctx.uncolored_pre_out += f"{label}: {string}\n"
+
+    output = ""
+    if ctx.adding_pre_output == False:
+        output += "```ansi\n"
+        ctx.adding_pre_output = True
+    
+    elif ctx.adding_pre_output == True and ctx.pre_out.endswith("\n```"):
+        ctx.pre_out = ctx.pre_out.removesuffix("```")
+
+    string = string.split("/")
+    output += f"[{label_colors[label_color]}m{label}[0m: {'[0m/'.join([colorize_number(x) for x in string])}"
+        
+    ctx.pre_out += output + '\n```'
+
+
+def add_to_output(ctx: Context, label = None, string = '', label_color = "cyan"):
+    """
+    Handles adding to the standard output (`ctx.out`) to display (For coloring purposes)
+    
+    Given a label and string, the output will be colored and presented as `label: string`.
+    """
+
+    # TODO: PLEASE REFACTOR THIS SHIT
+
+    label_colors = {
+        "gray": 30,
+        "yellow": 33,
+        "blue": 34,
+        "pink": 35,
+        "cyan": 36,
+        "white": 0
+    }
+
+    output = ""
+    if ctx.adding_output == False:
+        output += "```ansi\n"
+        ctx.adding_output = True
+ 
+    elif ctx.adding_output == True and ctx.out.endswith("\n```"):
+        ctx.out = ctx.out.removesuffix("```")
+
+    nums_and_signs = string.split(" ")
+    output += f"[{label_colors[label_color]}m{label}[0m: "
+
+    if len(nums_and_signs) == 1: # one single number
+        output += f"{colorize_number(nums_and_signs[0])}"
+    
+    elif len(nums_and_signs) == 3: # num1 + num2
+        num1, sign, num2 = nums_and_signs
+        output += f"{colorize_number(num1)} [0m{sign} {colorize_number('-' + num2 if sign == '-' else num2, remove_negative=True)}"
+
+    ctx.out += output + "\n```"
+
+    # For noncolored output as backup
+    ctx.uncolored_out += f"{label}: {string}\n"
+
+def add_to_output_as_normal_string(ctx: Context, string = ''):
+    "Handles adding to the standard output (`ctx.out`) to display as normal text."
+    ctx.adding_output = False
+    ctx.out += string + "\n"
+
+    # For noncolored output as backup
+    ctx.uncolored_out += f"{string}\n"
+
 @command(aliases=['rep', 'r'])
 def repeat(ctx: Context, inputs: str = '', n: int = 1):
     "Executes `inputs` `n` times"
@@ -930,7 +1022,7 @@ def macro(ctx: Context, name = 'macro'):
     ctx.macro = name
 
 def zeroed_formatter(ctx: Context, num, zero):
-    if zero is None:
+    if zero is None or zero == 0:
         return ctx.format(num)
     
     formatted_offset = ctx.format(num - zero, sign=True)
@@ -939,8 +1031,10 @@ def zeroed_formatter(ctx: Context, num, zero):
     else:
         formatted_offset = f'? {formatted_offset}'
     
+    # print(f"NUMBER {num} -> FORMAT RESULTS {f'{ctx.format(zero)} {formatted_offset}'}")
     return f'{ctx.format(zero)} {formatted_offset}'
 
+# RETURNERS
 
 @command()
 def outx(ctx: Context, zero: f64 = None, label: str = "X"):
@@ -953,7 +1047,7 @@ def outx(ctx: Context, zero: f64 = None, label: str = "X"):
 
     `zero` will also be truncated by the current decimal precision.
     """
-    ctx.out += f'{label.strip()}: {zeroed_formatter(ctx, ctx.player.x, zero)}\n'
+    add_to_output(ctx, label.strip(), zeroed_formatter(ctx, ctx.player.x, zero), label_color="yellow")
 
 @command()
 def outz(ctx: Context, zero: f64 = None, label: str = "Z"):
@@ -966,7 +1060,7 @@ def outz(ctx: Context, zero: f64 = None, label: str = "Z"):
 
     `zero` will also be truncated by the current decimal precision.
     """
-    ctx.out += f'{label.strip()}: {zeroed_formatter(ctx, ctx.player.z, zero)}\n'
+    add_to_output(ctx, label.strip(), zeroed_formatter(ctx, ctx.player.z, zero), label_color="cyan")
 
 @command()
 def outvx(ctx: Context, zero: f64 = None, label: str = "Vx"):
@@ -979,7 +1073,8 @@ def outvx(ctx: Context, zero: f64 = None, label: str = "Vx"):
 
     `zero` will also be truncated by the current decimal precision.
     """
-    ctx.out += f'{label.strip()}: {zeroed_formatter(ctx, ctx.player.vx, zero)}\n'
+    add_to_output(ctx, label.strip(), zeroed_formatter(ctx, ctx.player.vx, zero), label_color="yellow")
+
 @command()
 def outvz(ctx: Context, zero: f64 = None, label: str = "Vz"):
     """
@@ -991,7 +1086,8 @@ def outvz(ctx: Context, zero: f64 = None, label: str = "Vz"):
 
     `zero` will also be truncated by the current decimal precision.
     """
-    ctx.out += f'{label.strip()}: {zeroed_formatter(ctx, ctx.player.vz, zero)}\n'
+    # ctx.out += f'{label.strip()}: {zeroed_formatter(ctx, ctx.player.vz, zero)}\n'
+    add_to_output(ctx, label.strip(), zeroed_formatter(ctx, ctx.player.vz, zero), label_color="cyan")
 
 @command(name='outxmm', aliases=['xmm'])
 def x_mm(ctx: Context, zero: f64 = None, label: str = "X mm"):
@@ -1004,7 +1100,8 @@ def x_mm(ctx: Context, zero: f64 = None, label: str = "X mm"):
 
     `zero` will also be truncated by the current decimal precision.
     """
-    ctx.out += f'{label.strip()}: {zeroed_formatter(ctx, dist_to_mm(ctx.player.x), zero)}\n'
+    add_to_output(ctx, label.strip(), zeroed_formatter(ctx, dist_to_mm(ctx.player.x), zero), label_color="yellow")
+
 @command(name='outzmm', aliases=['zmm'])
 def z_mm(ctx: Context, zero: f64 = None, label: str = "Z mm"):
     """
@@ -1016,7 +1113,7 @@ def z_mm(ctx: Context, zero: f64 = None, label: str = "Z mm"):
 
     `zero` will also be truncated by the current decimal precision.
     """
-    ctx.out += f'{label.strip()}: {zeroed_formatter(ctx, dist_to_mm(ctx.player.z), zero)}\n'
+    add_to_output(ctx, label.strip(), zeroed_formatter(ctx, dist_to_mm(ctx.player.z), zero), label_color="cyan")
 
 @command(name='outxb', aliases=['xb'])
 def x_b(ctx: Context, zero: f64 = None, label: str = "X b"):
@@ -1029,7 +1126,8 @@ def x_b(ctx: Context, zero: f64 = None, label: str = "X b"):
 
     `zero` will also be truncated by the current decimal precision.
     """
-    ctx.out += f'{label.strip()}: {zeroed_formatter(ctx, dist_to_b(ctx.player.x), zero)}\n'
+    add_to_output(ctx, label.strip(), zeroed_formatter(ctx, dist_to_b(ctx.player.x), zero), label_color="yellow")
+
 @command(name='outzb', aliases=['zb'])
 def z_b(ctx: Context, zero: f64 = None, label: str = "Z b"):
     """
@@ -1041,15 +1139,15 @@ def z_b(ctx: Context, zero: f64 = None, label: str = "Z b"):
 
     `zero` will also be truncated by the current decimal precision.
     """
-    ctx.out += f'{label.strip()}: {zeroed_formatter(ctx, dist_to_b(ctx.player.z), zero)}\n'
+    add_to_output(ctx, label.strip(), zeroed_formatter(ctx, dist_to_b(ctx.player.z), zero), label_color="cyan")
     
 @command(aliases = ['speedvec', 'vector', 'vec'])
 def speedvector(ctx: Context):
     """Displays the magnitude and direction of the player's speed vector."""
     speed = sqrt(ctx.player.vx**2 + ctx.player.vz**2)
     angle = degrees(atan2(-ctx.player.vx, ctx.player.vz))
-    ctx.out += f'Speed: {ctx.format(speed)}\n'
-    ctx.out += f'Angle: {ctx.format(angle)}\n'
+    add_to_output(ctx, "Speed", ctx.format(speed), label_color="blue")
+    add_to_output(ctx, "Angle", ctx.format(angle), label_color="blue")
 
 @command(aliases = ['sprintdelay', 'sdel'])
 def air_sprint_delay(ctx: Context, sprint_delay = True):
@@ -1083,8 +1181,8 @@ def possibilities(ctx: Context, inputs = 'sj45(100)', mindistance: float = 0.01,
     mindistance = abs(mindistance) # only dealing with positive offsets
     if mindistance > 0.0625:
         raise SimError(f"Minimum distance must be less than or equal to 0.0625, got {mindistance} instead")
-    if miss is not None: # only dealing with negative misses (going towards the positive z direction)
-        miss = abs(miss)
+    if miss is not None:
+        miss = abs(miss) # only dealing with negative misses (going towards the positive z direction)
         if miss > 0.0625:
             raise SimError(f"Miss distance must be less than or equal to 0.0625, got {miss} instead")
     
@@ -1096,29 +1194,34 @@ def possibilities(ctx: Context, inputs = 'sj45(100)', mindistance: float = 0.01,
 
         old_move(ctx)
 
+        sign = copysign(1, self.z)
+
         player_blocks = self.z + offset
         jump_pixels = int(abs(player_blocks) / 0.0625)
-        jump_blocks = jump_pixels * 0.0625 * copysign(1, self.z)
-        poss_by = (abs(player_blocks) - abs(jump_blocks)) * copysign(1, self.z)
+        jump_blocks = jump_pixels * 0.0625 * sign
+        poss_by = (abs(player_blocks) - abs(jump_blocks)) * sign
 
         if abs(poss_by) <= mindistance:
-            ctx.out += f'Tick {tick}: {ctx.format(poss_by)} ({ctx.format(jump_blocks)}b)\n'
+            # ctx.out += f'Tick {tick}: {ctx.format(poss_by)} ({ctx.format(jump_blocks)}b)\n'
+            add_to_output(ctx, f'Tick {tick}', f"{ctx.format(jump_blocks)} {'+' if sign > 0 else '-'} {ctx.format(abs(poss_by))}", label_color="cyan")
+        
         elif miss:
             jump_blocks += 0.0625 * copysign(1, jump_blocks)
-            miss_by = (abs(player_blocks) - abs(jump_blocks)) * copysign(1, self.z)
+            miss_by = (abs(player_blocks) - abs(jump_blocks)) * sign
             if abs(miss_by) <= miss:
-                ctx.out += f'Tick {tick}: {ctx.format(miss_by)} miss from {ctx.format(jump_blocks)}b\n'
-        
+                # ctx.out += f'Tick {tick}: {ctx.format(miss_by)} miss from {ctx.format(jump_blocks)}b\n'
+                add_to_output(ctx,  f'Tick {tick}', f"{ctx.format(jump_blocks)} {'-' if sign > 0 else '+'} {ctx.format(abs(miss_by))}", label_color="cyan")
+
         tick += 1
     
     ctx.player.move = MethodType(move, ctx.player)
-    ctx.out += '```'
+    ctx.uncolored_out += '```'
     
     commands_args = parsers.string_to_args(inputs)
     for command, cmd_args in commands_args:
         parsers.execute_command(ctx, command, cmd_args)
     
-    ctx.out += '```'
+    ctx.uncolored_out += '```'
     ctx.player.move = old_move
 
 @command(aliases = ['xposs'])
@@ -1142,8 +1245,8 @@ def xpossibilities(ctx: Context, inputs = 'sj45(100)', mindistance: float = 0.01
     mindistance = abs(mindistance) # only dealing with positive offsets
     if mindistance > 0.0625:
         raise SimError(f"Minimum distance must be less than or equal to 0.0625, got {mindistance} instead")
-    if miss is not None: # only dealing with negative misses (going towards the positive x direction)
-        miss = abs(miss)
+    if miss is not None:
+        miss = abs(miss) # only dealing with negative misses (going towards the positive x direction)
         if miss > 0.0625:
             raise SimError(f"Miss distance must be less than or equal to 0.0625, got {miss} instead")
     
@@ -1155,29 +1258,34 @@ def xpossibilities(ctx: Context, inputs = 'sj45(100)', mindistance: float = 0.01
 
         old_move(ctx)
 
+        sign = copysign(1, self.x)
+
         player_blocks = self.x + offset
         jump_pixels = int(abs(player_blocks) / 0.0625)
-        jump_blocks = jump_pixels * 0.0625 * copysign(1, self.z)
-        poss_by = (abs(player_blocks) - abs(jump_blocks)) * copysign(1, self.z)
+        jump_blocks = jump_pixels * 0.0625 * sign
+        poss_by = (abs(player_blocks) - abs(jump_blocks)) * sign
 
         if abs(poss_by) <= mindistance:
-            ctx.out += f'Tick {tick}: {ctx.format(poss_by)} ({ctx.format(jump_blocks)}b)\n'
+            # ctx.out += f'Tick {tick}: {ctx.format(poss_by)} ({ctx.format(jump_blocks)}b)\n'
+            add_to_output(ctx, f'Tick {tick}', f"{ctx.format(jump_blocks)} {'+' if sign > 0 else '-'} {ctx.format(abs(poss_by))}", label_color="yellow")
+        
         elif miss:
             jump_blocks += 0.0625 * copysign(1, jump_blocks)
-            miss_by = (abs(player_blocks) - abs(jump_blocks)) * copysign(1, self.z)
+            miss_by = (abs(player_blocks) - abs(jump_blocks)) * sign
             if abs(miss_by) <= miss:
-                ctx.out += f'Tick {tick}: {ctx.format(miss_by)} miss from {ctx.format(jump_blocks)}b\n'
-        
+                # ctx.out += f'Tick {tick}: {ctx.format(miss_by)} miss from {ctx.format(jump_blocks)}b\n'
+                add_to_output(ctx, f'Tick {tick}', f"{ctx.format(jump_blocks)} {'-' if sign > 0 else '+'} {ctx.format(abs(miss_by))}", label_color="yellow")
+
         tick += 1
     
     ctx.player.move = MethodType(move, ctx.player)
-    ctx.out += '```'
+    ctx.uncolored_out += '```'
     
     commands_args = parsers.string_to_args(inputs)
     for command, cmd_args in commands_args:
         parsers.execute_command(ctx, command, cmd_args)
     
-    ctx.out += '```'
+    ctx.uncolored_out += '```'
     ctx.player.move = old_move
     
 @command(aliases=['ji'])
@@ -1213,6 +1321,7 @@ def jumpinfo(ctx: Context, z = 0.0, x = 0.0):
     ]
 
     ctx.out += '\n'.join(lines) + '\n'
+    ctx.uncolored_out += '\n'.join(lines) + '\n' # backup
 
 @command()
 def duration(ctx: Context, floor = 0.0, ceiling = 0.0, inertia = 0.005, jump_boost = 0):
@@ -1244,6 +1353,7 @@ def duration(ctx: Context, floor = 0.0, ceiling = 0.0, inertia = 0.005, jump_boo
 
     ceiling = f' {ceiling}bc' if ceiling != 0.0 else ''
     ctx.out += f'Duration of a {floor}b{ceiling} jump:\n**{ticks} ticks**\n'
+    ctx.uncolored_out += f'Duration of a {floor}b{ceiling} jump:\n**{ticks} ticks**\n' # backup
 
 @command()
 def height(ctx: Context, duration = 12, ceiling = 0.0, inertia = 0.005, jump_boost = 0):
@@ -1269,6 +1379,7 @@ def height(ctx: Context, duration = 12, ceiling = 0.0, inertia = 0.005, jump_boo
     
     ceiling = f' with a {ceiling}bc' if ceiling != 0.0 else ''
     ctx.out += (f'Height after {duration} ticks{ceiling}:\n**{round(y, 6)}**\n')
+    ctx.uncolored_out += (f'Height after {duration} ticks{ceiling}:\n**{round(y, 6)}**\n') # backup
 
 @command()
 def blip(ctx: Context, blips = 1, blip_height = 0.0625, init_height: f64 = None, init_vy: f64 = None, inertia = 0.005, jump_boost = 0):
@@ -1337,6 +1448,7 @@ def blip(ctx: Context, blips = 1, blip_height = 0.0625, init_height: f64 = None,
     out += '```\n'
     
     ctx.out += out
+    ctx.uncolored_out += out # backup
 
 def inv_helper(ctx: Context, transform, goal_x, goal_z, strat):
 
@@ -1383,8 +1495,11 @@ def z_bwmm(ctx: Context, mm = 1.0, strat = 'sj45(12)'):
 
     vx, vz = inv_helper(ctx, mm_to_dist, None, mm, strat)
 
-    ctx.pre_out += f'Speed: {ctx.format(vz)}\n'
-    ctx.pre_out += f'MM: {ctx.format(dist_to_mm(ctx.player.z))}\n'
+    add_to_pre_output(ctx, "Z Speed", ctx.format(vz))
+    add_to_pre_output(ctx, "Z MM", ctx.format(dist_to_mm(ctx.player.z)))
+    # ctx.pre_out += f'Speed: {ctx.format(vz)}\n'
+    # ctx.pre_out += f'MM: {ctx.format(dist_to_mm(ctx.player.z))}\n'
+
 
 @command(aliases=['zinv', 'inv'])
 def z_inv(ctx: Context, goal = 1.6, strat = 'sj45(12)'):
@@ -1401,8 +1516,10 @@ def z_inv(ctx: Context, goal = 1.6, strat = 'sj45(12)'):
 
     vx, vz = inv_helper(ctx, dist_to_dist, None, goal, strat)
     
-    ctx.pre_out += f'Speed: {ctx.format(vz)}\n'
-    ctx.pre_out += f'Dist: {ctx.format(ctx.player.z)}\n'
+    add_to_pre_output(ctx, "Z Speed", ctx.format(vz))
+    add_to_pre_output(ctx, "Z Dist", ctx.format(ctx.player.z))
+    # ctx.pre_out += f'Speed: {ctx.format(vz)}\n'
+    # ctx.pre_out += f'Dist: {ctx.format(ctx.player.z)}\n'
 
 @command(aliases=['zspeedreq', 'speedreq'])
 def z_speedreq(ctx: Context, blocks = 5.0, strat = 'sj45(12)'):
@@ -1419,8 +1536,10 @@ def z_speedreq(ctx: Context, blocks = 5.0, strat = 'sj45(12)'):
 
     vx, vz = inv_helper(ctx, b_to_dist, None, blocks, strat)
 
-    ctx.pre_out += f'Speed: {ctx.format(vz)}\n'
-    ctx.pre_out += f'Blocks: {ctx.format(dist_to_b(ctx.player.z))}\n'
+    add_to_pre_output(ctx, "Z Speed", ctx.format(vz))
+    add_to_pre_output(ctx, "Z Blocks", ctx.format(dist_to_b(ctx.player.z)))
+    # ctx.pre_out += f'Speed: {ctx.format(vz)}\n'
+    # ctx.pre_out += f'Blocks: {ctx.format(dist_to_b(ctx.player.z))}\n'
 
 @command(aliases=['xbwmm'])
 def x_bwmm(ctx: Context, mm = 1.0, strat = 'sj45(12)'):
@@ -1428,8 +1547,10 @@ def x_bwmm(ctx: Context, mm = 1.0, strat = 'sj45(12)'):
 
     vx, vz = inv_helper(ctx, mm_to_dist, mm, None, strat)
 
-    ctx.pre_out += f'Speed: {ctx.format(vx)}\n'
-    ctx.pre_out += f'MM: {ctx.format(dist_to_mm(ctx.player.x))}\n'
+    add_to_pre_output(ctx, "X Speed", ctx.format(vx), label_color="yellow")
+    add_to_pre_output(ctx, "X MM", ctx.format(dist_to_mm(ctx.player.x)), label_color="yellow")
+    # ctx.pre_out += f'Speed: {ctx.format(vx)}\n'
+    # ctx.pre_out += f'MM: {ctx.format(dist_to_mm(ctx.player.x))}\n'
 
 @command(aliases=['xinv'])
 def x_inv(ctx: Context, goal = 1.6, strat = 'sj45(12)'):
@@ -1437,8 +1558,10 @@ def x_inv(ctx: Context, goal = 1.6, strat = 'sj45(12)'):
 
     vx, vz = inv_helper(ctx, dist_to_dist, goal, None, strat)
     
-    ctx.pre_out += f'Speed: {ctx.format(vx)}\n'
-    ctx.pre_out += f'Dist: {ctx.format(ctx.player.x)}\n'
+    add_to_pre_output(ctx, "X Speed", ctx.format(vx), label_color="yellow")
+    add_to_pre_output(ctx, "X Dist", ctx.format(ctx.player.x), label_color="yellow")
+    # ctx.pre_out += f'Speed: {ctx.format(vx)}\n'
+    # ctx.pre_out += f'Dist: {ctx.format(ctx.player.x)}\n'
 
 @command(aliases=['xspeedreq'])
 def x_speedreq(ctx: Context, blocks = 5.0, strat = 'sj45(12)'):
@@ -1446,8 +1569,10 @@ def x_speedreq(ctx: Context, blocks = 5.0, strat = 'sj45(12)'):
 
     vx, vz = inv_helper(ctx, b_to_dist, blocks, None, strat)
 
-    ctx.pre_out += f'Speed: {ctx.format(vx)}\n'
-    ctx.pre_out += f'Blocks: {ctx.format(dist_to_b(ctx.player.x))}\n'
+    add_to_pre_output(ctx, "X Speed", ctx.format(vx), label_color="yellow")
+    add_to_pre_output(ctx, "X Blocks", ctx.format(dist_to_b(ctx.player.x)), label_color="yellow")
+    # ctx.pre_out += f'Speed: {ctx.format(vx)}\n'
+    # ctx.pre_out += f'Blocks: {ctx.format(dist_to_b(ctx.player.x))}\n'
 
 @command(aliases=['xzbwmm'])
 def xz_bwmm(ctx: Context, x_mm = 1.0, z_mm = 1.0, strat = 'sj45(12)'):
@@ -1455,8 +1580,11 @@ def xz_bwmm(ctx: Context, x_mm = 1.0, z_mm = 1.0, strat = 'sj45(12)'):
 
     vx, vz = inv_helper(ctx, mm_to_dist, x_mm, z_mm, strat)
 
-    ctx.pre_out += f'Speed: {ctx.format(vx)}/{ctx.format(vz)}\n'
-    ctx.pre_out += f'MM: {ctx.format(dist_to_mm(ctx.player.x))}/{ctx.format(dist_to_mm(ctx.player.z))}\n'
+    
+    add_to_pre_output(ctx, "X/Z Speed", f"{ctx.format(vx)}/{ctx.format(vz)}", label_color="blue")
+    add_to_pre_output(ctx, "X/Z MM", f"{ctx.format(dist_to_mm(ctx.player.x))}/{ctx.format(dist_to_mm(ctx.player.z))}", label_color="blue")    
+    # ctx.pre_out += f'Speed: {ctx.format(vx)}/{ctx.format(vz)}\n'
+    # ctx.pre_out += f'MM: {ctx.format(dist_to_mm(ctx.player.x))}/{ctx.format(dist_to_mm(ctx.player.z))}\n'
 
 @command(aliases=['xzinv'])
 def xz_inv(ctx: Context, x_goal = 1.6, z_goal = 1.6, strat = 'sj45(12)'):
@@ -1464,8 +1592,10 @@ def xz_inv(ctx: Context, x_goal = 1.6, z_goal = 1.6, strat = 'sj45(12)'):
 
     vx, vz = inv_helper(ctx, dist_to_dist, x_goal, z_goal, strat)
     
-    ctx.pre_out += f'Speed: {ctx.format(vx)}/{ctx.format(vz)}\n'
-    ctx.pre_out += f'Dist: {ctx.format(ctx.player.x)}/{ctx.format(ctx.player.z)}\n'
+    add_to_pre_output(ctx, "X/Z Speed", f"{ctx.format(vx)}/{ctx.format(vz)}", label_color="blue")
+    add_to_pre_output(ctx, "X/Z Dist", f"{ctx.format(ctx.player.x)}/{ctx.format(ctx.player.z)}", label_color="blue")    
+    # ctx.pre_out += f'Speed: {ctx.format(vx)}/{ctx.format(vz)}\n'
+    # ctx.pre_out += f'Dist: {ctx.format(ctx.player.x)}/{ctx.format(ctx.player.z)}\n'
 
 @command(aliases=['xzspeedreq'])
 def xz_speedreq(ctx: Context, x_blocks = 3.0, z_blocks = 4.0, strat = 'sj45(12)'):
@@ -1473,8 +1603,10 @@ def xz_speedreq(ctx: Context, x_blocks = 3.0, z_blocks = 4.0, strat = 'sj45(12)'
 
     vx, vz = inv_helper(ctx, b_to_dist, x_blocks, z_blocks, strat)
 
-    ctx.pre_out += f'Speed: {ctx.format(vx)}/{ctx.format(vz)}\n'
-    ctx.pre_out += f'Blocks: {ctx.format(dist_to_b(ctx.player.x))}/{ctx.format(dist_to_b(ctx.player.z))}\n'
+    add_to_pre_output(ctx, "X/Z Speed", f"{ctx.format(vx)}/{ctx.format(vz)}", label_color="blue")
+    add_to_pre_output(ctx, "X/Z Dist", f"{ctx.format(dist_to_b(ctx.player.x))}/{ctx.format(dist_to_b(ctx.player.z))}", label_color="blue")
+    # ctx.pre_out += f'Speed: {ctx.format(vx)}/{ctx.format(vz)}\n'
+    # ctx.pre_out += f'Blocks: {ctx.format(dist_to_b(ctx.player.x))}/{ctx.format(dist_to_b(ctx.player.z))}\n'
 
 @command(aliases=['angle', 'ai'])
 def angleinfo(ctx: Context, angle = f32(0.0), mode = 'vanilla'):
@@ -1519,11 +1651,15 @@ def angleinfo(ctx: Context, angle = f32(0.0), mode = 'vanilla'):
             col[i] = col[i].ljust(col_width)
 
     ctx.out += '```'
+    ctx.uncolored_out += '```' # backup (FIX PLEASE TO MAKE IT CLEANER)
     for i in range(4):
         for j in range(4):
             ctx.out += output[j][i]
+            ctx.uncolored_out += output[j][i]
         ctx.out += '\n'
+        ctx.uncolored_out += '\n'
     ctx.out += '```'
+    ctx.uncolored_out += '```'
 
 @command()
 def help(ctx: Context, cmd_name = 'help'):
@@ -1535,8 +1671,7 @@ def help(ctx: Context, cmd_name = 'help'):
     """
 
     if cmd_name not in commands_by_name:
-        ctx.out += f'Command `{cmd_name}` not found. This could be a custom defined function (help does not support it at the moment).\n'
-        return
+        raise SimError(f'Command `{cmd_name}` not found.')
 
     cmd = commands_by_name[cmd_name]
     cmd_name = cmd._aliases[0]
@@ -1550,13 +1685,15 @@ def help(ctx: Context, cmd_name = 'help'):
         params.append(out)
     newln = '\n'
 
-    ctx.out += f'Help with {cmd_name}:'
-    ctx.out += '' if cmd.__doc__ is None else f'\n```{cleandoc(cmd.__doc__)}```'
-    ctx.out += f'```\nAliases:\n{newln.join(map(lambda x: "  "+x, cmd._aliases))}'
-    ctx.out += f'\nArgs:\n{newln.join(params)}```\n'
+    help_output = f'Help with {cmd_name}:'
+    help_output += '' if cmd.__doc__ is None else f'\n```{cleandoc(cmd.__doc__)}```'
+    help_output += f'```\nAliases:\n{newln.join(map(lambda x: "  "+x, cmd._aliases))}'
+    help_output += f'\nArgs:\n{newln.join(params)}```\n'
+
+    add_to_output_as_normal_string(ctx, string=help_output)
 
 @command(aliases=['print'])
-def println(ctx: Context, string: str = "\n"):
+def println(ctx: Context, string: str = ""):
     """
     Print any basic text to your heart's desire. To print commas, place a \ before the comma.
 
@@ -1564,7 +1701,8 @@ def println(ctx: Context, string: str = "\n"):
     
     Pings and links will not print.
     """
-    ctx.out += string + "\n"
+    # ctx.out += string + "\n"
+    add_to_output_as_normal_string(ctx, string)
 
 @command(aliases=['ver','v'])
 def version(ctx: Context, string: str = "1.8"):
@@ -1604,7 +1742,7 @@ def language(ctx: Context, string: str = "english"):
     """
     
     if string.lower() != "english":
-        ctx.out += f"Sorry but `{string}` not supported, we only have: \n`english`\n"
+        raise SimError(f"Sorry but `{string}` not supported, we only have: \n`english`\n")
     else:
         insults = ["idiot sandwich", "buffoon", "illiterate freak", "succubus", "homosapien of the low IQ variant", "bitch", "idot", "uncultured swine", "smelly bedwars player", "smelly league player, go take a shower and touch grass", "smelly valorant player, go take a shower and touch grass", "lonely virgin gamer, consider this: 🚿","nincompoop","pillock","🤢 🎮", "fat fuck", "despicable being","loveless loser","muppet","submissive and breedable human", "glutenous glob", "disgusting douche", "karen", "normie","literally are the definition of 1984", "wicket witch", "charlatan", "normie \*laughs in poor gamer e-girl\*", "sexual spring breaking degenerate. Get out of my server, i own this place.","sussy baka uWu \*nudges and soft vores you\*\n\n\n\n\nWC","lil husbando, come give mommy a huggy", "lazy linguistic lacking logic loveless ludicrous livid lamentable leeching loser", "tier 20 twitch troller", "gold wings enthusiast", "'\n\n\n\n\nwc", "hoe, i bet u watch tik tok"]
-        ctx.out += f"This is already in english you {random.choice(insults)}.\n"
+        add_to_output_as_normal_string(f"This is already in english you {random.choice(insults)}.\n")
