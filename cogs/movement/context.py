@@ -5,15 +5,24 @@ class Context():
     def __init__(self, player, envs, is_dev):
 
         self.player = player
+        self.cached = {}
         self.envs = envs
         self.is_dev = is_dev
 
         self.macro = None
         self.out = ''
         self.pre_out = ''
+
+        # If the output is too long, use this backup output which does not contain color
+        self.uncolored_out = ''
+        self.uncolored_pre_out = ''
+
         self.input_history = []
         self.history = []
         self.print_precision = 6
+
+        self.adding_output = False # marker bool for formatting standard outputs
+        self.adding_pre_output = False # marker bool for formatting pre-outputs (top priority outputs)
     
     def child(self):
         return Context(deepcopy(self.player), self.envs, self.is_dev)
@@ -23,14 +32,17 @@ class Context():
             return 'None'
         return format_float_positional(num, trim='-', precision=self.print_precision, sign=sign)
 
-    def result(self):
-
+    def result(self, backup=False):
         if not self.out:
             if any([n != 0 for n in (self.player.x, self.player.z, self.player.vx, self.player.vz)]):
                 self.out += self.default_string()
+                self.uncolored_out += self.default_string()
             else:
                 self.out += '​\U0001f44d'
+                self.uncolored_out += '​\U0001f44d'
 
+        if backup:
+            return self.uncolored_pre_out + self.uncolored_out    
         return self.pre_out + self.out
     
     def default_string(self):
