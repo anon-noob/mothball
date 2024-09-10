@@ -41,15 +41,11 @@ async def help(ctx):
 
 @bot.command()
 async def version(ctx):
-    s = f"""Mothball version 2.0.1
+    s = f"""Mothball version 2.1.0
 Recent changes:
-- A mini wiki has been created to document all simulation functions (type `;help`)
-- Texts are now formatted so you can use curly braces to evaluate anything inside {'{}.'}
-  - For example `outz(label=greater than {{0.0625-0.001}})` would result in `greater than 0.0615: 0`
-- `var()` works properly now and converts to the appriopiate datatype instead of just a string
-- More detailed error messages.
-- **Bug Fix:** Expressions work inside `anglequeue` and `turnqueue`. Now you can do `aq(1, 1+1, 1+1+1)`.
-- **Bonus Addon:** Multiplication is allowed (but not exponents).
+- Simulation outputs are now colorized for computer users (rip mobile users)
+  - Defaults to normal (uncolored) output if the colored output is too long
+  - If that is still too long, upload as a file as usual.
 """
     await ctx.send(s)
 
