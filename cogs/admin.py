@@ -30,7 +30,7 @@ class Admin(commands.Cog):
         
         if text == 'u':
             await ctx.send('Running `git pull`...')
-            task = subprocess.run('git pull' , shell=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            task = subprocess.run('git pull https://github.com/anon-noob/mothball.git main' , shell=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             await ctx.send(f'```{task.stdout}```')
 
         msg = await ctx.send('Restarting...')
@@ -110,3 +110,4 @@ class Admin(commands.Cog):
     async def admin_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.CheckFailure):
             await ctx.message.add_reaction('🤡')
+
