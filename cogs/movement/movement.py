@@ -25,7 +25,7 @@ class Movement(commands.Cog):
         
         return context
     
-    async def generic_sim(self, dpy_ctx: commands.Context, input, continuation = None, edit = None, history = False):
+    async def generic_sim(self, dpy_ctx: commands.Context, input, continuation = None, edit = None, history = False, *, color_output = True):
 
         context = Context(Player(), [self.bot.env], self.bot.params['is_dev'])
 
@@ -40,8 +40,10 @@ class Movement(commands.Cog):
 
             if history:
                 results = context.history_string()
-            else:
+            elif color_output:
                 results = context.result()
+            else:
+                results = context.result(backup=True)
 
             errored = False
 
@@ -58,12 +60,18 @@ class Movement(commands.Cog):
             buffer = BytesIO(context.macro_csv().encode('utf8'))
             kwargs = {'content': results, 'file': discord.File(fp=buffer, filename=f'{context.macro}.csv')}
         elif len(results) > 1990:
-            results = context.result(backup=True)
-            if len(results) < 1990:
-                kwargs = {'content': results}
-            else:
+            if color_output:
+                results = context.result(backup=True)
+                if len(results) < 1990:
+                    kwargs = {'content': results}
+                else:
+                    buffer = BytesIO(results.encode('utf8'))
+                    kwargs = {'content': 'Uploaded output to file since output was too long.', 'file': discord.File(fp=buffer, filename='output.txt')}
+            
+            elif not color_output:
                 buffer = BytesIO(results.encode('utf8'))
                 kwargs = {'content': 'Uploaded output to file since output was too long.', 'file': discord.File(fp=buffer, filename='output.txt')}
+                
         else:
             kwargs = {'content': results}
 
@@ -93,6 +101,10 @@ class Movement(commands.Cog):
     @commands.command(aliases=['sim', 's'])
     async def simulate(self, ctx: commands.Context, *, text: str):
         await self.generic_sim(ctx, text)
+    
+    @commands.command(aliases=['ncsim', 'ncs', 'nsim', 'ns'])
+    async def nocolor_simulate(self, ctx: commands.Context, *, text: str):
+        await self.generic_sim(ctx, text, color_output=False)
 
     @commands.command(aliases=['his', 'h'])
     async def history(self, ctx: commands.Context, *, text: str):
