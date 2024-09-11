@@ -41,11 +41,15 @@ async def help(ctx):
 
 @bot.command()
 async def version(ctx):
-    s = f"""Mothball version 2.1.0
+    v = "2.1.1"
+    s = f"""Mothball version {v}
 Recent changes:
 - Simulation outputs are now colorized for computer users (rip mobile users)
   - Defaults to normal (uncolored) output if the colored output is too long
   - If that is still too long, upload as a file as usual.
+
+- For those that uses mothball with a mobile decive, you have the option to display outputs without color like normal.
+  - Instead of `;s` which colorizes output, use `;ns` for no-color simulate
 """
     await ctx.send(s)
 
