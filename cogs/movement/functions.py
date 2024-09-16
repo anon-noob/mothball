@@ -247,10 +247,7 @@ def var(ctx: Context, name = '', input = ''):
     A valid variable `name` is any sequence of alphabet letters a-z or A-Z, numerical digits (0-9), an underscore `_`, and any combination of them with only one restriction. \\
     A number cannot be the first character in the variable name.
 
-    `var()` will attempt to convert the value to the appropiate datatype, which only supports
-    ```py
-    int | float | str
-    ```
+    `var()` will attempt to convert the value to the appropiate datatype, which only supports integers, floats, or strings
     """
     var_regex = r"^([a-zA-Z_][a-zA-Z0-9_]*)$"
     if not re.findall(var_regex, name): # Either has one match or no matches
