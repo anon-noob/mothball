@@ -41,15 +41,16 @@ async def help(ctx):
 
 @bot.command()
 async def version(ctx):
-    v = "2.1.1"
+    v = "2.1.2"
     s = f"""Mothball version {v}
-Recent changes:
-- Simulation outputs are now colorized for computer users (rip mobile users)
+Recent Major Changes:
+- Simulation outputs are now colorized for computer users (rip mobile users). Use `;ns` for no-color simulate, which displays in the old original formatting.
   - Defaults to normal (uncolored) output if the colored output is too long
   - If that is still too long, upload as a file as usual.
 
-- For those that uses mothball with a mobile decive, you have the option to display outputs without color like normal.
-  - Instead of `;s` which colorizes output, use `;ns` for no-color simulate
+Patches:
+- `sprintstrafejump`, `strafejump`, or `stfj` and its 45 variant now work properly under any circumstances.
+  - Previously, it was only accurate if slip was 0.6, facing 0, and no potion effects. 
 """
     await ctx.send(s)
 
