@@ -109,9 +109,12 @@ def get_optimal_sprint_strafe_jump_angle(ctx: Context, is_sneaking = False):
     ctx1.player.z = 0.0
     ctx1.player.vx = 0.0
     ctx1.player.vz = 0.0
-    ctx1.player.ground_slip = ctx.player.ground_slip
-    ctx1.player.speed = ctx.player.speed
-    ctx1.player.slowness = ctx.player.slowness
+    ctx1.player.default_rotation = 0.0
+    ctx1.player.rotation_offset = 0.0
+    ctx1.player.rotation_queue = []
+    ctx1.player.turn_queue = []
+    ctx1.player.modx = 0.0
+    ctx1.player.modz = 0.0
     
     if is_sneaking:
         parsers.execute_string(ctx1, "snsj.wa")
