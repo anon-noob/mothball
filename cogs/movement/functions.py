@@ -83,8 +83,8 @@ def move(ctx: Context):
         ctx.player.move(ctx)
 
 def jump(ctx: Context, after_jump_tick = lambda: None):
-    
-    ctx.args['jumping'] = True
+    if ctx.args['duration'] > 0:
+        ctx.args['jumping'] = True
     ctx.player.move(ctx)
     ctx.args['jumping'] = False
 
