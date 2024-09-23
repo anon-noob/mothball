@@ -244,8 +244,8 @@ class Misc(commands.Cog):
 
     @commands.command()
     async def love(self, ctx, user: typing.Optional[discord.User] = None, target: int = 100):
-        if user in ["me","me?","me!"]:
-            await ctx.send(random.choice(["No", "Never", "Ew", "Nah"]))
+        if user in ["me","me?","me!","me...", "me.", "me.."]:
+            await ctx.send(random.choice(["No", "Never", "Ew", "Nah", "hell nah fam"]))
         else:
             if user == None:
                 user = ctx.author
