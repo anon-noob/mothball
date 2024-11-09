@@ -41,16 +41,11 @@ async def help(ctx):
 
 @bot.command()
 async def version(ctx):
-    v = "2.1.2"
+    v = "2.1.3"
     s = f"""Mothball version {v}
-Recent Major Changes:
-- Simulation outputs are now colorized for computer users (rip mobile users). Use `;ns` for no-color simulate, which displays in the old original formatting.
-  - Defaults to normal (uncolored) output if the colored output is too long
-  - If that is still too long, upload as a file as usual.
-
-Patches:
-- `sprintstrafejump`, `strafejump`, or `stfj` and its 45 variant now work properly under any circumstances.
-  - Previously, it was only accurate if slip was 0.6, facing 0, and no potion effects. 
+Recent Additions:
+- `height()` and `duration()` have a new `slime` parameter (ask @hamm for assistance on using it)
+- new function `outangle`, returns the angle of the simulation, particularly useful when you use a long `turnqueue` sequence.
 """
     await ctx.send(s)
 
