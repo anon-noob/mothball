@@ -1149,6 +1149,23 @@ def speedvector(ctx: Context):
     add_to_output(ctx, "Speed", ctx.format(speed), label_color="blue")
     add_to_output(ctx, "Angle", ctx.format(angle), label_color="blue")
 
+@command(aliases = ['outa', 'outfacing', 'outf'])
+def outangle(ctx: Context):
+    """
+    (This function is subject to change)
+    
+    Outputs the simulation's default rotation.
+
+    Example 1: `aq(4,7,2) s(3) outangle`
+
+    >>> Facing: 2
+
+    Example 2: `tq(-3,7,2,-4) s45(3) outangle s45(1)`
+
+    >>> Facing: 6
+    """
+    add_to_output(ctx, "Facing", ctx.format(ctx.player.default_rotation), label_color="blue")
+
 @command(aliases = ['sprintdelay', 'sdel'])
 def air_sprint_delay(ctx: Context, sprint_delay = True):
     """
@@ -1324,16 +1341,27 @@ def jumpinfo(ctx: Context, z = 0.0, x = 0.0):
     ctx.uncolored_out += '\n'.join(lines) + '\n' # backup
 
 @command()
-def duration(ctx: Context, floor = 0.0, ceiling = 0.0, inertia = 0.005, jump_boost = 0):
+def duration(ctx: Context, floor = 0.0, ceiling = 0.0, inertia = 0.005, jump_boost = 0, slime = []):
     """
     Displays the duration of a `floor` jump.
+
+    I do not know how the `slime` parameter works, ask @hamm for help on this. (WARNING: may not work as intended/produces inaccurate measurements)
     """
 
     vy = 0.42 + 0.1 * jump_boost
     y = 0
     ticks = 0
+    bounces = 0
 
-    while y > floor or vy > 0:
+    while y > floor or vy > 0 or bounces < len(slime):
+        if slime and bounces < len(slime):
+            if y > slime[bounces] > y + vy:
+                y = slime[bounces] + vy
+                vy = -vy
+                bounces += 1
+            elif y < slime[bounces] and vy < 0:
+                ctx.out += ('Impossible slime bounce height')
+                return
         y = y + vy
         if ceiling != 0.0 and y > ceiling - 1.8:
             y = ceiling - 1.8
@@ -1356,15 +1384,26 @@ def duration(ctx: Context, floor = 0.0, ceiling = 0.0, inertia = 0.005, jump_boo
     ctx.uncolored_out += f'Duration of a {floor}b{ceiling} jump:\n**{ticks} ticks**\n' # backup
 
 @command()
-def height(ctx: Context, duration = 12, ceiling = 0.0, inertia = 0.005, jump_boost = 0):
+def height(ctx: Context, duration = 12, ceiling = 0.0, inertia = 0.005, jump_boost = 0, slime=[]):
     """
     Displays the player's height `duration` ticks after jumping.
+    
+    I do not know how the `slime` parameter works, ask @hamm for help on this. (WARNING: may not work as intended/produces inaccurate measurements)
     """
 
     vy = 0.42 + jump_boost * 0.1
     y = 0
+    bounces = 0
 
     for i in range(duration):
+        if slime and bounces <= len(slime)-1:  # Lazy and eval ftw
+            if y > slime[bounces] > y + vy:
+                y = slime[bounces] + vy
+                vy = -vy
+                bounces += 1
+            elif y < slime[bounces] and vy < 0:
+                ctx.out += ('Impossible slime bounce height')
+                return
         y = y + vy
         if ceiling != 0.0 and y > ceiling - 1.8:
             y = ceiling - 1.8
@@ -1380,6 +1419,7 @@ def height(ctx: Context, duration = 12, ceiling = 0.0, inertia = 0.005, jump_boo
     ceiling = f' with a {ceiling}bc' if ceiling != 0.0 else ''
     ctx.out += (f'Height after {duration} ticks{ceiling}:\n**{round(y, 6)}**\n')
     ctx.uncolored_out += (f'Height after {duration} ticks{ceiling}:\n**{round(y, 6)}**\n') # backup
+
 
 @command()
 def blip(ctx: Context, blips = 1, blip_height = 0.0625, init_height: f64 = None, init_vy: f64 = None, inertia = 0.005, jump_boost = 0):
