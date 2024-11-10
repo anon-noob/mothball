@@ -38,10 +38,11 @@ register_arg('airborne', bool, ['air'])
 register_arg('sprinting', bool, ['sprint'])
 register_arg('sneaking', bool, ['sneak', 'sn'])
 register_arg('jumping', bool, ['jump'])
-register_arg('water', bool, ['water']) # (New) Added water
+register_arg('water', bool, ['water'])
 register_arg('speed', int, ['spd'])
 register_arg('slowness', int, ['slow', 'sl'])
 register_arg('soulsand', int, ['ss'])
+register_arg('blocking', bool, ['blocking']) # (New) added sword blocks (1.8)
 
 def command(name=None, aliases=[]):
     def deco(f):
@@ -850,12 +851,114 @@ def sneaksprintwater45(ctx: Context, duration = 1, rotation: f32 = None):
     ctx.argd.setdefault('sneaking', True)
     move(ctx)
 ##### End of new water stuff ######
-
+##### Begin of new sword block stuff #####
 @command(aliases=['bl', 'sbl'])
 def swordblock(ctx: Context, duration = 1, rotation: f32 = None):
+    "Sword block while on the ground"
     ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault()
+    ctx.args.setdefault('blocking', True)
     move(ctx)
+
+@command(aliases = ['bla', 'sbla','sblawt', 'blawt'])
+def swordblockair(ctx: Context, duration = 1, rotation: f32 = None):
+    "Swrod block while midair or in water"
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('blocking', True)
+    ctx.args.setdefault('airborne', True)
+    move(ctx)
+    
+@command(aliases=['bl45', 'sbl45'])
+def swordblock45(ctx: Context, duration = 1, rotation: f32 = None):
+    "Sword block and 45 while on the ground"
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('strafe', f32(1))
+    ctx.args.setdefault('blocking', True)
+    ctx.args['function_offset'] = f32(45)
+    move(ctx)
+
+@command(aliases = ['bla45', 'sbla45', 'sblawt45', 'blawt45'])
+def swordblockair45(ctx: Context, duration = 1, rotation: f32 = None):
+    "Sword block and 45 while midair or in water"
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('strafe', f32(1))
+    ctx.args.setdefault('blocking', True)
+    ctx.args.setdefault('airborne', True)
+    ctx.args['function_offset'] = f32(45)
+    move(ctx)
+
+@command(aliases = ['snbl', 'snsbl'])
+def sneakswordblock(ctx: Context, duration = 1, rotation: f32 = None):
+    "Sword block and sneaking on the ground"
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('blocking', True)
+    ctx.args.setdefault('sneaking', True)
+    move(ctx)
+    
+@command(aliases = ['snbl45', 'snsbl45'])
+def sneakswordblock45(ctx: Context, duration = 1, rotation: f32 = None):
+    "Sword block, sneaking, and 45 strafing on the ground"
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('strafe', f32(1))
+    ctx.args.setdefault('blocking', True)
+    ctx.args.setdefault('sneaking', True)
+    ctx.args['function_offset'] = f32(45)
+    move(ctx)
+    
+@command(aliases = ['snbla', 'snsbla', 'snsblawt', 'snblawt'])
+def sneakswordblockair(ctx: Context, duration = 1, rotation: f32 = None):
+    "Sword block and sneaking while midair or in water"
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('blocking', True)
+    ctx.args.setdefault('sneaking', True)
+    ctx.args.setdefault('airborne', True)
+    move(ctx)
+    
+@command(aliases = ['snbla45', 'snsbla45', 'snwtsbla45', 'snwtbla45'])
+def sneakswordblockair45(ctx: Context, duration = 1, rotation: f32 = None):
+    "Sword block, sneaking, and 45 strafing while midair or in water"
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('strafe', f32(1))
+    ctx.args.setdefault('blocking', True)
+    ctx.args.setdefault('sneaking', True)
+    ctx.args.setdefault('airborne', True)
+    ctx.args['function_offset'] = f32(45)
+    move(ctx)
+
+@command(aliases = ['sblj', 'blj'])
+def swordblockjump(ctx: Context, duration = 1, rotation: f32 = None):
+    "Sword block and jump"
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('blocking', True)
+    jump(ctx)
+    
+@command(aliases = ['sblj45', 'blj45'])
+def swordblockjump45(ctx: Context, duration = 1, rotation: f32 = None):
+    "Sword block and jump with 45"
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('strafe', f32(1))
+    ctx.args.setdefault('blocking', True)
+    ctx.args['function_offset'] = f32(45)
+    jump(ctx)
+    
+@command(aliases = ['snsblj', 'snblj'])
+def sneakswordblockjump(ctx: Context, duration = 1, rotation: f32 = None):
+    "Sword block, sneak, and jump"
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('blocking', True)
+    ctx.args.setdefault('sneaking', True)
+    jump(ctx)
+    
+@command(aliases = ['snsblj45', 'snblj45'])
+def sneakswordblockjump45(ctx: Context, duration = 1, rotation: f32 = None):
+    "Sword block, sneak, and jump with 45"
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('strafe', f32(1))
+    ctx.args.setdefault('blocking', True)
+    ctx.args['function_offset'] = f32(45)
+    ctx.args.setdefault('sneaking', True)
+    jump(ctx)
+
+##### End of new sword block stuff #####
 
 @command(name='|')
 def reset_position(ctx: Context):
