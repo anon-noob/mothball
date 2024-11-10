@@ -67,8 +67,8 @@ class Player:
         if self.prev_slip is None:
             self.prev_slip = slip
 
-        self.last_turn = rotation - self.last_rotation
-        self.last_rotation = rotation
+       self.last_turn = rotation - self.last_rotation
+        self.last_rotation = rotation + self.rotation_offset
         rotation += function_offset + self.rotation_offset
 
         
