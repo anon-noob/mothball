@@ -1273,7 +1273,7 @@ def outangle(ctx: Context):
 
     >>> Facing: 6
     """
-    add_to_output(ctx, "Facing", ctx.format(ctx.player.default_rotation), label_color="blue")
+    add_to_output(ctx, "Facing", ctx.format(ctx.player.last_rotation), label_color="blue")
 
 @command(aliases = ['outt'])
 def outturn(ctx: Context):
