@@ -830,7 +830,7 @@ def sneaksprintwater(ctx: Context, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('water', True)
     ctx.args.setdefault('sprinting', True)
-    ctx.argd.setdefault('sneaking', True)
+    ctx.args.setdefault('sneaking', True)
     move(ctx)
 
 @command(aliases=['snswt45'])
@@ -850,6 +850,12 @@ def sneaksprintwater45(ctx: Context, duration = 1, rotation: f32 = None):
     ctx.argd.setdefault('sneaking', True)
     move(ctx)
 ##### End of new water stuff ######
+
+@command(aliases=['bl', 'sbl'])
+def swordblock(ctx: Context, duration = 1, rotation: f32 = None):
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault()
+    move(ctx)
 
 @command(name='|')
 def reset_position(ctx: Context):
@@ -1165,6 +1171,7 @@ def outangle(ctx: Context):
     >>> Facing: 6
     """
     add_to_output(ctx, "Facing", ctx.format(ctx.player.default_rotation), label_color="blue")
+    
 
 @command(aliases = ['sprintdelay', 'sdel'])
 def air_sprint_delay(ctx: Context, sprint_delay = True):
