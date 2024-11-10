@@ -27,6 +27,7 @@ class Player:
         self.speed = 0
         self.slowness = 0
         self.water = 0 # New water
+        self.blocking = 0 # New sword blocks
     
     def move(self, ctx):
         args = ctx.args
