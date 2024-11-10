@@ -65,9 +65,12 @@ class Player:
         self.prev_slip = args.get('prev_slip', self.prev_slip)
         if self.prev_slip is None:
             self.prev_slip = slip
-        
-        rotation += function_offset + self.rotation_offset
 
+        last_rotation = rotation
+        rotation += function_offset + self.rotation_offset
+        last_turn = rotation - last_rotation
+
+        
         if args.get('duration', 0) < 0 or 'reverse' in args:
             forward *= fl(-1)
             strafe *= fl(-1)
