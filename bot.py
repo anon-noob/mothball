@@ -41,11 +41,12 @@ async def help(ctx):
 
 @bot.command()
 async def version(ctx):
-    v = "2.1.3"
+    v = "2.1.4"
     s = f"""Mothball version {v}
 Recent Additions:
 - `height()` and `duration()` have a new `slime` parameter (ask @hamm for assistance on using it)
 - new function `outangle`, returns the angle of the simulation, particularly useful when you use a long `turnqueue` sequence.
+- Added `swordblock` functions!
 """
     await ctx.send(s)
 
