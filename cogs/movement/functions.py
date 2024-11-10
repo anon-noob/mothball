@@ -1274,6 +1274,23 @@ def outangle(ctx: Context):
     >>> Facing: 6
     """
     add_to_output(ctx, "Facing", ctx.format(ctx.player.default_rotation), label_color="blue")
+
+@command(aliases = ['outt'])
+def outturn(ctx: Context):
+    """
+    (This function is subject to change)
+
+    Outputs the simulation's last rotation.
+
+    Example 1: `aq(4,7,2) s(3) outturn`
+
+    >>> Last Turn: -5
+
+    Example 2: `tq(-3,10,13,-4) s45(3) outangle s45(1)`
+
+    >>> Last Turn: 13
+    """
+    add_to_output(ctx, "Last Turn", ctx.format(ctx.player.last_turn), label_color="blue")
     
 
 @command(aliases = ['sprintdelay', 'sdel'])
