@@ -1286,7 +1286,7 @@ def outturn(ctx: Context):
 
     >>> Last Turn: -5
 
-    Example 2: `tq(-3,10,13,-4) s45(3) outangle s45(1)`
+    Example 2: `tq(-3,10,13,-4) s45(3) outturn s45(1)`
 
     >>> Last Turn: 13
     """
