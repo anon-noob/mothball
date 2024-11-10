@@ -29,6 +29,7 @@ class Player:
         self.water = 0 # New water
         self.blocking = 0 # New sword blocks
         self.last_turn = 0 # for outturn() method
+        self.last_rotation = 0
     
     def move(self, ctx):
         args = ctx.args
@@ -66,9 +67,9 @@ class Player:
         if self.prev_slip is None:
             self.prev_slip = slip
 
-        last_rotation = rotation
+        self.last_turn = rotation - self.last_rotation
+        self.last_rotation = rotation
         rotation += function_offset + self.rotation_offset
-        last_turn = rotation - last_rotation
 
         
         if args.get('duration', 0) < 0 or 'reverse' in args:
