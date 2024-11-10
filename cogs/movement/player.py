@@ -50,6 +50,7 @@ class Player:
         slowness = args.get('slowness', self.slowness)
         soulsand = args.get('soulsand', self.soulsand)
         water = args.get('water', self.water)
+        blocking = args.get('blocking', self.blocking)
         sprintjump_boost = fl(0.2)
 
         if airborne:
@@ -119,6 +120,11 @@ class Player:
         if sneaking:
             forward = fl(float(forward) * 0.3)
             strafe = fl(float(strafe) * 0.3)
+
+        # Applies sword blocking (1.8 only, 1.9+ uses shields and have not been implemented)
+        if blocking:
+            forward = fl(float(forward) * 0.2)
+            strafe = fl(float(strafe) * 0.2)
         
         forward *= fl(0.98)
         strafe *= fl(0.98)
