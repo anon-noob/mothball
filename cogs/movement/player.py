@@ -28,6 +28,7 @@ class Player:
         self.slowness = 0
         self.water = 0 # New water
         self.blocking = 0 # New sword blocks
+        self.last_turn = 0 # for outturn() method
     
     def move(self, ctx):
         args = ctx.args
