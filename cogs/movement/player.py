@@ -30,6 +30,7 @@ class Player:
         self.blocking = 0 # New sword blocks
         self.last_turn = 0 # for outturn() method
         self.last_rotation = 0
+        self.prev_web = 0
     
     def move(self, ctx):
         args = ctx.args
@@ -54,6 +55,7 @@ class Player:
         soulsand = args.get('soulsand', self.soulsand)
         water = args.get('water', self.water)
         blocking = args.get('blocking', self.blocking)
+        web = args.get('web', False)
         sprintjump_boost = fl(0.2)
 
         if airborne:
@@ -90,10 +92,10 @@ class Player:
         self.vx *= fl(0.91) * self.prev_slip
         self.vz *= fl(0.91) * self.prev_slip
 
-        # Applying inertia threshold
-        if abs(self.vx) < self.inertia_threshold:
+        # Applying inertia threshold and web movement
+        if abs(self.vx) < self.inertia_threshold or self.prev_web:
             self.vx = 0.0
-        if abs(self.vz) < self.inertia_threshold:
+        if abs(self.vz) < self.inertia_threshold or self.prev_web:
             self.vz = 0.0
 
         # Calculating movement multiplier
@@ -156,8 +158,14 @@ class Player:
             self.vx += float(strafe * cos_yaw - forward * sin_yaw)
             self.vz += float(forward * cos_yaw + strafe * sin_yaw)
 
+        # Apply web speed multiplier
+        if web:
+            self.vx = self.vx / 4
+            self.vz = self.vz / 4
+        
         self.prev_slip = slip
         self.prev_sprint = sprinting
+        self.prev_web = web
         
         ctx.history.append((self.x, self.z, self.vx, self.vz))
         ctx.input_history.append([forward, strafe, sprinting, sneaking, jumping, rotation])
