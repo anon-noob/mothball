@@ -960,6 +960,189 @@ def sneakswordblockjump45(ctx: Context, duration = 1, rotation: f32 = None):
 
 ##### End of new sword block stuff #####
 
+##### New web movement #####
+@command()
+def web(ctx: Context, duration = 1, rotation: f32 = None):
+    "Walk while inside a web"
+    ctx.args.setdefault('web', True)
+    ctx.args.setdefault('forward', f32(1))
+    move(ctx)
+
+@command()
+def web45(ctx: Context, duration = 1, rotation: f32 = None):
+    "Walk while 45 strafing and also while inside a web"
+    ctx.args.setdefault('web', True)
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('strafe', f32(1))
+    ctx.args['function_offset'] = f32(45)
+    move(ctx)
+
+@command(aliases=['sweb'])
+def sprintweb(ctx: Context, duration = 1, rotation: f32 = None):
+    "Sprint while inside a web"
+    ctx.args.setdefault('web', True)
+    ctx.args.setdefault('sprinting', True)
+    ctx.args.setdefault('forward', f32(1))
+    move(ctx)
+
+@command(aliases=['sweb45'])
+def sprintweb45(ctx: Context, duration = 1, rotation: f32 = None):
+    "Sprint while inside a web"
+    ctx.args.setdefault('web', True)
+    ctx.args.setdefault('sprinting', True)
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('strafe', f32(1))
+    ctx.args['function_offset'] = f32(45)
+    move(ctx)
+
+@command(aliases = ['aweb', 'waweb'])
+def airweb(ctx: Context, duration = 1, rotation: f32 = None):
+    "Move (without sprint) in midair while inside a web"
+    ctx.args.setdefault('web', True)
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('airborne', True)
+    move(ctx)
+
+@command(aliases=["aweb45", "waweb45"])
+def airweb45(ctx: Context, duration = 1, rotation: f32 = None):
+    "Move (without sprint) while 45 strafing in midair inside a web"
+    ctx.args.setdefault('web', True)
+    ctx.args.setdefault('airborne', True)
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('strafe', f32(1))
+    ctx.args['function_offset'] = f32(45)
+    move(ctx)
+
+@command(aliases=["saweb"])
+def sprintairweb(ctx: Context, duration = 1, rotation: f32 = None):
+    "Move with sprint in midair while inside a web"
+    ctx.args.setdefault('web', True)
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('airborne', True)
+    ctx.args.setdefault('sprinting', True)
+    move(ctx)
+
+@command(aliases=["saweb45"])
+def sprintairweb45(ctx: Context, duration = 1, rotation: f32 = None):
+    "Move with sprint while 45 strafing in midair inside a web"
+    ctx.args.setdefault('web', True)
+    ctx.args.setdefault('airborne', True)
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('strafe', f32(1))
+    ctx.args['function_offset'] = f32(45)
+    ctx.args.setdefault('sprinting', True)
+    move(ctx)
+
+@command(aliases=["wjweb", "jweb"])
+def jumpweb(ctx: Context, duration = 1, rotation: f32 = None):
+    "Jump (without sprint) inside a web"
+    ctx.args.setdefault('web', True)
+    ctx.args.setdefault('forward', f32(1))
+    jump(ctx)
+
+@command(aliases=["sjweb"])
+def sprintjumpweb(ctx: Context, duration = 1, rotation: f32 = None):
+    "Jump with sprint inside a web"
+    ctx.args.setdefault('web', True)
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('sprinting', True)
+    jump(ctx)
+
+@command(aliases=["wjweb45", "jweb45"])
+def jumpweb45(ctx: Context, duration = 1, rotation: f32 = None):
+    "Jump (without sprint) and 45 strafe inside a web"
+    ctx.args.setdefault('web', True)
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('strafe', f32(1))
+    ctx.args['function_offset'] = f32(45)
+    jump(ctx)
+
+@command(aliases=["sjweb45"])
+def sprintjumpweb45(ctx: Context, duration = 1, rotation: f32 = None):
+    "Jump with sprint and 45 strafe inside a web"
+    ctx.args.setdefault('web', True)
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('sprinting', True)
+
+    def update():
+        ctx.args.setdefault('strafe', f32(1))
+        ctx.args['function_offset'] = f32(45)
+    
+    jump(ctx, after_jump_tick = update)
+
+@command(aliases=["stweb"])
+def stopweb(ctx: Context, duration = 1):
+    "Inputless ticks while on ground and inside a web"
+    ctx.args.setdefault('web', True)
+    move(ctx)
+
+@command(aliases=["staweb"])
+def stopwebair(ctx: Context, duration = 1):
+    "Inputless ticks while midair and inside a web"
+    ctx.args.setdefault('web', True)
+    ctx.args.setdefault('airborne', True)
+    move(ctx)
+
+@command(aliases=['snweb'])
+def sneakweb(ctx: Context, duration = 1, rotation: f32 = None):
+    "Sneak on the ground while inside a web"
+    ctx.args.setdefault('web', True)
+    ctx.args.setdefault('sneaking', True)
+    ctx.args.setdefault('forward', f32(1))
+    move(ctx)
+
+@command(aliases=['snweb45'])
+def sneakweb45(ctx: Context, duration = 1, rotation: f32 = None):
+    "Sneak on the ground and 45 strafe while inside a web"
+    ctx.args.setdefault('web', True)
+    ctx.args.setdefault('sneaking', True)
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('strafe', f32(1))
+    ctx.args['function_offset'] = f32(45)
+    move(ctx)
+
+@command(aliases=['snaweb'])
+def sneakairweb(ctx: Context, duration = 1, rotation: f32 = None):
+    "Sneak midair while inside a web"
+    ctx.args.setdefault('web', True)
+    ctx.args.setdefault('sneaking', True)
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('airborne', True)
+    move(ctx)
+
+@command(aliases=['snaweb45'])
+def sneakairweb45(ctx: Context, duration = 1, rotation: f32 = None):
+    "Sneak and 45 strafe midair while inside a web"
+    ctx.args.setdefault('web', True)
+    ctx.args.setdefault('sneaking', True)
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('strafe', f32(1))
+    ctx.args['function_offset'] = f32(45)
+    ctx.args.setdefault('airborne', True)
+    move(ctx)
+
+@command(aliases=['snjweb'])
+def sneakjumpweb(ctx: Context, duration = 1, rotation: f32 = None):
+    "Sneak and jump while inside a web"
+    ctx.args.setdefault('web', True)
+    ctx.args.setdefault('sneaking', True)
+    ctx.args.setdefault('forward', f32(1))
+    jump(ctx)
+
+@command(aliases=['snjweb45'])
+def sneakjumpweb45(ctx: Context, duration = 1, rotation: f32 = None):
+    "Sneak, jump, and 45 strafe while inside a web"
+    ctx.args.setdefault('web', True)
+    ctx.args.setdefault('sneaking', True)
+    ctx.args.setdefault('forward', f32(1))
+    ctx.args.setdefault('strafe', f32(1))
+    ctx.args['function_offset'] = f32(45)
+    jump(ctx)
+
+
+##### To add: Sneak sprint web if exists #####
+#### End of web #####
+
 @command(name='|')
 def reset_position(ctx: Context):
     """
