@@ -43,6 +43,7 @@ register_arg('speed', int, ['spd'])
 register_arg('slowness', int, ['slow', 'sl'])
 register_arg('soulsand', int, ['ss'])
 register_arg('blocking', bool, ['blocking']) # (New) added sword blocks (1.8)
+register_arg('web', bool, ['web']) # For web movement
 
 def command(name=None, aliases=[]):
     def deco(f):
