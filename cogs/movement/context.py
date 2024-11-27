@@ -2,7 +2,7 @@ from copy import deepcopy
 from numpy import format_float_positional
 
 class Context():
-    def __init__(self, player, envs, is_dev):
+    def __init__(self, player, envs, is_dev, colorize_output = False):
 
         self.player = player
         self.cached = {}
@@ -17,6 +17,8 @@ class Context():
         self.uncolored_out = ''
         self.uncolored_pre_out = ''
 
+        self.colorize_output = colorize_output
+
         self.input_history = []
         self.history = []
         self.print_precision = 6
@@ -25,7 +27,7 @@ class Context():
         self.adding_pre_output = False # marker bool for formatting pre-outputs (top priority outputs)
     
     def child(self):
-        return Context(deepcopy(self.player), self.envs, self.is_dev)
+        return Context(deepcopy(self.player), self.envs, self.is_dev, self.colorize_output)
 
     def format(self, num, sign = False):
         if num is None:
