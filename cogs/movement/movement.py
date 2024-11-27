@@ -27,7 +27,7 @@ class Movement(commands.Cog):
     
     async def generic_sim(self, dpy_ctx: commands.Context, input, continuation = None, edit = None, history = False, *, color_output = True):
 
-        context = Context(Player(), [self.bot.env], self.bot.params['is_dev'])
+        context = Context(Player(), [self.bot.env], self.bot.params['is_dev'], color_output)
 
         if continuation:
             parent = self.msg_links[continuation]
@@ -40,7 +40,7 @@ class Movement(commands.Cog):
 
             if history:
                 results = context.history_string()
-            elif color_output:
+            elif context.colorize_output:
                 results = context.result()
             else:
                 results = context.result(backup=True)
