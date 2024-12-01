@@ -41,10 +41,10 @@ async def help(ctx):
 
 @bot.command()
 async def version(ctx):
-    v = "2.1.6"
+    v = "2.1.7"
     s = f"""Mothball version {v}
 Recent Additions:
-- Added web movement for version 1.8
+- (Super New Big Feature, Proceed With Caution!) Added y movement, do `;y` to simulate it! Currently supports jumping, jump boost, slime bounces, and web movement. I would like your feedback on whether the syntax and the semantics need to be changed, especially the semantics!
 """
     await ctx.send(s)
 
