@@ -5,8 +5,10 @@ import asyncio
 from io import BytesIO
 from cogs.movement.context import Context
 from cogs.movement.player import Player
+from cogs.movement.playerY import PlayerY
 from cogs.movement.parsers import execute_string
 from cogs.movement.utils import SimError, SimNode
+
 
 async def setup(bot):
     bot.env = {}
@@ -25,9 +27,13 @@ class Movement(commands.Cog):
         
         return context
     
-    async def generic_sim(self, dpy_ctx: commands.Context, input, continuation = None, edit = None, history = False, *, color_output = True):
-
-        context = Context(Player(), [self.bot.env], self.bot.params['is_dev'], color_output)
+    async def generic_sim(self, dpy_ctx: commands.Context, input, continuation = None, edit = None, history = False, *, color_output = True, sim_type = "xz"):
+        
+        if sim_type == "y":
+            context = Context(PlayerY(), [self.bot.env], self.bot.params['is_dev'], sim_type)
+        elif sim_type == "xz":
+            context = Context(Player(), [self.bot.env], self.bot.params['is_dev'], sim_type)
+            
 
         if continuation:
             parent = self.msg_links[continuation]
@@ -40,7 +46,7 @@ class Movement(commands.Cog):
 
             if history:
                 results = context.history_string()
-            elif context.colorize_output:
+            elif color_output:
                 results = context.result()
             else:
                 results = context.result(backup=True)
@@ -100,7 +106,8 @@ class Movement(commands.Cog):
         
     @commands.command(aliases=['sim', 's'])
     async def simulate(self, ctx: commands.Context, *, text: str):
-        await self.generic_sim(ctx, text)
+         await self.generic_sim(ctx, text)
+
     
     @commands.command(aliases=['ncsim', 'ncs', 'nsim', 'ns'])
     async def nocolor_simulate(self, ctx: commands.Context, *, text: str):
@@ -137,6 +144,11 @@ class Movement(commands.Cog):
     
     async def edit_down(self, channel, msg):
         text = msg.content
+        if any(text.startswith(cmd) for cmd in (';y', ';ysim')):
+            sim_type = "y"
+        else:
+            sim_type = "xz"
+
         history = any(text.startswith(cmd) for cmd in (';history ', ';his ', ';h ', ';thenh ', ';th '))
         for i in range(len(text)):
             if text[i].isspace():
@@ -147,9 +159,18 @@ class Movement(commands.Cog):
             continuation = msg.reference.message_id
         else:
             continuation = None
-
-        await self.generic_sim(channel, text, history = history, edit = self.msg_links[msg.id], continuation = continuation)
+        
+        # This is only for xz movement
+        await self.generic_sim(channel, text, history = history, edit = self.msg_links[msg.id], continuation = continuation, sim_type = sim_type)
 
         for child_id in self.msg_links[msg.id].children:
             child = await channel.fetch_message(child_id)
             await self.edit_down(channel, child)
+
+    @commands.command(aliases=['ysim', 'y'])
+    async def y_simulate(self, ctx: commands.Context, *, text: str):
+        await self.generic_sim(ctx, text, sim_type="y")
+    
+    @commands.command(aliases=['yhis', 'yh'])
+    async def y_history(self, ctx: commands.Context, *, text: str):
+        await self.generic_sim(ctx, text, sim_type="y", history=True)
