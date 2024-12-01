@@ -1,11 +1,13 @@
 from re import match, search
 import cogs.movement.functions as functions
+import cogs.movement.functionsY as functionsY
 from cogs.movement.utils import SimError
 from numpy import float32 as fl
 from collections import Counter
 from evalidate import Expr, base_eval_model
 import re
 import random
+from cogs.movement.context import Context # For type hinting
 
 if 'USub' not in base_eval_model.nodes:
     base_eval_model.nodes.append('USub')
@@ -15,7 +17,7 @@ if 'USub' not in base_eval_model.nodes:
     base_eval_model.nodes.append('Pow')
 
 # This function is purely for error handling scenarios
-def get_suggestions(context, string: str):
+def get_suggestions(context: Context, string: str):
     """
     Given `string`, return a list of suggestions from all possible mothball commands that best matches `string`.
 
@@ -29,9 +31,14 @@ def get_suggestions(context, string: str):
     envs = {}
     for env in context.envs:
         envs.update(env)
-    envs = {a:envs[a] for a in envs if type(envs[a]) == functions.Function}
+    
+    if context.simulation_axis == "xz":
+        envs = {a:envs[a] for a in envs if type(envs[a]) == functions.Function}
+        all_cmds = envs | commands_by_name
+    elif context.simulation_axis == "y":
+        envs = {a:envs[a] for a in envs if type(envs[a]) == functionsY.Function}
+        all_cmds = envs | y_commands_by_name
 
-    all_cmds = envs | commands_by_name
 
     for command in list(all_cmds.keys()):
         # 1. Matches start
@@ -72,7 +79,6 @@ def execute_string(context, text):
         raise SimError('Something went wrong while parsing.')
 
     for command, args in commands_args:
-
         try:
             execute_command(context, command, args)
         except SimError:
@@ -87,38 +93,44 @@ def string_to_args(text):
     commands_args = [argumentatize_command(command) for command in commands_str_list]
     return commands_args
 
-def execute_command(context, command, args):
+def execute_command(context: Context, command, args):
+    if context.simulation_axis == "xz":
+        cmds = commands_by_name
+    elif context.simulation_axis == "y":
+        cmds = y_commands_by_name
 
-    # Handle command modifiers
-    modifiers = {}
-    if command.startswith('-'):
-        command = command[1:]
-        modifiers['reverse'] = True
+    if context.simulation_axis == "xz":
+        # Handle command modifiers
+        modifiers = {}
+        if command.startswith('-'):
+            command = command[1:]
+            modifiers['reverse'] = True
+        
+        if command.endswith('.land'):
+            command = command[:-5]
+            modifiers['prev_slip'] = fl(1.0)
+        
+        key_modifier = search(r'\.([ws]?[ad]?){1,2}(\.|$)', command)
+        if key_modifier:
+            keys = key_modifier.group(0)[1:]
+
+            if 'w' in keys: modifiers.setdefault('forward', fl(1))
+            if 's' in keys: modifiers.setdefault('forward', fl(-1))
+            if 'a' in keys: modifiers.setdefault('strafe', fl(1))
+            if 'd' in keys: modifiers.setdefault('strafe', fl(-1))
+
+            modifiers.setdefault('forward', fl(0))
+            modifiers.setdefault('strafe', fl(0))
+
+            command = command.replace(key_modifier.group(0), '', 1)
+        # End handling command modifiers   
     
-    if command.endswith('.land'):
-        command = command[:-5]
-        modifiers['prev_slip'] = fl(1.0)
-    
-    key_modifier = search(r'\.([ws]?[ad]?){1,2}(\.|$)', command)
-    if key_modifier:
-        keys = key_modifier.group(0)[1:]
+    if command in cmds: # Normal execution
+        command_function = cmds[command]
 
-        if 'w' in keys: modifiers.setdefault('forward', fl(1))
-        if 's' in keys: modifiers.setdefault('forward', fl(-1))
-        if 'a' in keys: modifiers.setdefault('strafe', fl(1))
-        if 'd' in keys: modifiers.setdefault('strafe', fl(-1))
-
-        modifiers.setdefault('forward', fl(0))
-        modifiers.setdefault('strafe', fl(0))
-
-        command = command.replace(key_modifier.group(0), '', 1)
-    # End handling command modifiers   
-    
-    if command in commands_by_name: # Normal execution
-        command_function = commands_by_name[command]
-
-        context.args, context.pos_args = dictize_args(context.envs, command_function, args)
-        context.args.update(modifiers)
+        context.args, context.pos_args = dictize_args(context.envs, command_function, args, axis=context.simulation_axis)
+        if context.simulation_axis == "xz":
+            context.args.update(modifiers)
 
         command_function(context)
 
@@ -240,24 +252,30 @@ def argumentatize_command(command):
 
     return (command_name, args)
 
-def dictize_args(envs, command, str_args):
+def dictize_args(envs, command, str_args, axis = "xz"):
     args = {}
     pos_args = []
+    if axis == "xz":
+        cmds = types_by_command
+    elif axis == "y":
+        cmds = y_types_by_command
 
-    command_types = list(types_by_command[command].keys())
+
+    command_types = list(cmds[command].keys())
 
     positional_index = 0
     for arg in str_args:
         if match(r'^[\w_\|]* ?=', arg): # if keyworded arg
             divider = arg.index('=')
             arg_name = arg[:divider].strip()
-            arg_name = dealias_arg_name(arg_name)
-            arg_val = convert(envs, command, arg_name, arg[divider + 1:].strip())
+            arg_name = dealias_arg_name(arg_name, axis=axis)
+
+            arg_val = convert(envs, command, arg_name, arg[divider + 1:].strip(), axis=axis)
             args[arg_name] = arg_val
 
         elif positional_index < len(command_types): # if positional arg
             arg_name = command_types[positional_index]
-            arg_val = convert(envs, command, arg_name, arg)
+            arg_val = convert(envs, command, arg_name, arg, axis=axis)
             positional_index += 1
             args[arg_name] = arg_val
         
@@ -265,15 +283,25 @@ def dictize_args(envs, command, str_args):
     
     return args, pos_args
 
-def dealias_arg_name(arg_name):
+def dealias_arg_name(arg_name, axis = "xz"):
     arg_name = arg_name.lower()
-    return aliases.get(arg_name, arg_name)
+    if axis == "xz":
+        return aliases.get(arg_name, arg_name)
+    elif axis == "y":
+        return y_aliases.get(arg_name, arg_name)
 
-def convert(envs, command, arg_name, val):
-    if arg_name in types_by_command[command]: # if positionial arg
-        type = types_by_command[command][arg_name]
-    elif arg_name in types_by_arg: # if keyworded arg
-        type = types_by_arg[arg_name]
+def convert(envs, command, arg_name, val, axis = "xz"):
+    if axis == "xz":
+        types_by_cmd = types_by_command
+        types_arg = types_by_arg
+    elif axis == "y":
+        types_by_cmd = y_types_by_command
+        types_arg = y_types_by_arg
+
+    if arg_name in types_by_cmd[command]: # if positionial arg
+        type = types_by_cmd[command][arg_name]
+    elif arg_name in types_arg: # if keyworded arg
+        type = types_arg[arg_name]
     else:
         raise SimError(f'Unknown argument `{arg_name}`')
     try:
@@ -388,3 +416,9 @@ aliases = functions.aliases
 commands_by_name = functions.commands_by_name
 types_by_command = functions.types_by_command
 types_by_arg = functions.types_by_arg
+
+
+y_aliases = functionsY.aliases
+y_commands_by_name = functionsY.commands_by_name
+y_types_by_command = functionsY.types_by_command
+y_types_by_arg = functionsY.types_by_arg
