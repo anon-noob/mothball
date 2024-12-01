@@ -360,6 +360,11 @@ def jump_boost(ctx: Context, amplifier: int = 0):
     "Sets the jump boost potion effect for the simulation"
     ctx.player.jump_boost = amplifier
 
+@command()
+def inertia(ctx: Context, inertia_threshold: float = 0.005):
+    "Sets the simulation's inertia threshold. In version 1.8, inertia equals 0.005. In 1.9+, it is 0.003 instead."
+    ctx.player.inertia_threshold = inertia_threshold
+
 @command(aliases=['print'])
 def println(ctx: Context, string: str = ""):
     """
