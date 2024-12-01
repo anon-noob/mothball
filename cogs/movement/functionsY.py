@@ -284,7 +284,7 @@ def outy(ctx: Context, zero: f64 = None, label: str = "Y"):
     """
     add_to_output(ctx, label, zeroed_formatter(ctx, ctx.player.y, zero))
 
-@command(aliases=['outty'])
+@command(aliases=['outty', 'ymm'])
 def outtopy(ctx: Context, zero: f64 = None, label: str = "Y"):
     """
     Output's the player height's y position.
@@ -292,6 +292,8 @@ def outtopy(ctx: Context, zero: f64 = None, label: str = "Y"):
     If `zero` is a nonzero number, the output will be expressed as an expression centered at `zero`.
 
     `zero` will also be truncated by the current decimal precision.
+
+    This is precisely what "ymm" is in a similar notion as "xmm" and "zmm"
     """
     add_to_output(ctx, label,  zeroed_formatter(ctx, ctx.player.y + 1.8, zero))
 
