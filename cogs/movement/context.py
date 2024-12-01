@@ -1,13 +1,17 @@
 from copy import deepcopy
 from numpy import format_float_positional
+from cogs.movement.player import Player
+from cogs.movement.playerY import PlayerY
 
 class Context():
-    def __init__(self, player, envs, is_dev, colorize_output = False):
+    def __init__(self, player: Player | PlayerY, envs, is_dev, axises = "xz"):
 
         self.player = player
         self.cached = {}
         self.envs = envs
         self.is_dev = is_dev
+
+        self.simulation_axis = axises # either xz or y
 
         self.macro = None
         self.out = ''
@@ -17,8 +21,6 @@ class Context():
         self.uncolored_out = ''
         self.uncolored_pre_out = ''
 
-        self.colorize_output = colorize_output
-
         self.input_history = []
         self.history = []
         self.print_precision = 6
@@ -27,7 +29,8 @@ class Context():
         self.adding_pre_output = False # marker bool for formatting pre-outputs (top priority outputs)
     
     def child(self):
-        return Context(deepcopy(self.player), self.envs, self.is_dev, self.colorize_output)
+        "Returns a deepcopy of a `Context` object"
+        return Context(deepcopy(self.player), self.envs, self.is_dev, axises=self.simulation_axis)
 
     def format(self, num, sign = False):
         if num is None:
@@ -36,9 +39,14 @@ class Context():
 
     def result(self, backup=False):
         if not self.out:
-            if any([n != 0 for n in (self.player.x, self.player.z, self.player.vx, self.player.vz)]):
+            if self.simulation_axis == "xz" and any([n != 0 for n in (self.player.x, self.player.z, self.player.vx, self.player.vz)]):
                 self.out += self.default_string()
                 self.uncolored_out += self.default_string()
+
+            elif self.simulation_axis == "y" and any([n != 0 for n in (self.player.y,  self.player.vy)]):
+                self.out += self.default_string()
+                self.uncolored_out += self.default_string()
+
             else:
                 self.out += '​\U0001f44d'
                 self.uncolored_out += '​\U0001f44d'
@@ -48,18 +56,27 @@ class Context():
         return self.pre_out + self.out
     
     def default_string(self):
-        xstr = self.format(self.player.x + self.player.modx)
-        zstr = self.format(self.player.z + self.player.modz)
-        max_length = max(len(xstr), len(zstr))
-        out =  f'X = {xstr.ljust(max_length + 5, " ")}Vx = {self.format(self.player.vx)}\n'
-        out += f'Z = {zstr.ljust(max_length + 5, " ")}Vz = {self.format(self.player.vz)}\n'
+        if self.simulation_axis == "xz":
+            xstr = self.format(self.player.x + self.player.modx)
+            zstr = self.format(self.player.z + self.player.modz)
+            max_length = max(len(xstr), len(zstr))
+            out =  f'X = {xstr.ljust(max_length + 5, " ")}Vx = {self.format(self.player.vx)}\n'
+            out += f'Z = {zstr.ljust(max_length + 5, " ")}Vz = {self.format(self.player.vz)}\n'
+        elif self.simulation_axis == "y":
+            out = f"Y = {self.player.y}\n"
+            out += f"Vy = {self.player.vy}\n"
         return out
 
     def history_string(self):
-        history = ''
-        for tick in self.history:
-            history += (f'x/z:({self.format(tick[0]+self.player.modx)}, {self.format(tick[1]+self.player.modz)})'.ljust(15 + 2 * self.print_precision))
-            history += f'vx/vz:({self.format(tick[2])}, {self.format(tick[3])})\n'
+        if self.simulation_axis == "xz":
+            history = ''
+            for tick in self.history:
+                history += (f'x/z:({self.format(tick[0]+self.player.modx)}, {self.format(tick[1]+self.player.modz)})'.ljust(15 + 2 * self.print_precision))
+                history += f'vx/vz:({self.format(tick[2])}, {self.format(tick[3])})\n'
+        elif self.simulation_axis == "y":
+            history = ''
+            for tick in self.history:
+                history += f"y: {self.format(tick[0])}, vy: {self.format(tick[1])}\n"
         return '```' + history + '```'
 
     def macro_csv(self):
