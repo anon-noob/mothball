@@ -4,7 +4,7 @@ from cogs.movement.player import Player
 from cogs.movement.playerY import PlayerY
 
 class Context():
-    def __init__(self, player: Player | PlayerY, envs, is_dev, axises = "xz"):
+    def __init__(self, player, envs, is_dev, axises = "xz"):
 
         self.player = player
         self.cached = {}
