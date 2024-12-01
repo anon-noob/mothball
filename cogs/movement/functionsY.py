@@ -285,7 +285,7 @@ def outy(ctx: Context, zero: f64 = None, label: str = "Y"):
     add_to_output(ctx, label, zeroed_formatter(ctx, ctx.player.y, zero))
 
 @command(aliases=['outty', 'ymm'])
-def outtopy(ctx: Context, zero: f64 = None, label: str = "Y"):
+def outtopy(ctx: Context, zero: f64 = None, label: str = "Top Y"):
     """
     Output's the player height's y position.
 
