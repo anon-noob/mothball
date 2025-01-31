@@ -76,9 +76,12 @@ options = {"Current-theme":
 def get_path_to_options():
     operating_system = platform.system()
     if operating_system == "Windows":
-        return os.path.join(os.path.expanduser("~"), "AppData\\Roaming\\Mothball\\Mothball Settings\\Options.json")
+        return os.path.join(os.path.expanduser("~"), "AppData", "Roaming", "Mothball", "Mothball Settings", "Options.json")
     elif operating_system == "Darwin":
-        return os.path.join(os.path.expanduser("~"), "Library\\Application Support\\Mothball\\Mothball Settings\\Options.json")
+        return os.path.join(os.path.expanduser("~"), "Library", "Application Support", "Mothball", "Mothball Settings", "Options.json")
+    elif operating_system == "Linux":
+        return os.path.join(os.path.expanduser("~"), ".config", "Mothball", "Mothball Settings", "Options.json")
+        
 
 def create_directories():
     operating_system = platform.system()
@@ -86,23 +89,34 @@ def create_directories():
         create_windows_directories()
     elif operating_system == "Darwin":
         create_mac_directories()
+    elif operating_system == "Linux":
+        create_linux_directories()
 
 def create_windows_directories():
     user_directory = os.path.expanduser("~")
-    os.makedirs(os.path.join(user_directory, "AppData\\Roaming\\Mothball\\Mothball Settings"), exist_ok=True)
-    os.makedirs(os.path.join(user_directory, "Documents\\Mothball\\Notebooks"), exist_ok=True)
+    os.makedirs(os.path.join(user_directory, "AppData", "Roaming", "Mothball", "Mothball Settings"), exist_ok=True)
+    os.makedirs(os.path.join(user_directory, "Documents", "Mothball", "Notebooks"), exist_ok=True)
 
-    if not os.path.exists(os.path.join(user_directory, "AppData\\Roaming\\Mothball\\Mothball Settings\\Options.json")):
-        with open(os.path.join(user_directory, "AppData\\Roaming\\Mothball\\Mothball Settings\\Options.json", "w")) as file:
+    if not os.path.exists(os.path.join(user_directory, "AppData" ,"Roaming", "Mothball", "Mothball Settings", "Options.json")):
+        with open(os.path.join(user_directory, "AppData", "Roaming", "Mothball", "Mothball Settings", "Options.json"), "w") as file:
             json.dump(options, file)   
 
 def create_mac_directories():
     user_directory = os.path.expanduser("~")
-    os.makedirs(os.path.join(user_directory, "Library\\Application Support\\Mothball\\Mothball Settings"), exist_ok=True)
-    os.makedirs(os.path.join(user_directory, "Documents\\Mothball\\Notebooks"), exist_ok=True)
+    os.makedirs(os.path.join(user_directory, "Library", "Application Support", "Mothball", "Mothball Settings"), exist_ok=True)
+    os.makedirs(os.path.join(user_directory, "Documents", "Mothball", "Notebooks"), exist_ok=True)
 
-    if not os.path.exists(os.path.join(user_directory, "Library\\Application Support\\Mothball\\Mothball Settings\\Options.json")):
-        with open(os.path.join(user_directory, "Library\\Application Support\\Mothball\\Mothball Settings\\Options.json", "w")) as file:
+    if not os.path.exists(os.path.join(user_directory, "Library" ,"Application Support", "Mothball", "Mothball Settings", "Options.json")):
+        with open(os.path.join(user_directory, "Library" ,"Application Support", "Mothball", "Mothball Settings" ,"Options.json"), "w") as file:
+            json.dump(options, file)
+
+def create_linux_directories():
+    user_directory = os.path.expanduser("~")
+    os.makedirs(os.path.join(user_directory, ".config", "Mothball" ,"Mothball Settings"), exist_ok=True)
+    os.makedirs(os.path.join(user_directory, "Documents", "Mothball", "Notebooks"), exist_ok=True)
+
+    if not os.path.exists(os.path.join(user_directory, ".config", "Mothball", "Mothball Settings", "Options.json")):
+        with open(os.path.join(user_directory, ".config", "Mothball", "Mothball Settings", "Options.json"), "w") as file:
             json.dump(options, file)
 
 
@@ -112,11 +126,17 @@ def get_options():
         return get_windows_options()
     elif operating_system == "Darwin":
         return get_mac_options()
+    elif operating_system == "Linux":
+        return get_linux_options()
 
 def get_windows_options():
-    with open(os.path.join(os.path.expanduser("~"), "AppData\\Roaming\\Mothball\\Mothball Settings\\Options.json")) as file:
+    with open(os.path.join(os.path.expanduser("~"), "AppData", "Roaming", "Mothball", "Mothball Settings" ,"Options.json")) as file:
         return json.load(file)
 
 def get_mac_options():
-    with open(os.path.join(os.path.expanduser("~"), "Library\\Application Support\\Mothball\\Mothball Settings\\Options.json")) as file:
+    with open(os.path.join(os.path.expanduser("~"), "Library", "Application Support", "Mothball", "Mothball Settings", "Options.json")) as file:
+        return json.load(file)
+    
+def get_linux_options():
+    with open(os.path.join(os.path.expanduser("~"), ".config", "Mothball", "Mothball Settings", "Options.json")) as file:
         return json.load(file)
