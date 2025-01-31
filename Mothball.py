@@ -10,7 +10,7 @@ import MainHelpPage
 import About_Mothball
 import Credits
 from tkinter.filedialog import askopenfile, asksaveasfile
-
+import sys
 import FileHandler
 
 class MainNotebookGUI(tk.Tk, tk.Frame):
@@ -30,6 +30,14 @@ class MainNotebookGUI(tk.Tk, tk.Frame):
         self.bind("<Control-n>", func=lambda e: self.new())
 
         FileHandler.create_directories()
+
+        if getattr(sys, "frozen", False):
+            app_path = sys._MEIPASS # When run as an exe
+        else:
+            app_path = "" # Otherwise (run as a script)
+
+        icon_path = os.path.join(app_path, "Assets", "The_HPK_Cube.ico")
+        self.iconbitmap(icon_path)
 
         self.file_name = ""
 
