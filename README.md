@@ -1,18 +1,5 @@
 # Mothball
-The most up to date Discord bot for simulating Minecraft movement to high accuracy, used for parkour among other minecraft fields of research involving movement. Credits to [CyrenArkade](https://github.com/CyrenArkade/mothball) for making the original mothball.
-
-## Commands
-`;[simulate | sim | s]`​`functions` Simulates the provided functions and displays the final result.  
-`;[history | h]`​`functions` Simulates the provided functions and displays tick by tick results.  
-`;[then | t]`​`functions` Continues simulation from the reply and displays the final result.  
-`;[thenh | th]`​`functions` Continues simulation from the reply and displays tick by tick results.
-
-### Non-Simulation Functions
-
-`jumpinfo(z, x=0)`  
-`duration(floor=0, ceiling=inf, inertia=0.005, jump_boost=0)`  
-`height(ticks=0, ceiling=inf, inertia=0.005, jump_boost=0)`  
-`blip(num_blips=1, blip_height=0.0625, init_height=blip_height, init_vy=(0.42+jump_boost), inertia=0.005, jump_boost=0)`
+The most up to date Discord bot for simulating Minecraft movement to high accuracy, used for parkour among other minecraft fields of research involving movement. This is the desktop application version. Credits to [CyrenArkade](https://github.com/CyrenArkade/mothball) for making the original mothball. For the up to date discord bot Mothball, see the main branch [here](https://github.com/anon-noob/mothball).
 
 ## Function Syntax
 Functions must be separated by spaces. They consist of the function name, optionally followed by arguments in parenthesis. Args must be separated by commas.
@@ -95,8 +82,8 @@ Comments are multiline.
 Custom variables can be defined with the syntax `var(name, val)`.  
 For example, you could define t=12 with `var(t, 12)`, then use the variable with `sprintjump(t)`.
 
-Custom functions can be defined with the syntax `def(name, inputs, *args)`.  
-For example, you could define `def(angled_3bc, -wj(duration, angle) -w(1, angle) | sj(duration, angle), duration, angle)`.  
+Custom functions can be defined with the syntax `function(name, inputs, *args)`.  
+For example, you could define `function(angled_3bc, -wj(duration, angle) -w(1, angle) | sj(duration, angle), duration, angle)`.  
 You could then call this function with `angled_3bc(11, 0.0054)`
 
 Functions and variables will persist across channels and servers until Mothball restarts.
