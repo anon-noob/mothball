@@ -231,7 +231,7 @@ class MainNotebookGUI(tk.Tk, tk.Frame):
                     "has_changed": frame.has_changed,
                      "raw_output": frame.raw_output}
             
-            with open(os.path.join(self.user_directory, f"Documents\\Mothball\\Notebooks\\{self.file_name}.json"), "w") as file:
+            with open(os.path.join(self.user_directory, "Documents", "Mothball", "Notebooks", f"{self.file_name}.json"), "w") as file:
                 json.dump(data, file, indent=4)
 
             self.has_unsaved_changes = False
