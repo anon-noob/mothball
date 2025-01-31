@@ -1,5 +1,5 @@
 # Mothball
-The most up to date Discord bot for simulating Minecraft movement to high accuracy, used for parkour among other minecraft fields of research involving movement. This is the desktop application version. Credits to [CyrenArkade](https://github.com/CyrenArkade/mothball) for making the original mothball. For the up to date discord bot Mothball, see the main branch [here](https://github.com/anon-noob/mothball).
+The most up to date Discord bot for simulating Minecraft movement to high accuracy, used for parkour among other minecraft fields of research involving movement. This is the desktop application version. Credits to [CyrenArkade](https://github.com/CyrenArkade/mothball) for making the original mothball. For the up to date discord bot Mothball, see the main branch [here](https://github.com/anon-noob/mothball). Feel free to report bugs, make suggestions, and add ons. This version of Mothball is currently unstable, so proceed with caution! Works on windows and maybe mac os.
 
 ## Function Syntax
 Functions must be separated by spaces. They consist of the function name, optionally followed by arguments in parenthesis. Args must be separated by commas.
