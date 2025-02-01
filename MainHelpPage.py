@@ -43,7 +43,7 @@ class MainHelpPage(tk.Frame):
         
         self.add_to_tree(1, 'movement', 'Movement', MH.Movement)
         self.add_to_tree(1, 'outputs', 'Outputs', OH.SettersAndOutputs)
-        self.add_to_tree(1, 'Optimization', 'Optimization',OP.Calculators)
+        self.add_to_tree(1, 'optimize', 'Optimization',OP.Calculators)
 
         self.tree.insert("", "end",iid=2, text="Documentation")
 
