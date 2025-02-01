@@ -100,7 +100,7 @@ class Intro(Page):
         self.insert_text(" function, duration and rotation are positional only arguments. The only way to pass arguments is by providing them directly, for example, ")
         self.inline_code("sprint(6, 20)")
         self.insert_text(". The order of arguments matters.\n\nThe ")
-        self.inline_code("/")
+        self.inline_code("*")
         self.insert_text(" symbol indicates that all following parameters are keyword-only, meaning they cannot be passed as positional arguments. These can be passed by explicitly writing the parameter name followed by an equal sign, and then the argument. For the ")
         self.inline_code("sprint")
         self.insert_text(" function, slip, speed, and slow are keyword only arguments. The only way to pass these kinds of arguments is like this: ")
