@@ -12,7 +12,7 @@ class Welcome(Page):
         super().__init__(master, pack)
 
         self.heading("Welcome to Mothball!")
-        self.insert_text("Click on the right to read about what Mothball has to offer.")
+        self.insert_text("Click on the left to read about what Mothball has to offer.")
         self.finalize()
 
 
