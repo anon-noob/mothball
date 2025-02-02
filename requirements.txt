@@ -1,2 +1,2 @@
 numpy==1.23.3
-tk
+pyinstaller==6.11.1
