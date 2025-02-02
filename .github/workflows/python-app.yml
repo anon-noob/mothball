@@ -37,3 +37,12 @@ jobs:
     - name: Test with pytest
       run: |
         pytest
+    - name: Build app with PyInstaller
+      run: |
+        pip install pyinstaller
+        pyinstaller --onefile --noconsole -i "Assets/The_HPK_Cube.ico" Mothball.py
+    - name: Upload executable
+      uses: actions/upload-artifact@v2
+      with:
+        name: Mothball-app
+        path: dist/Mothball
