@@ -194,7 +194,9 @@ class MainNotebookGUI(tk.Tk, tk.Frame):
 
     
     def _on_mousewheel(self, event):
-        self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        a = self.winfo_containing(event.x_root, event.y_root)
+        if a and a.winfo_toplevel() == self:
+            self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
 
     def edit_colors(self):
         ChangeColorDialog(self, self.options)
