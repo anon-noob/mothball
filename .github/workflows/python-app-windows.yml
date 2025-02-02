@@ -43,4 +43,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: Mothball-app
-        path: dist/Mothball
+        path: dist/Mothball.exe
