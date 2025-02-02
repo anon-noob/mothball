@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter.messagebox import askyesnocancel
 import json
-import os, os.path
+import os
 from ChangeColorDialog import ChangeColorDialog
 from SetttingsDialog import Settings
 from CodeCell import Cell
@@ -12,6 +12,9 @@ import Credits
 from tkinter.filedialog import askopenfile, asksaveasfile
 import sys
 import FileHandler
+
+# PLEASE FIX:
+# Scrolling in top level widget scrolls the rest of the widgets
 
 class MainNotebookGUI(tk.Tk, tk.Frame):
 
@@ -31,13 +34,15 @@ class MainNotebookGUI(tk.Tk, tk.Frame):
 
         FileHandler.create_directories()
 
-        if getattr(sys, "frozen", False):
-            app_path = sys._MEIPASS # When run as an exe
-        else:
-            app_path = "" # Otherwise (run as a script)
-
-        icon_path = os.path.join(app_path, "Assets", "The_HPK_Cube.ico")
-        self.iconbitmap(icon_path)
+        try:
+            if getattr(sys, "frozen", False):
+                apppath = sys._MEIPASS # When run as an exe
+            else:
+                apppath = "" # Otherwise (run as a script)
+            icopath = os.path.join(apppath, "Assets", "The_HPK_Cube.ico") # This has to change depending on the os probably
+            self.iconbitmap(icopath)
+        except:
+            pass
 
         self.file_name = ""
 
@@ -63,6 +68,7 @@ class MainNotebookGUI(tk.Tk, tk.Frame):
         self.title("Parkour Simulator - A Mothball Upgrade - Unnamed")
 
         self.canvas.bind('<Configure>', lambda e: self._on_configure(e, self.id))
+
 
         self.help_window = False
         self.about_window = False
@@ -193,7 +199,7 @@ class MainNotebookGUI(tk.Tk, tk.Frame):
         self.event_generate('<Configure>')
 
     
-    def _on_mousewheel(self, event):
+    def _on_mousewheel(self, event: tk.Event):
         a = self.winfo_containing(event.x_root, event.y_root)
         if a and a.winfo_toplevel() == self:
             self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
@@ -379,8 +385,10 @@ class StarterFrame(tk.Frame):
         self.y_button.pack()
     
     def adjust_width(self, event):
+        "empty function"
         pass
 
 if __name__ == "__main__":
     app = MainNotebookGUI()
+    app.geometry("520x400")
     app.mainloop()
