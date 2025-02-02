@@ -1,3 +1,7 @@
+import FileHandler
+if __name__ == "__main__":
+    FileHandler.create_directories()
+
 import tkinter as tk
 from tkinter import ttk
 from tkinter.messagebox import askyesnocancel
@@ -11,7 +15,6 @@ import About_Mothball
 import Credits
 from tkinter.filedialog import askopenfile, asksaveasfile
 import sys
-import FileHandler
 
 # PLEASE FIX:
 # Scrolling in top level widget scrolls the rest of the widgets
@@ -32,7 +35,6 @@ class MainNotebookGUI(tk.Tk, tk.Frame):
         self.bind("<Control-o>", func=lambda e: self.load())
         self.bind("<Control-n>", func=lambda e: self.new())
 
-        FileHandler.create_directories()
 
         try:
             if getattr(sys, "frozen", False):
@@ -253,7 +255,7 @@ class MainNotebookGUI(tk.Tk, tk.Frame):
             self.has_unsaved_changes = False
 
     def save_as(self):
-        file = asksaveasfile(confirmoverwrite=True, initialdir=os.path.join(self.user_directory, f"Documents\\Mothball\\Notebooks"), defaultextension=".json")
+        file = asksaveasfile(confirmoverwrite=True, initialdir=os.path.join(self.user_directory, "Documents", "Mothball", "Notebooks"), defaultextension=".json")
         if not file:
             return
         
@@ -279,7 +281,7 @@ class MainNotebookGUI(tk.Tk, tk.Frame):
             if not askyesnocancel("Unsaved Changes", "You have unsaved changes. Open new file anyway?"):
                 return "break"
 
-        file = askopenfile(initialdir=os.path.join(self.user_directory, f"Documents\\Mothball\\Notebooks"), defaultextension=".json")
+        file = askopenfile(initialdir=os.path.join(self.user_directory, "Documents", "Mothball", "Notebooks"), defaultextension=".json")
         if not file:
             return "break"
         data = json.load(file)
@@ -385,7 +387,6 @@ class StarterFrame(tk.Frame):
         self.y_button.pack()
     
     def adjust_width(self, event):
-        "empty function"
         pass
 
 if __name__ == "__main__":
