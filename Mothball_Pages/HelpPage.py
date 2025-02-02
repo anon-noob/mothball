@@ -127,9 +127,9 @@ class Page(tk.Frame):
     def on_key_press(self, event: tk.Event=None):
         if event.keysym == "Escape":
             self.hide_search_widget(event)
-        elif event.keysym == "Return" or event.keysym == "Up":
+        elif event.keysym == "Return" or event.keysym == "Down":
             self.next_match()
-        elif event.keysym == "Down":
+        elif event.keysym == "Up":
             self.next_match(-1)
         else:
             search_term = self.search_entry.get()
