@@ -60,6 +60,7 @@ class Cell(tk.Frame):
         self.eval_button = tk.Button(self, text="Run", command=self.evaluate, foreground="white", background="gray12")
         self.bind_hover(self.eval_button)
         self.eval_button.grid(row=5, column=1)
+        self.bind_all("<Control-r>", lambda x: self.evaluate())
 
         self.adjust_height()        
         self.adjust_height(widget=self.output)
