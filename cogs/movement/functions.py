@@ -1310,9 +1310,10 @@ def turnqueue(ctx: Context):
     ctx.player.turn_queue.extend(map(to_f32, ctx.pos_args))
 
 @command()
-def macro(ctx: Context, name = 'macro'):
-    "Makes an mpk (not cyv) macro file named `name.csv`"
+def macro(ctx: Context, name = 'macro', format = 'mpk'):
+    "Makes an mpk or cyv macro file named `name.csv`"
     ctx.macro = name
+    ctx.macro_format = format
 
 def zeroed_formatter(ctx: Context, num, zero):
     if zero is None or zero == 0:

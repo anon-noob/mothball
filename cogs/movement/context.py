@@ -14,6 +14,7 @@ class Context():
         self.simulation_axis = axises # either xz or y
 
         self.macro = None
+        self.macro_format = None
         self.out = ''
         self.pre_out = ''
 
@@ -107,4 +108,28 @@ class Context():
             prev_rotation = tick[5]
             lines.append(f'0.0,0.0,0.0,0.0,0.0,{turn},0.0,{input_str},false,false, 0.0, 0.0, 0.0')
 
+        return '\n'.join(lines)
+        
+    def macro_json(self):
+        lines = ['[']
+        prev_rotation = None
+        for i, tick in enumerate(self.input_history):
+            w = a = s = d = 'false'
+            if tick[0] > 0: w = 'true'
+            if tick[0] < 0: s = 'true'
+            if tick[1] > 0: a = 'true'
+            if tick[1] < 0: d = 'true'
+
+            if prev_rotation is None:
+                turn = 0
+            else:
+                turn = tick[5] - prev_rotation
+
+            prev_rotation = tick[5]
+            line = f'[\"{w}\", \"{a}\", \"{s}\", \"{d}\", \"{str(tick[4]).lower()}\", \"{str(tick[2]).lower()}\", \"{str(tick[3]).lower()}\", \"{turn}\", \"{0.0}\"]'
+            if i < len(self.input_history) - 1:
+                line += ','
+            lines.append(line)
+
+        lines.append(']')
         return '\n'.join(lines)

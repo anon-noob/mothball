@@ -63,8 +63,12 @@ class Movement(commands.Cog):
             results = 'Something went wrong.'
 
         if context.macro:
-            buffer = BytesIO(context.macro_csv().encode('utf8'))
-            kwargs = {'content': results, 'file': discord.File(fp=buffer, filename=f'{context.macro}.csv')}
+            if context.macro_format == 'mpk':
+                buffer = BytesIO(context.macro_csv().encode('utf8'))
+                kwargs = {'content': results, 'file': discord.File(fp=buffer, filename=f'{context.macro}.csv')}
+            elif context.macro_format == 'cyv':
+                buffer = BytesIO(context.macro_json().encode('utf8'))
+                kwargs = {'content': results, 'file': discord.File(fp=buffer, filename=f'{context.macro}.json')}
         elif len(results) > 1990:
             if color_output:
                 results = context.result(backup=True)

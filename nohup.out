@@ -1,0 +1,4 @@
+[2025-02-16 22:29:34] [INFO    ] discord.client: logging in using static token
+[2025-02-16 22:29:41] [INFO    ] discord.gateway: Shard ID None has connected to Gateway (Session ID: 018eb790ab0e1cfce51c4f7eadb935e5).
+[2025-02-16 22:45:30] [ERROR   ] discord.ext.commands.bot: Ignoring exception in command None
+discord.ext.commands.errors.CommandNotFound: Command "o" is not found
