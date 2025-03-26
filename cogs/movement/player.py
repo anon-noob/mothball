@@ -26,11 +26,15 @@ class Player:
         self.soulsand = 0
         self.speed = 0
         self.slowness = 0
-        self.water = 0 # New water
-        self.blocking = 0 # New sword blocks
-        self.last_turn = 0 # for outturn() method
+        self.water = 0
+        self.blocking = 0
+        self.last_turn = 0
         self.last_rotation = 0
         self.prev_web = 0
+        self.prev_sneak = 0
+        self.single_axis_inertia = True
+        self.sneak_delay = False
+
     
     def move(self, ctx):
         args = ctx.args
@@ -55,8 +59,8 @@ class Player:
         soulsand = args.get('soulsand', self.soulsand)
         water = args.get('water', self.water)
         blocking = args.get('blocking', self.blocking)
-        web = args.get('web', False)
         sprintjump_boost = fl(0.2)
+        web = args.get('web', False)
 
         if airborne:
             slip = fl(1)
@@ -78,6 +82,7 @@ class Player:
             forward *= fl(-1)
             strafe *= fl(-1)
             sprintjump_boost *= -1
+        
         # End defining
         
         # Moving the player
@@ -92,11 +97,16 @@ class Player:
         self.vx *= fl(0.91) * self.prev_slip
         self.vz *= fl(0.91) * self.prev_slip
 
-        # Applying inertia threshold and web movement
-        if abs(self.vx) < self.inertia_threshold or self.prev_web:
-            self.vx = 0.0
-        if abs(self.vz) < self.inertia_threshold or self.prev_web:
-            self.vz = 0.0
+        # Applying inertia threshold or web movement
+        if self.single_axis_inertia: # 1.21.4 and below
+            if abs(self.vx) < self.inertia_threshold or self.prev_web:
+                self.vx = 0.0
+            if abs(self.vz) < self.inertia_threshold or self.prev_web:
+                self.vz = 0.0
+        else: # 1.21.5 and above
+            if abs(math.sqrt(self.vx**2 + self.vz**2)) < self.inertia_threshold or self.prev_web:
+                self.vx = 0.0
+                self.vz = 0.0
 
         # Calculating movement multiplier
         if airborne:
@@ -125,7 +135,7 @@ class Player:
             self.vz += self.mccos(facing) * sprintjump_boost
 
         # Applies sneaking
-        if sneaking:
+        if (sneaking and not self.sneak_delay) or (self.prev_sneak and self.sneak_delay):
             forward = fl(float(forward) * 0.3)
             strafe = fl(float(strafe) * 0.3)
 
@@ -158,14 +168,15 @@ class Player:
             self.vx += float(strafe * cos_yaw - forward * sin_yaw)
             self.vz += float(forward * cos_yaw + strafe * sin_yaw)
 
-        # Apply web speed multiplier
+        # Apply web slowdown
         if web:
             self.vx = self.vx / 4
             self.vz = self.vz / 4
-        
+
         self.prev_slip = slip
         self.prev_sprint = sprinting
         self.prev_web = web
+        self.prev_sneak = sneaking
         
         ctx.history.append((self.x, self.z, self.vx, self.vz))
         ctx.input_history.append([forward, strafe, sprinting, sneaking, jumping, rotation])
