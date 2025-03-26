@@ -1278,7 +1278,7 @@ def sneak_delay(ctx: Context, sneak_delay = False):
     """
     Toggles sneak delay, which is present in 1.14 and above
     
-    If air sprint delay is toggled on, activating and deactivating sprint in midair is 1 tick delayed.
+    If air sprint delay is toggled on, activating and deactivating sneak is 1 tick delayed.
 
     To toggle on, use sndel(true), sndel(t), or sndel(1)
     """
