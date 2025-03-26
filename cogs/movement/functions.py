@@ -1254,14 +1254,35 @@ def fastmath(ctx: Context):
     ctx.player.angles = 4096
 
 @command()
-def inertia(ctx: Context, inertia = 0.005):
+def inertia(ctx: Context, inertia = 0.005, single_axis: bool = True):
     """
-    Sets the inertia threshold.
+    Sets the inertia threshold and whether it is calculated in separate (single) axis or together.
     
+    Inertia thresholds by Minecraft version:
+
     1.8- : 0.005
     1.9+ : 0.003
+
+    Behavior of inertia per axis:
+
+    1.21.4-: single axis (a low enough x speed hits inertia on x only, likewise for z)
+    1.21.5+: multi axis (a low enough total speed (sqrt(vx^2 + vz^2)) is required to hit inertia)
+
+    Toggle single axis off by passing "false", "f", or "0" to single_axis.  
     """
     ctx.player.inertia_threshold = inertia
+    ctx.player.single_axis_inertia = single_axis
+
+@command(aliases=['sneakdelay', 'sndel'])
+def sneak_delay(ctx: Context, sneak_delay = False):
+    """
+    Toggles sneak delay, which is present in 1.20 and above
+    
+    If air sprint delay is toggled on, activating and deactivating sprint in midair is 1 tick delayed.
+
+    To toggle on, use sndel(true), sndel(t), or sndel(1)
+    """
+    ctx.player.sneak_delay = sneak_delay
 
 @command(aliases = ['pre'])
 def precision(ctx: Context, precision = 6):
@@ -2061,14 +2082,16 @@ def version(ctx: Context, string: str = "1.8"):
     """
     Sets the version of the simulation. This can toggle the appropriate functions for the inputted version, namely sprint air delay and inertia.
 
-    Version 1.8 and below has inertia set to 0.005, while later versions are set to 0.003. \
-    Version 1.19.3 and below has sprint air delay while later versions don't.
+    Version 1.8 and older has inertia set to 0.005 while later versions are set to 0.003. \
+    Version 1.19.3 and older has sprint air delay while later versions don't. \
+    Version 1.21.4 and older has single axis inertia while later versions use multi axis inertia.
     
-    The version should be either in the form `major.minor` or `major.minor.patch`. For example, `1.21.2`
+    The version should be either in the form `major.minor` or `major.minor.patch`. For example, `1.21.4` (DO NOT PLAY THIS VERSION EVER)
 
-    Pro tip: `major` will always be 1 unless some update happens (never).
+    Pro tip: `major` will always be 1 unless some update happens (Minecraft 2 confirmed omg!!!).
     """
-    versioning_regex = r"(\d+)\.(\d+)(?:\.(\d+))?(.*)?"
+    # Code modified by ducky (currn)
+    versioning_regex = r"(\d+)\.(\d+)(?:\.(\d+))?(.*)?" 
     result = re.findall(versioning_regex, string.strip(),flags=re.DOTALL)
     if not result or not result[0]:
         raise SimError(f"Invalid version string {string}")
@@ -2084,8 +2107,17 @@ def version(ctx: Context, string: str = "1.8"):
     elif int(minor) > 21:
         raise SimError(f"The `minor` number (`major.minor.patch`) should be `21` or less, not {minor}.")
 
+    if patch == "": # Dealing with patch being left blank
+        patch = 0
+
     if (int(minor) == 19 and int(patch) > 3) or (int(minor) > 19): # Dealing with air sprint delay
         ctx.player.air_sprint_delay = False
+
+    if (int(minor) >= 20): # Dealing with 1t delayed sneaking
+        ctx.player.sneak_delay = True
+
+    if (int(minor) == 21 and int(patch) > 4) or (int(minor) > 21): # Dealing with single axis inertia
+        ctx.player.single_axis_inertia = False
 
 @command(aliases=["lang"])
 def language(ctx: Context, string: str = "english"):
@@ -2093,8 +2125,12 @@ def language(ctx: Context, string: str = "english"):
     Did you really think this would be implemented...
     """
     
-    if string.lower() != "english":
-        raise SimError(f"Sorry but `{string}` not supported, we only have: \n`english`\n")
-    else:
+    if string.lower() == "english":
         insults = ["idiot sandwich", "buffoon", "illiterate freak", "succubus", "homosapien of the low IQ variant", "bitch", "idot", "uncultured swine", "smelly bedwars player", "smelly league player, go take a shower and touch grass", "smelly valorant player, go take a shower and touch grass", "lonely virgin gamer, consider this: 🚿","nincompoop","pillock","🤢 🎮", "fat fuck", "despicable being","loveless loser","muppet","submissive and breedable human", "glutenous glob", "disgusting douche", "karen", "normie","literally are the definition of 1984", "wicket witch", "charlatan", "normie \*laughs in poor gamer e-girl\*", "sexual spring breaking degenerate. Get out of my server, i own this place.","sussy baka uWu \*nudges and soft vores you\*\n\n\n\n\nWC","lil husbando, come give mommy a huggy", "lazy linguistic lacking logic loveless ludicrous livid lamentable leeching loser", "tier 20 twitch troller", "gold wings enthusiast", "'\n\n\n\n\nwc", "hoe, i bet u watch tik tok"]
         add_to_output_as_normal_string(f"This is already in english you {random.choice(insults)}.\n")
+    elif string.lower() == "parkour":
+        raise SimError(f"-[]---[][]-[][]---[]-[][][]-- \"-[][]--[]-[]-[]-[][][][]--[]-[]-\" []-[][][][] []-[][]-[] --[][]-[][]--[]---[][]-[]-[]-[]--. ")
+    elif string.lower().startswith("enchant"):
+        raise SimError(f"╎ϟ ▭ ╎ᒣ ▭ リᒍᒣ ▭ ᒍ⎓ ▭ ┤∷ᒷᖋᒣ ▭ ⋮ᒍ॥ ▭ ᒣᒍ ▭ ᕊᒷ ▭ ᒷリᔮ⍑ᖋリᒣᒷ↸ ▭ ∴╎ᒣ⍑ ▭ ᒣ⍑ᒷ ▭ ⎓ᖋリᒣᖋϟ॥ ▭ ᒍ⎓ ▭ ϟᒍ|:⍊╎リ┤ ▭ ᖋリ॥ ▭ i!ᖋ∷·ǀ·ᒍ⚍∷ ▭ ⋮⚍ᒲi! ▭ ∴╎ᒣ⍑ ▭ ᒲᒍᒣ⍑ᕊᖋ|:|:․ﺭ․")
+    else:
+        raise SimError(f"Sorry but `{string}` not supported, we only have: \n`english, parkour, enchanting_table`\n")
