@@ -1276,7 +1276,7 @@ def inertia(ctx: Context, inertia = 0.005, single_axis: bool = True):
 @command(aliases=['sneakdelay', 'sndel'])
 def sneak_delay(ctx: Context, sneak_delay = False):
     """
-    Toggles sneak delay, which is present in 1.20 and above
+    Toggles sneak delay, which is present in 1.14 and above
     
     If air sprint delay is toggled on, activating and deactivating sprint in midair is 1 tick delayed.
 
@@ -2110,11 +2110,12 @@ def version(ctx: Context, string: str = "1.8"):
     if patch == "": # Dealing with patch being left blank
         patch = 0
 
+    if (int(minor) >= 14): # Dealing with 1t delayed sneaking
+        ctx.player.sneak_delay = True
+        
     if (int(minor) == 19 and int(patch) > 3) or (int(minor) > 19): # Dealing with air sprint delay
         ctx.player.air_sprint_delay = False
 
-    if (int(minor) >= 20): # Dealing with 1t delayed sneaking
-        ctx.player.sneak_delay = True
 
     if (int(minor) == 21 and int(patch) > 4) or (int(minor) > 21): # Dealing with single axis inertia
         ctx.player.single_axis_inertia = False
