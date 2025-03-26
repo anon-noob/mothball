@@ -39,10 +39,12 @@ async def help(ctx):
 
 @bot.command()
 async def version(ctx):
-    v = "2.1.7"
+    v = "2.2.0"
     s = f"""Mothball version {v}
 Recent Additions:
-- (Super New Big Feature, Proceed With Caution!) Added y movement, do `;y` to simulate it! Currently supports jumping, jump boost, slime bounces, and web movement. I would like your feedback on whether the syntax and the semantics need to be changed, especially the semantics!
+- 1.21.5 is out, which means inertia has changed! Do `help(inertia)` to see the changes
+- For versions 1.14+, sneaking is now 1t delayed. Use `version` or `sneakdelay` to toggle it.
+- `version()` has been updated to account for these changes.
 """
     await ctx.send(s)
 
