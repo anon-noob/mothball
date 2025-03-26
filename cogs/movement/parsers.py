@@ -323,7 +323,7 @@ def cast(envs, command, type, val):
     if val.lower() in ('none', 'null'):
         return None
     
-    local_env = {}
+    local_env = {'px':0.0625}
     for env in envs:
         local_env.update(env)
 
