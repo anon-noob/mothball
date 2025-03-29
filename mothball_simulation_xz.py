@@ -53,7 +53,7 @@ class Player:
     ], "calculators": [
         "bwmm", "xbwmm", "wall", "xwall", "inv", "xinv", "blocks", "xblocks", "repeat", "r", "possibilities", "poss", "xpossibilities", "xposs", "xzpossibilities", "xzposs"
     ], "setters": [
-        "face", "facing", "f", "turn", "setposz", "z", "setvz", "vz", "setposx", "x", "setvx", "vx", "setslip", "slip", "setprecision", "precision", "pre", "inertia", "sprintairdelay", "sdel", "version", "v", "anglequeue", "aq", "tq", "turnqueue", "speed", "slow", "sndel", "sneakdelay", "var", "function", "func", "alias", "toggle"
+        "face", "facing", "f", "turn", "setposz", "z", "setvz", "vz", "setposx", "x", "setvx", "vx", "setslip", "slip", "setprecision", "precision", "pre", "inertia", "sprintairdelay", "sdel", "version", "v", "anglequeue", "aq", "tq", "turnqueue", "speed", "slow", "sndel", "sneakdelay", "var", "function", "func", "alias", "toggle", "singleaxisinertia", "sai"
     ]}
 
 
@@ -82,6 +82,8 @@ class Player:
         self.precision = 7
 
         self.inertia_threshold = 0.005
+
+        self.inertia_axis = 1
 
         self.inputs = ""
 
@@ -298,10 +300,15 @@ class Player:
             self.vz *= f32(0.91) * self.previous_slip
 
             # Apply inertia or web
-            if abs(self.vx) < self.inertia_threshold or self.previously_in_web:
-                self.vx = 0.0
-            if abs(self.vz) < self.inertia_threshold or self.previously_in_web:
-                self.vz = 0.0
+            if self.inertia_axis == 1:
+                if abs(self.vx) < self.inertia_threshold or self.previously_in_web:
+                    self.vx = 0.0
+                if abs(self.vz) < self.inertia_threshold or self.previously_in_web:
+                    self.vz = 0.0
+            elif self.inertia_axis == 2:
+                if sqrt(self.vz**2 + self.vx**2) < self.inertia_threshold or self.previously_in_web:
+                    self.vx = 0.0
+                    self.vz = 0.0
 
             # Get Movement Multiplier M
             M = self.movement_multiplier(slip, is_sprinting, speed, slow, state)
@@ -1933,7 +1940,7 @@ water.w(7) stw(3) # the player still moves a bit after the water.w(7)
     
     def sneakdelay(self, toggle: str, /):
         """
-        `toggle` will toggle true if it is the string `"true"`, else it will assume flse.
+        `toggle` will toggle true if it is the string `"true"`, else it will assume false.
 
         Toggles the player's sneak delay. If toggled, it takes 1 tick longer to activate sneak if the previous tick didn't sneak. 
         
@@ -1945,6 +1952,17 @@ water.w(7) stw(3) # the player still moves a bit after the water.w(7)
         else:
             self.sneak_delay = False
     
+    def singleaxisinertia(self, toggle: str, /):
+        """
+        Set's inertia to affect individual axis.
+        """
+        toggle = toggle.lower().strip()
+        if toggle == "true":
+            self.inertia_axis = 1
+        else:
+            self.inertia_axis = 2
+
+
     def version(self, string: str, /):
         "String should be in the form `1.n`, for example the minimum `1.8` is default. Max is currently `1.20`"
         components = string.split(".")
@@ -2440,13 +2458,14 @@ self.local_funcs['{name}'] = {name}
     add_alias(inertia, "inertia")
     add_alias(sprintairdelay, "sprintairdelay", "sdel")
     add_alias(sneakdelay, "sneakdelay", "sndel")
+    add_alias(singleaxisinertia, "singleaxisinertia", "sai")
     add_alias(version, "version", "v")
     add_alias(speed, "speed")
     add_alias(slowness, "slowness", "slow")
     add_alias(var, "var")
     add_alias(function, "function", "func")
     add_alias(alias, "alias")
-    add_alias(toggle, "toggle")
+    # add_alias(toggle, "toggle") # broken
 
     add_alias(anglequeue, "anglequeue", "aq")
     add_alias(turnqueue, "turnqueue", "tq")
@@ -2862,8 +2881,19 @@ self.local_funcs['{name}'] = {name}
             index = int(1 / (2 * Player.pi) * self.total_angles * rad + self.total_angles / 4) & (self.total_angles - 1)
         return f32(sin(index * self.pi * 2.0 / self.total_angles))
 
+
+    ## TEST ZONE
+    # def sneaktap(self, count: int = 1, duration: int = 1):
+    #     for i in range(count):
+    #         self.simulate(f"sn{f'.{self.inputs}' if self.inputs else ''}({duration})", return_defaults=False)
+    #         while self.vz != 0 or self.vx != 0:
+    #             self.simulate("st", return_defaults=False)
+
+    # _can_have_input.append("sneaktap")
+    # add_alias(sneaktap, "snt")
+
 if __name__ == "__main__":
     a = Player()
 
-    a.simulate("v(1.21) snweb(2) snweba outvz(0,snweba) snweba45 outvz(0,snweba45) snsweba outvz(0,snsweba) snsweba45 outvz(0,snsweba45)")
-    a.show_output()
+    # a.simulate("snt(1,1) s(5) outz(1-2*px)") # equivalent to sn st(10) s(5) ... (top secret test)
+    # a.show_output()
