@@ -38,7 +38,7 @@ jobs:
     - name: Build app with PyInstaller
       run: |
         pip install pyinstaller
-        pyinstaller --onefile --noconsole -i "Assets/The_HPK_Cube.ico" Mothball.py
+        pyinstaller --onefile --add-data "Mothball_Pages/*;Mothball_Pages" --add-data "images/*;images" --noconsole --i "images/cube.ico" Mothball.py
     - name: Upload executable
       uses: actions/upload-artifact@v4
       with:
