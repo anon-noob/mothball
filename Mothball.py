@@ -2,6 +2,7 @@ import FileHandler
 if __name__ == "__main__":
     FileHandler.create_directories()
 
+import webbrowser
 import tkinter as tk
 from tkinter import ttk
 from tkinter.messagebox import askyesnocancel
@@ -15,14 +16,13 @@ import About_Mothball
 import Credits
 from tkinter.filedialog import askopenfile, asksaveasfile
 import sys
+import Version
 
-# PLEASE FIX:
-# Scrolling in top level widget scrolls the rest of the widgets
 
 class MainNotebookGUI(tk.Tk, tk.Frame):
 
     FRAMES: dict[int, Cell] = {}
-
+    VERSION: str = "v0.1-alpha"
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -71,10 +71,29 @@ class MainNotebookGUI(tk.Tk, tk.Frame):
 
         self.canvas.bind('<Configure>', lambda e: self._on_configure(e, self.id))
 
+        try:
+            if getattr(sys, "frozen", False):
+                apppath = sys._MEIPASS
+            else:
+                apppath = ""
+
+            # Windows: Use .ico
+            icopath = os.path.join(apppath, "images", "cube.ico")
+            self.iconbitmap(icopath)
+
+            # macOS/Linux: Use .png
+            iconpath_png = os.path.join(apppath, "images", "cube.png")
+            if os.path.exists(iconpath_png):
+                icon_image = tk.PhotoImage(file=iconpath_png)
+                self.wm_iconphoto(True, icon_image)
+        except Exception as e:
+            print(f"Error setting icon: {e}")
+
 
         self.help_window = False
         self.about_window = False
         self.credits_window = False
+        self.version_window = False
         self.has_unsaved_changes = False
         
         self.scrollable_content.grid_rowconfigure(0, weight=1)
@@ -103,6 +122,11 @@ class MainNotebookGUI(tk.Tk, tk.Frame):
         helpMenu.add_command(label="Credits", command= self.show_credits)
         menubar.add_cascade(label="Help", menu=helpMenu)
 
+        updateMenu = tk.Menu(menubar, tearoff=False)
+        updateMenu.add_command(label="Current Version", command=self.show_version)
+        updateMenu.add_command(label="Check For Updates", command=TEST)
+        menubar.add_cascade(label="Update", menu=updateMenu)
+
         self.protocol("WM_DELETE_WINDOW", self.on_destroy)
 
     def _on_configure(self, event: tk.Event, widget_id, delay = 500):
@@ -121,7 +145,6 @@ class MainNotebookGUI(tk.Tk, tk.Frame):
             widget.adjust_height()
             widget.adjust_height(widget=widget.output)
             widget.colorize_code()
-            # self.update_idletasks()
 
     def createbox(self, row, mode: str):
         "Creates a box below it"
@@ -357,7 +380,15 @@ class MainNotebookGUI(tk.Tk, tk.Frame):
             self.credits_window.top.bind("<Destroy>", func= self.n)
         else:
             self.credits_window.top.focus()
+    
+    def show_version(self):
+        if not self.version_window:
+            self.version_window = Version.Version(self.VERSION, None)
+            self.version_window.top.bind("<Destroy>", func= self.o)
+        else:
+            self.version_window.focus()
 
+    # idfk
     def l(self, e):
         self.help_window = False
     
@@ -366,6 +397,9 @@ class MainNotebookGUI(tk.Tk, tk.Frame):
     
     def n(self, e):
         self.credits_window = False
+    
+    def o(self, e):
+        self.version_window = False
     
     def on_destroy(self):
         if self.has_unsaved_changes:
@@ -388,6 +422,9 @@ class StarterFrame(tk.Frame):
     
     def adjust_width(self, event):
         pass
+
+def TEST():
+    webbrowser.open_new("https://github.com/anon-noob/mothball/releases/tag/v0.1-alpha")
 
 if __name__ == "__main__":
     app = MainNotebookGUI()
