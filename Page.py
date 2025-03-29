@@ -491,7 +491,7 @@ class Page(tk.Frame):
             new_width = self.text.winfo_width()
             new_height = int(img_height * (new_width / img_width))
 
-            image = image.resize((new_width, new_height), Image.ANTIALIAS)
+            image = image.resize((new_width, new_height), Image.LANCZOS)
             image = ImageTk.PhotoImage(image)
             old_image = self.images[index][1]
             self.images[index] = (src, image)
