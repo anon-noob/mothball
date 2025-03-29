@@ -1,17 +1,53 @@
+import os
+import sys
 from tkinter import ttk
 import tkinter as tk
-import Mothball_Pages.Introduction as I
-import Mothball_Pages.MovementHelp as MH
-import Mothball_Pages.OutputHelp as OH
-import Mothball_Pages.OptimizationHelp as OP
-import Mothball_Pages.Welcome_Page as WP
-import Mothball_Pages.LearnTheBasics as LB
-import Mothball_Pages.DocumentationIntro as DI
-import Mothball_Pages.MovementDocumentation as MD
+import Page as Page
+
+if getattr(sys, "frozen", False):
+    base_path = sys._MEIPASS
+else:
+    base_path = os.path.abspath(".")
+
+with open(os.path.join(base_path, "Mothball_Pages/Introduction.txt")) as f:
+    introduction = f.read()
+    introductionHEADINGS = Page.Page.get_headings(introduction)
+
+with open(os.path.join(base_path, "Mothball_Pages/DocumentationIntro.txt")) as f:
+    documentationIntro = f.read()
+    documentationIntroHEADINGS = Page.Page.get_headings(documentationIntro)
+
+with open(os.path.join(base_path, "Mothball_Pages/LearnTheBasics.txt")) as f:
+    learnTheBasics = f.read()
+    learnTheBasicsHEADINGS = Page.Page.get_headings(learnTheBasics)
+
+with open(os.path.join(base_path, "Mothball_Pages/MovementDocumentation.txt")) as f:
+    movementDocumentation = f.read()
+    movementDocumentationHEADINGS = Page.Page.get_headings(movementDocumentation)
+
+with open(os.path.join(base_path, "Mothball_Pages/MovementHelp.txt")) as f:
+    movementHelp = f.read()
+    movementHelpHEADINGS = Page.Page.get_headings(movementHelp)
+
+with open(os.path.join(base_path, "Mothball_Pages/OptimizationHelp.txt")) as f:
+    optimizationHelp = f.read()
+    optimizationHelpHEADINGS = Page.Page.get_headings(optimizationHelp)
+
+with open(os.path.join(base_path, "Mothball_Pages/OutputHelp.txt")) as f:
+    outputHelp = f.read()
+    outputHelpHEADINGS = Page.Page.get_headings(outputHelp)
+
+with open(os.path.join(base_path, "Mothball_Pages/SetterHelp.txt")) as f:
+    setterHelp = f.read()
+    setterHelpHEADINGS = Page.Page.get_headings(setterHelp)
+
+with open(os.path.join(base_path, "Mothball_Pages/WelcomePage.txt")) as f:
+    welcomePage = f.read()
+    welcomePageHEADINGS = Page.Page.get_headings(welcomePage)
+
 
 class MainHelpPage(tk.Frame):
     def __init__(self, master):
-        # super().__init__(master)
         self.top = tk.Toplevel(master)
 
         self.master = master
@@ -27,39 +63,38 @@ class MainHelpPage(tk.Frame):
         self.right_frame = tk.Frame(self.top)
         self.right_frame.pack(side="right", expand=True, fill="both")
 
-        self.current_page = WP.Welcome(self.right_frame)
-        self.current_page_name = "learn"
+        self.current_page = Page.Page(self.right_frame)
+        self.current_page_name = "welcome"
+        self.current_page.parse_text(welcomePage)
+        self.current_page.text.configure(state="disabled")
 
         self.tree.bind("<<TreeviewSelect>>", self.on_treeview_select)
 
         self.tree.insert("", "end",iid=0, text="Welcome to Mothball")
         self.tree.insert("", "end",iid=1, text="Learn the Basics")
-
-        self.tree.insert(1, "end", iid="intro", text="Introduction")
-        self.temp = I.Intro(self.right_frame, pack=False).headings
-
-        for title, (index, depth) in self.temp.items():
-            self.tree.insert("intro", "end", iid="intro " + index, text=title)
-        
-        self.add_to_tree(1, 'movement', 'Movement', MH.Movement)
-        self.add_to_tree(1, 'outputs', 'Outputs', OH.SettersAndOutputs)
-        self.add_to_tree(1, 'optimize', 'Optimization',OP.Calculators)
-
         self.tree.insert("", "end",iid=2, text="Documentation")
 
-        self.add_to_tree(2,"movementdocumentation", 'Movement', MD.MovementDocumentation)
+        self.add_to_tree(1, 'intro', "Introduction", introductionHEADINGS)
+        self.add_to_tree(1, 'movement', "Movement", movementHelpHEADINGS)
+        self.add_to_tree(1, 'setters', "Setters", setterHelpHEADINGS)
+        self.add_to_tree(1, 'outputs', "Outputs", outputHelpHEADINGS)
+        self.add_to_tree(1, 'optimize', "Optimization", optimizationHelpHEADINGS)
+        
+        self.add_to_tree(2, 'movementdocumentation', 'Movement Functions', movementDocumentationHEADINGS)
 
-    def add_to_tree(self, depth: int, id_name: str, display_name: str, page_object):
-        last_heading = ""
+    def add_to_tree(self, depth: int, id_name: str, display_name: str, HEADINGS: dict):
+        last_heading1 = ""
+        last_heading2 = ""
         self.tree.insert(depth, "end", iid=id_name, text=display_name)
-        self.temp = page_object(self.right_frame, pack=False).headings
-        for title, (index, depth) in self.temp.items():
+        for title, (index, depth) in HEADINGS.items():
             if depth == 1:
                 self.tree.insert(id_name, 'end', iid=id_name + " " + index, text=title)
-                last_heading = id_name + " " + index
+                last_heading1 = id_name + " " + index
             elif depth == 2:
-                self.tree.insert(last_heading, 'end', iid=id_name + " " + index, text=title)
-            
+                self.tree.insert(last_heading1, 'end', iid=id_name + " " + index, text=title)
+                last_heading2 = id_name + " " + index
+            elif depth == 3:
+                self.tree.insert(last_heading2, 'end', iid=id_name + " " + index, text=title)
 
 
     def on_treeview_select(self, event):
@@ -74,7 +109,8 @@ class MainHelpPage(tk.Frame):
                     self.show("learn")
                 elif item_id == 2:
                     self.show("doc")
-            except:
+
+            except ValueError:
                 try:
                     page, index = item_id.split(" ")
                     if self.current_page_name != page:
@@ -83,32 +119,42 @@ class MainHelpPage(tk.Frame):
                 except:
                     self.show(item_id)
 
-    def clear_frame(self):
-        for widget in self.right_frame.winfo_children():
-            widget.destroy()
+    def clear_page(self):
+        self.current_page.text.configure(state="normal")
+        for tag_name in self.current_page.tags:
+            self.current_page.text.tag_remove(tag_name, "1.0", tk.END)
+        self.current_page.text.delete("1.0", tk.END)
+        self.current_page.pos.row = 1
+        self.current_page.pos = self.current_page.pos.reset_column()
+        self.current_page.images = {}
+        
     
     def show(self, page_name):
         if self.current_page_name == page_name:
             return
-        self.clear_frame()
+        self.clear_page()
         match page_name:
             case"intro":
-                self.current_page = I.Intro(self.right_frame)
+                self.current_page.parse_text(introduction)
             case "movement":
-                self.current_page = MH.Movement(self.right_frame)
+                self.current_page.parse_text(movementHelp)
             case "outputs":
-                self.current_page = OH.SettersAndOutputs(self.right_frame)
+                self.current_page.parse_text(outputHelp)
             case "optimize":
-                self.current_page = OP.Calculators(self.right_frame)
+                self.current_page.parse_text(optimizationHelp)
+            case "setters":
+                self.current_page.parse_text(setterHelp)
             case "welcome":
-                self.current_page = WP.Welcome(self.right_frame)
+                self.current_page.parse_text(welcomePage)
             case "learn":
-                self.current_page = LB.Learn(self.right_frame)
+                self.current_page.parse_text(learnTheBasics)
             case "doc":
-                self.current_page = DI.DocumentationIntro(self.right_frame)
+                self.current_page.parse_text(documentationIntro)
             case "movementdocumentation":
-                self.current_page = MD.MovementDocumentation(self.right_frame)
+                self.current_page.parse_text(movementDocumentation)
         self.current_page_name = page_name
+        self.current_page.text.configure(state="disabled")
+
 
 
 if __name__ == "__main__":
