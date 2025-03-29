@@ -22,7 +22,7 @@ import Version
 class MainNotebookGUI(tk.Tk, tk.Frame):
 
     FRAMES: dict[int, Cell] = {}
-    VERSION: str = "v0.1-alpha"
+    VERSION: str = "v0.2-alpha"
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
