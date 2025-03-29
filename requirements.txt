@@ -2,4 +2,3 @@ numpy==1.23.3
 pyinstaller==6.11.1
 pillow==11.1.0
 requests==2.31.0
-PIL==9.5.0
