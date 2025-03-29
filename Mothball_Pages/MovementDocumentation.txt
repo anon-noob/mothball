@@ -1,0 +1,853 @@
+# Important Notes
+Here, you will find all the information for each movement function. A few things to take note.
+
+A function that can be "modified by inputs" means that a function can append inputs like this: `sprint.wa`. This means to sprint with W and A. If no input is given, then it defaults to just W. Possible inputs are combinations of WASD. Any 45 strafe function cannot be modified by inputs. Any movement where the player does not input anything (`stop`, `stopair`, `stopjump`, etc) cannot be modified by inputs.
+
+The terms "rotation" and "facing" both refer to the angle at which the player is looking. You will encounter descriptions like "45 strafing towards the direction of <angle>". This means that the player is looking at <angle> while also having the 45 strafe boost. For example, consider the movement "sprint and 45 strafing towards the direction of 4 degrees". Both `sprint.wa(1, 49)` and `sprint45(1, 4)` achieve the same movement.
+
+For the nerds, to maintain consistency, all 45 strafe movements use the inputs W+A, not W+D. Therefore, `sprint45(1, angle)` is equivalent to `sprint.wa(1, angle + 45)`. However, `sprint.wd(1, angle - 45)` is not guaranteed to be exactly the same, but it is very close, with a max difference of 5 decimal places. When making super precise strats, keep this in mind when testing in game.
+
+`slip` is a block property in Minecraft that determines how slippery a block is, similar to friction in reality. Lower slip values make it easier to accelerate and decelerate, while higher slip values make it harder. Generally, when sprint jumping, blocks with higher slip values give more speed than those with lower slip values. Most blocks have a slip value of 0.6. Slime has a slip value of 0.8. Ice and packed ice have a slip value of 0.98. Blue ice (modern Minecraft versions) have a slip value of 0.989.
+
+Sprinting in air has version differences. In 1.8 to 1.19.3, if you start sprinting while midair, it is delayed by 1 tick. In later versions, there is no delay. For example, the equivalent of `walkjump(4) sprintair(8)` in 1.8 is `walkjump(5) sprintair(7)` in 1.19.4+.
+
+Sneaking has version differences. In versions 1.14+, sneaking is 1 tick delayed. In older versions, there is no delay. For example, the equivalent of `walk(3) sneak(2) sprint(3)` in 1.8 to 1.13 is `walk(2) sneak(2) walk sprint(3)` in 1.14+.
+
+Lastly, some functions have default arguments of `None`. In the case of movement functions, this means that `None` is automatically replaced with the player's default attributess, in particular the player's defalt `rotation`, `slip`, `speed`, and `slow`.
+
+# Classic Movement
+This section contains functions that simulate normal movement. This is movement that the player can perform in any normal circumstances, such as sprinting, sneaking, walking, jumping, and no movement.
+
+## Walk
+```mothball/signature
+w
+```
+
+Walk on the ground for `duration` ticks while facing `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Can be modified by an input.
+Examples:
+
+```mothball
+walk(5) # walk forward for 5t #
+walk.wd(3, 10) # walk with w+d for 3t while facing at 10 degrees #
+walk(2, slip=0.98) # walk forward for 2t with a slip of 0.98 (ice) #
+```
+
+## Walk45
+```mothball/signature
+walk45
+```
+
+While 45 strafing, walk on the ground for `duration` ticks towards the direction of `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Cannot be modified by an input.
+Examples:
+
+```mothball
+walk45(5) # walk and 45 strafe for 5t #
+walk45(2, slip=0.98) # walk and 45 strafe for 2t with a slip of 0.98 (ice) #
+walk45.wd # raises an error: cannot be modified by an input #
+```
+
+## Sprint
+```mothball/signature
+sprint
+```
+
+Sprint on the ground for `duration` ticks while facing `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Can be modified by an input.
+Examples:
+
+```mothball
+sprint(5) # sprint forward for 5t #
+sprint.wd(3, 10) # sprint with w+d for 3t while facing at 10 degrees #
+sprint(2, slip=0.98) # sprint forward for 2t with a slip of 0.98 (ice) #
+```
+
+## Sprint45
+```mothball/signature
+sprint45
+```
+
+While 45 strafing, sprint on the ground for `duration` ticks towards the direction of `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Cannot be modified by an input.
+Examples:
+
+```mothball
+sprint45(5) # sprint and 45 strafe for 5t #
+sprint45(2, slip=0.98) # sprint and 45 strafe for 2t with a slip of 0.98 (ice) #
+sprint45.wd # raises an error: cannot be modified by an input #
+```
+
+## Sneak
+```mothball/signature
+sneak
+```
+
+Sneak on the ground for `duration` ticks while facing `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Can be modified by an input.
+Examples:
+
+```mothball
+sneak(5) # sneak forward for 5t #
+sneak.wd(3, 10) # sneak with w+d for 3t while facing at 10 degrees #
+sneak(2, slip=0.98) # sneak forward for 2t with a slip of 0.98 (ice) #
+```
+
+## Sneak45
+```mothball/signature
+sneak45
+```
+
+While 45 strafing, sneak on the ground for `duration` ticks towards the direction of `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Cannot be modified by an input.
+Examples:
+
+```mothball
+sneak45(5) # sneak and 45 strafe for 5t #
+sneak45(2, slip=0.98) # sneak and 45 strafe for 2t with a slip of 0.98 (ice) #
+sneak45.wd # raises an error: cannot be modified by an input #
+```
+
+## Sneaksprint (Versions 1.14+ only)
+```mothball/signature
+sneaksprint
+```
+
+Sneak and sprint on the ground for `duration` ticks while facing `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Can be modified by an input.
+Examples:
+
+```mothball
+sns(5) # sneak sprint forward for 5t #
+sns.wd(3, 10) # sneak sprint with w+d for 3t while facing at 10 degrees #
+sns(2, slip=0.98) # sneak sprint forward for 2t with a slip of 0.98 (ice) #
+```
+
+## Sneaksprint45 (Versions 1.14+ only)
+```mothball/signature
+sns45
+```
+
+While 45 strafing, sneak and sprint on the ground for `duration` ticks towards the direction of `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Cannot be modified by an input.
+Examples:
+
+```mothball
+sns45(5) # sneak sprint and 45 strafe for 5t #
+sns45(2, slip=0.98) # sneak sprint and 45 strafe for 2t with a slip of 0.98 (ice) #
+sns45.wd # raises an error: cannot be modified by an input #
+```
+
+## Stop
+```mothball/signature
+stop
+```
+
+No movement input for `duration` ticks with a ground slipperiness of `slip`. Note that even if no WASD keys are pressed, the player can still be moving due to existing momentum. This function cannot be modified by inputs.
+Examples:
+
+```mothball
+st(2) # stop for 2 ticks #
+w(2) st # walk 2 ticks, then stop for 1 tick #
+st.wd # raises an error: cannot be modified by an input #
+```
+
+## Walkair
+```mothball/signature
+walkair
+```
+
+While airborne, move for `duration` ticks while facing `rotation` degrees. Can be modified by an input.
+Examples:
+
+```mothball
+walkair(2) # move forward in air for 2t #
+walkair.sa(7, -3) # move with s+a in air for 3t while facing at -3 degrees #
+```
+
+## Walkair45
+```mothball/signature
+walkair45
+```
+
+While airborne, 45 strafe for `duration` ticks towards the direction of `rotation` degrees. Cannot be modified by an input.
+Examples:
+
+```mothball
+walkair45(2) # 45 strafe forward in air for 2t #
+walkair45.sa # raises an error: cannot be modified by an input #
+```
+
+## Sprintair
+```mothball/signature
+sprintair
+```
+
+While airborne, sprint for `duration` ticks while facing `rotation` degrees. Can be modified by an input.
+Examples:
+
+```mothball
+sprintair(2) # sprint forward in air for 2t #
+sprintair.wa(7, -3) # sprint with w+a in air for 3t while facing at -3 degrees #
+```
+
+## Sprintair45
+```mothball/signature
+sprintair45
+```
+
+While airborne, sprint and 45 strafe for `duration` ticks towards the direction of `rotation` degrees. Cannot be modified by an input.
+Examples:
+
+```mothball
+sprintair45(2) # sprint and 45 strafe forward in air for 2t #
+sprintair45.sa # raises an error: cannot be modified by an input #
+```
+
+## Sneakair
+```mothball/signature
+sneakair
+```
+
+While airborne, sneak for `duration` ticks while facing `rotation` degrees. Can be modified by an input.
+Examples:
+
+```mothball
+sneakair(2) # sneak forward in air for 2t #
+sneakair.sa(7, -3) # sneak with s+a in air for 3t while facing at -3 degrees #
+```
+
+## Sneakair45
+```mothball/signature
+sneakair45
+```
+
+While airborne, sneak and 45 strafe for `duration` ticks towards the direction of `rotation` degrees. Cannot be modified by an input.
+Examples:
+
+```mothball
+sneakair45(2) # 45 strafe forward in air for 2t #
+sneakair45.sa # raises an error: cannot be modified by an input #
+```
+
+## Sneaksprintair (Versions 1.14+ only)
+```mothball/signature
+sneaksprintair
+```
+
+While airborne, sneak sprint for `duration` ticks while facing `rotation` degrees. Can be modified by an input.
+Examples:
+
+```mothball
+snsa(2) # sneak sprint forward in air for 2t #
+snsa.wa(7, -3) # sneak sprint with w+a in air for 3t while facing at -3 degrees #
+```
+
+## Sneaksprintair45 (Versions 1.14+ only)
+```mothball/signature
+snsa45
+```
+
+While airborne, sneak sprint and 45 strafe for `duration` ticks towards the direction of `rotation` degrees. Cannot be modified by an input.
+Examples:
+
+```mothball
+snsa45(2) # sneak sprint and 45 strafe forward in air for 2t #
+snsa45.sa # raises an error: cannot be modified by an input #
+```
+
+## Stopair
+```mothball/signature
+stopair
+```
+
+While airborne, no movement input for `duration`. Note that even if no WASD keys are pressed, the player can still be moving due to existing momentum. This function cannot be modified by inputs.
+Examples:
+
+```mothball
+sta(2) # stop in air for 2 ticks #
+wj sta(11) # jump, then stop in air for 11 ticks #
+sta.wd # raises an error: cannot be modified by an input #
+```
+
+## Walkjump
+```mothball/signature
+walkjump
+```
+
+Jump for `duration` ticks while facing `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Can be modified by an input. Note that only the first tick is the jump tick and all subsequent ticks are air ticks. Therefore, if t is the number of ticks, then `wj(t) = wj(1) wa(t-1)`
+Examples:
+
+```mothball
+wj(5) # jump forward for 5t #
+wj.wd(3, 10) # jump with w+d for 3t while facing at 10 degrees #
+wj(2, slip=0.98) # jump forward for 2t with a slip of 0.98 (ice) #
+```
+
+## Walkjump45
+```mothball/signature
+walkjump45
+```
+
+While 45 strafing, jump for `duration` ticks towards the direction of `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Cannot be modified by an input. Note that only the first tick is the jump tick and all subsequent ticks are air ticks. Therefore, if t is the number of ticks, then `wj45(t) = wj45(1) wa45(t-1)`
+Additionally, `wj45` is equivalent to `wj.wa(1,45)`.
+Examples:
+
+```mothball
+wj45(5) # jump and 45 strafe forward for 5t #
+walk45(2, slow=1) # jump and 45 strafe for 2t with slowness 1 #
+wj45.wd # raises an error: cannot be modified by an input #
+```
+
+## Sprintjump
+```mothball/signature
+sprintjump
+```
+
+Sprint jump for `duration` ticks while facing `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Can be modified by an input. Note that only the first tick is the jump tick and all subsequent ticks are air ticks. Therefore, if t is the number of ticks, then `sj(t) = sj(1) sa(t-1)`
+Examples:
+
+```mothball
+sj(5) # sprint jump forward for 5t #
+sj.wd(3, 10) # sprint jump with w+d for 3t while facing at 10 degrees #
+sj(2, slip=0.98) # jump forward for 2t with a slip of 0.98 (ice) #
+```
+
+## Sprintjump45
+```mothball/signature
+sprintjump45
+```
+
+Sprint jump, then 45 strafe for a total of `duration` ticks towards the direction of `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Cannot be modified by an input. Note that only the first tick is the jump tick and all subsequent ticks are air ticks. Therefore, if t is the number of ticks, then `sj45(t) = sj45(1) sa45(t-1)`
+Additionally, `sj45(1)` is equivalent to `sj45(1)` while `sa45(1)` is equivalent to `sa.wa(1,45)`. 45 strafes on sprint jumps require you to face straight on the jump tick, and 45 strafe while midair. This also means that `sj45(t) = sj(1) sj45(t-1)`.
+Examples:
+
+```mothball
+sj45(5) # sprint jump, then 45 strafe forward for a total of 5t #
+sj45(2, slow=1) # jump and 45 strafe for 2t with slowness 1 #
+sj45.wd # raises an error: cannot be modified by an input #
+```
+
+## Sneakjump
+```mothball/signature
+sneakjump
+```
+
+While sneaking, jump for `duration` ticks while facing `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Can be modified by an input. Note that only the first tick is the jump tick and all subsequent ticks are air ticks. Therefore, if t is the number of ticks, then `snj(t) = snj(1) sna(t-1)`
+Examples:
+
+```mothball
+snj(5) # sneak jump forward for 5t #
+snj.wd(3, 10) # sneak jump with w+d for 3t while facing at 10 degrees #
+snj(2, slip=0.98) # sneak jump forward for 2t with a slip of 0.98 (ice) #
+```
+
+## Sneakjump45
+```mothball/signature
+sneakjump45
+```
+
+While 45 strafing, jump for `duration` ticks towards the direction of `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Cannot be modified by an input. Note that only the first tick is the jump tick and all subsequent ticks are air ticks. Therefore, if t is the number of ticks, then `snj45(t) = snj45(1) sna45(t-1)`
+Additionally, `snj45` is equivalent to `snj.wa(1,45)`.
+Examples:
+
+```mothball
+snj45(5) # sneak jump and 45 strafe forward for 5t #
+snj45(2, slow=1) # sneak jump and 45 strafe for 2t with slowness 1 #
+snj45.wd # raises an error: cannot be modified by an input #
+```
+
+## Sneaksprintjump (Versions 1.14+ only)
+```mothball/signature
+sneaksprintjump
+```
+
+Sprint jump for `duration` ticks while facing `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Can be modified by an input. Note that only the first tick is the jump tick and all subsequent ticks are air ticks. Therefore, if t is the number of ticks, then `snsj(t) = snsj(1) snsa(t-1)`
+Examples:
+
+```mothball
+snsj(5) # sprint jump forward for 5t #
+snsj.wd(3, 10) # sprint jump with w+d for 3t while facing at 10 degrees #
+snsj(2, slip=0.98) # jump forward for 2t with a slip of 0.98 (ice) #
+```
+
+## Sneaksprintjump45 (Versions 1.14+ only)
+```mothball/signature
+sneaksprintjump45
+```
+
+While 45 strafing, sprint sneak jump for `duration` ticks towards the direction of `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Cannot be modified by an input. Note that only the first tick is the jump tick and all subsequent ticks are air ticks. Therefore, if t is the number of ticks, then `snsj45(t) = snsj45(1) snsa45(t-1)`.
+
+It turns out there is no nice equivalent function for `snsj45` as the function automatically optimizes by adjusting the jump angle to maximize distance. This angle differs depending on the circumstance, such as potion effects and how slippery the ground is. Under normal circumstances (no potion effects and a ground slip of 0.6), `snsj45 = snsj.wa(1, 9.115)`, but if the player has slowness 1 and the ground has a slip of 0.98 (ice), then `snsj45 = snsj.wa(1, 2.058)`. Also, sprint sneak jumping with strafe turns out to be better than with just W.
+Examples:
+
+```mothball
+snsj45(5) # While 45 strafing, sprint sneak jump for a total of 5t #
+sj45(2, slow=1) # sprint sneak jump and 45 strafe for 2t with slowness 1 #
+sj45.wd # raises an error: cannot be modified by an input #
+```
+
+## Stopjump
+```mothball/signature
+stop
+```
+
+Jump with no horizontal movement input for `duration` ticks with a ground slipperiness of `slip`. Note that even if no WASD keys are pressed, the player can still be moving due to existing momentum. This function cannot be modified by inputs. Note that only the first tick is the jump tick and all subsequent ticks are air ticks. Therefore, if t is the number of ticks, then `stj(t) = stj(1) sta(t-1)`.
+Examples:
+
+```mothball
+stj(7) # stop jump for 7 ticks #
+st.wd # raises an error: cannot be modified by an input #
+```
+
+## Sprintstrafejump
+```mothball/signature
+stfj
+```
+
+Sprint strafe jump at the optimal angle for max distance, then face straight for a total of `duration` ticks going towards the direction of `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Cannot be modified by an input. Note that only the first tick is the jump tick and all subsequent ticks are air ticks. Therefore, if t is the number of ticks, then `stfj(t) = stfj(1) sa(t-1)`
+Also note that this angle differs depending on the circumstance, such as potion effects and how slippery the ground is. Under normal circumstances (no potion effects and a ground slip of 0.6), `stfj = sj.wa(1, 17.478)`, but if the player has speed 1 and the ground has a slip of 0.98 (ice), then `stfj = sj.wa(1, 6.41)`.
+Examples:
+
+```mothball
+stfj(5) # sprint strafe jump at the optimal angle, then face forward for 4 more ticks #
+stfj.wa # raises an error: cannot be modified by an input #
+```
+
+## Sprintstrafejump45
+```mothball/signature
+stfj45
+```
+
+Sprint strafe jump at the optimal angle for max distance, then 45 strafe, all for a total of `duration` ticks while traveling in the direction of `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Cannot be modified by an input. Note that only the first tick is the jump tick and all subsequent ticks are air ticks. Therefore, if t is the number of ticks, then `stfj45(t) = stfj45(1) sa45(t-1)`
+Additionally, `stfj(1)` is equivalent to `stfj45(1)`, so `stfj45(t) = stfj(1) sa45(t-1)`. The only difference is that subsequent air ticks are 45 strafed.
+Examples:
+
+```mothball
+stfj45(5) # sprint strafe jump at the optimal angle, then 45 strafe midair for 4 more ticks #
+stfj45.wa # raises an error: cannot be modified by an input #
+```
+
+# Water Movement
+This section contains all water related functions. These functions simulate Minecraft 1.8 water movement, or the non-swimming movement in modern versions. There are no jump functions since you can't jump while inside water. You can simulate jumping as normal after leaving water.
+
+## Walkwater
+```mothball/signature
+wwt
+```
+
+Move while in water for `duration` ticks facing `rotation` degrees. Can be modified by an input. Note this simulates 1.8 water movement, or the non-swimming movement in later versions.
+Example:
+
+```mothball
+wt.s(5) # move back in water for 5 ticks #
+```
+
+## Walkwater45
+```mothball/signature
+wwt45
+```
+
+45 strafe while in water for `duration` ticks while traveling in the direction of `rotation` degrees. Cannot be modified by an input. Note this simulates 1.8 water movement, or the non-swimming movement in later versions.
+Examples:
+
+```mothball
+wt45(4) # 45 strafe in water for 4 ticks #
+wt45.wd # raises an error: cannot be modified by an input #
+```
+
+## Sprintwater
+```mothball/signature
+swt
+```
+
+Almost identical to `walkwater`. Move while in water for `duration` ticks facing `rotation` degrees. Can be modified by an input. Note this simulates 1.8 water movement, or the non-swimming movement in later versions. The difference of `sprintwater` to `walkwater` is that sprint is activated, although it doesn't change water movement. However, it does affect sprint air delay when you exit water.
+Example:
+
+```mothball
+swt(10) sa(3) swt(5) # move in water for 10 ticks, then sprint in air for 3 ticks, and then move in water for 5 ticks
+This is the strategy for waterchest #
+```
+
+In the example, the air ticks are all sprinted. If air sprint delay was present and `swt` was replaced by `wt`, then the first air tick would not be sprinted. Here's a comparison.
+
+## Sprintwater45
+```mothball/signature
+swt45
+```
+
+45 strafe while in water for `duration` ticks while traveling in the direction of `rotation` degrees. Cannot be modified by an input. Note this simulates 1.8 water movement, or the non-swimming movement in later versions.
+
+This is equivalent to `walkwater45` while in water, but is affected by sprint air delay when exiting water. See `sprintwater`.
+Examples:
+
+```mothball
+swt45(4) # 45 strafe in water for 4 ticks #
+swt.wd # raises an error: cannot be modified by an input # 
+```
+
+## Sneakwater
+```mothball/signature
+snwt
+```
+
+Sneak while in water for `duration` ticks facing `rotation` degrees. Can be modified by an input. Note this simulates 1.8 water movement, or the non-swimming movement in later versions.
+Example:
+
+```mothball
+snwt.wd(2,5.5) # sneak with w+d in water for 2 ticks while facing 5.5 degrees #
+```
+
+## Sneakwater45
+```mothball/signature
+snwt45
+```
+
+Sneak and 45 strafe while in water for `duration` ticks while traveling in the direction of `rotation` degrees. Can be modified by an input. Note this simulates 1.8 water movement, or the non-swimming movement in later versions.
+Example:
+
+```mothball
+snwt45(2,5.5) # sneak and 45 strafe in water for 2 ticks toward the direction of 5.5 degrees #
+snwt45.wa # raises an error: cannot be modified by an input #
+```
+
+## Stopwater
+```mothball/signature
+snwt
+```
+
+No movement input while in water for `duration` ticks. Cannot be modified by an input. 
+Example:
+
+```mothball
+wt.s(7) stwt # move back in water for 7 ticks, then stop for a tick in water #
+stwt.sa # raises an error: cannot be modified by an input #
+```
+
+# Web Movement
+This section deals with web movement.
+
+## Web
+```mothball/signature
+web
+```
+
+Walk inside a web and on the ground for `duration` ticks while facing `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Can be modified by an input.
+Examples:
+
+```mothball
+web(5) # walk forward inside a web for 5t #
+web.wd(3, 10) # walk inside a web with w+d for 3t while facing at 10 degrees #
+web(500, slip=0.98) # walk forward inside a web for 500t with a slip of 0.98 (ice) (please never build this jump)#
+```
+
+## Web45
+```mothball/signature
+web45
+```
+
+Walk inside a web and on the ground while 45 strafing for `duration` ticks going towards the direction of `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Cannot be modified by an input.
+Additionally, `web45(1) = web.wa(1,45)`.
+Examples:
+
+```mothball
+web45(5) # 45 strafe and walk forward inside a web for 5t #
+web45.sa # raises an error: cannot be modified by an input #
+```
+
+## Sprintweb
+```mothball/signature
+sweb
+```
+
+Sprint inside a web and on the ground for `duration` ticks while facing `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Can be modified by an input.
+Examples:
+
+```mothball
+sweb(5) # sprint forward inside a web for 5t #
+sweb.wd(3, 10) # sprint inside a web with w+d for 3t while facing at 10 degrees #
+sweb(500, slip=0.98) # sprint forward inside a web for 500t with a slip of 0.98 (ice) #
+```
+
+## Sprintweb45
+```mothball/signature
+sweb45
+```
+
+Sprint inside a web and on the ground while 45 strafing for `duration` ticks going towards the direction of `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Cannot be modified by an input.
+Additionally, `sweb45(1) = sweb.wa(1,45)`.
+Examples:
+
+```mothball
+sweb45(5) # 45 strafe and sprint forward inside a web for 5t #
+sweb45.wd # raises an error: cannot be modified by an input #
+```
+
+## Sneakweb
+```mothball/signature
+snweb
+```
+
+Sneak inside a web and on the ground for `duration` ticks while facing `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Can be modified by an input.
+Examples:
+
+```mothball
+snweb(5) # sneak forward inside a web for 5t #
+snweb.wd(3, 10) # sneak inside a web with w+d for 3t while facing at 10 degrees #
+snweb(20, slip=0.98) # sneak forward inside a web for 20t with a slip of 0.98 (ice) (please never build this jump)#
+```
+
+## Sneakweb45
+```mothball/signature
+snweb45
+```
+
+Sneak inside a web and on the ground while 45 strafing for `duration` ticks going towards the direction of `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Cannot be modified by an input.
+Additionally, `snweb45(1) = snweb.wa(1,45)`.
+Examples:
+
+```mothball
+snweb45(5) # 45 strafe and sneak forward inside a web for 5t #
+snweb45.wd # raises an error: cannot be modified by an input #
+```
+
+## Sneaksprintweb (Versions 1.14+ only)
+```mothball/signature
+snsweb
+```
+
+Sneak and sprint inside a web and on the ground for `duration` ticks while facing `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Can be modified by an input.
+Examples:
+
+```mothball
+snsweb(5) # sneak sprint forward inside a web for 5t #
+snsweb.wd(3, 10) # sneak sprint inside a web with w+d for 3t while facing at 10 degrees #
+snsweb(20, slip=0.98) # sneak forward inside a web for 20t with a slip of 0.98 (ice) #
+```
+
+## Sneaksprintweb45 (Versions 1.14+ only)
+```mothball/signature
+snsweb45
+```
+
+Sneak and sprint inside a web and on the ground while 45 strafing for `duration` ticks going towards the direction of `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Cannot be modified by an input.
+Additionally, `snsweb45(1) = snsweb.wa(1,45)`.
+Examples:
+
+```mothball
+snsweb45(5) # 45 strafe and sneak forward inside a web for 5t #
+snsweb45.wd # raises an error: cannot be modified by an input #
+```
+
+## Webair
+```mothball/signature
+weba
+```
+
+Move inside a web while also airborn for `duration` ticks while facing `rotation` degrees. Can be modified by an input.
+Examples:
+
+```mothball
+weba(5) # move forward inside a web while midair for 5t #
+weba.wd(3, 10) # move inside a web while midair with w+d for 3t while facing at 10 degrees
+```
+
+## Webair45
+```mothball/signature
+weba45
+```
+
+Walk inside a web and on the ground while 45 strafing for `duration` ticks going towards the direction of `rotation` degrees. Cannot be modified by an input.
+Additionally, `weba45(1) = weba.wa(1,45)`.
+Examples:
+
+```mothball
+weba45(5) # 45 strafe and move forward while midair and inside a web for 5t #
+web45a.sa # raises an error: cannot be modified by an input #
+```
+
+## Sprintwebair
+```mothball/signature
+sweba
+```
+
+Sprint inside a web while midair `duration` ticks while facing `rotation` degrees. Can be modified by an input.
+Examples:
+
+```mothball
+sweba(5) # sprint in air and inside a web for 5t #
+sweba.wd(3, 10) # sprint  in air and inside a web with w+d for 3t while facing at 10 degrees #
+```
+
+## Sprintwebair45
+```mothball/signature
+sweba45
+```
+
+Sprint inside a web while midair and 45 strafing for `duration` ticks going towards the direction of `rotation` degrees. Cannot be modified by an input.
+Additionally, `sweba45(1) = sweba.wa(1,45)`.
+Examples:
+
+```mothball
+sweba45(5) # 45 strafe and sprint forward midair and inside a web for 5t #
+sweba45.wd # raises an error: cannot be modified by an input #
+```
+
+## Sneakwebair
+```mothball/signature
+snweba
+```
+
+Sneak while midair and inside a web for `duration` ticks while facing `rotation` degrees. Can be modified by an input.
+Examples:
+
+```mothball
+snweba(5) # sneak while midair inside a web for 5t #
+snweba.wd(3, 10) # sneak while midair inside a web with w+d for 3t while facing at 10 degrees #
+```
+
+## Sneakwebair45
+```mothball/signature
+snweba45
+```
+
+Sneak while midair and inside a web and while 45 strafing for `duration` ticks going towards the direction of `rotation` degrees. Cannot be modified by an input.
+Additionally, `snweba45(1) = snweba.wa(1,45)`.
+Examples:
+
+```mothball
+snweba45(5) # 45 strafe midair and sneak forward inside a web for 5t #
+snweba45.wd # raises an error: cannot be modified by an input #
+```
+
+## Sneaksprintwebair (Versions 1.14+ only)
+```mothball/signature
+snsweba
+```
+
+Sneak and sprint while midair and inside a web for `duration` ticks while facing `rotation` degrees. Can be modified by an input.
+Examples:
+
+```mothball
+snsweba(5) # sneak sprint forward inside a web for 5t #
+snsweba.wd(3, 10) # sneak sprint inside a web with w+d for 3t while facing at 10 degrees #
+```
+
+## Sneaksprintwebair45 (Versions 1.14+ only)
+```mothball/signature
+snsweba45
+```
+
+Sneak and sprint while midair and inside a web while 45 strafing for `duration` ticks going towards the direction of `rotation` degrees. Cannot be modified by an input.
+Additionally, `snsweb45(1) = snsweb.wa(1,45)`.
+Examples:
+
+```mothball
+snsweba45(5) # 45 strafe midair and sprint sneak inside a web for 5t #
+snsweba45.wd # raises an error: cannot be modified by an input #
+```
+
+## Webjump
+```mothball/signature
+webj
+```
+
+Jump inside a web for `duration` ticks while facing `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Can be modified by an input.
+Additionally, `webj(t) = webj(1) weba(t-1)`.
+Examples:
+
+```mothball
+webj(5) # jump forward inside a web for 5t #
+webj.wd(3, 10) # jump inside a web with w+d for 3t while facing at 10 degrees #
+web(500, slip=0.98) # walk forward inside a web for 500t with a slip of 0.98 (ice) (please never build this jump)#
+```
+
+## Webjump45
+```mothball/signature
+webj45
+```
+
+Jump inside a web while 45 strafing for `duration` ticks going towards the direction of `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Cannot be modified by an input.
+Additionally, `webj45(t) = webj.wa(1,45) webj.wa(t-1,45)`.
+Examples:
+
+```mothball
+webj45(5) # jump and 45 strafe inside a web for 5t #
+webj45.sa # raises an error: cannot be modified by an input #
+```
+
+## Sprintwebjump
+```mothball/signature
+swebj
+```
+
+Sprint jump inside a web for `duration` ticks while facing `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Can be modified by an input.
+Examples:
+
+```mothball
+swebj(5) # sprint jump inside a web for 5t #
+swebj.wd(3, 10) # sprint jump inside a web with w+d for 3t while facing at 10 degrees #
+```
+
+## Sprintwebjump45
+```mothball/signature
+swebj45
+```
+
+Sprint jump, the 45 strafe, all while inside a web for a total of `duration` ticks going towards the direction of `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Cannot be modified by an input.
+Additionally, `swebj45(t) = swebj(1) sweba.wa(t-1,45)`.
+Examples:
+
+```mothball
+swebj45(5) # sprint jump, then 45 strafe inside a web for 5t #
+swebj45.wd # raises an error: cannot be modified by an input #
+```
+
+## Sneakwebjump
+```mothball/signature
+snwebj
+```
+
+Sneak jump inside a web for `duration` ticks while facing `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Can be modified by an input.
+Examples:
+
+```mothball
+snwebj(5) # sneak jump forward inside a web for 5t #
+snwebj.wd(3, 10) # sneak jump inside a web with w+d for 3t while facing at 10 degrees #
+snwebj(20, speed=3) # sneak jump inside a web for 20t with speed 3 #
+```
+
+## Sneakwebjump45
+```mothball/signature
+snwebj45
+```
+
+Sneak jump and 45 strafe inside a web for `duration` ticks going towards the direction of `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Cannot be modified by an input.
+Additionally, `snwebj45(t) = snwebj.wa(1,45) snweb.wa(t-1,45)`.
+Examples:
+
+```mothball
+snwebj45(5) # sneak jump and 45 strafe inside a web for 5t #
+snwebj45.wd # raises an error: cannot be modified by an input #
+```
+
+## Sneaksprintwebjump (Versions 1.14+ only)
+```mothball/signature
+snswebj
+```
+
+Sneak sprint jump inside a web for `duration` ticks while facing `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Can be modified by an input.
+Examples:
+
+```mothball
+snswebj(5) # sneak sprint jump forward inside a web for 5t #
+snswebj.wd(3, 10) # sneak sprint jump inside a web with w+d for 3t while facing at 10 degrees #
+snswebj(7, speed=2, slow=1) # sneak sprint jump inside a web for 20t with a speed 2 and slow 1 #
+```
+
+## Sneaksprintwebjump45 (Versions 1.14+ only)
+```mothball/signature
+snswebj45
+```
+
+Sneak sprint jump inside a web while 45 strafing for `duration` ticks going towards the direction of `rotation` degrees, with a ground slipperiness of `slip` and with potion effects `speed` and `slow`. Cannot be modified by an input.
+Jumping with strafe in this scenario is faster than without. Therefore, this function automatically optimizes by adjusting the jump angle to maximize distance. This angle differs depending on the circumstance, such as potion effects and how slippery the ground is. Under normal circumstances (no potion effects and a ground slip of 0.6), `snswebj45 = snswebj.wa(1, 9.115)`, but if the player has slowness 1 and the ground has a slip of 0.98 (ice), then `snswebj45 = snswebj.wa(1, 2.058)`.
+Examples:
+
+```mothball
+snswebj45(5) # sprint sneak jump and 45 strafe inside a web for 5t #
+snswebj45.wd # raises an error: cannot be modified by an input #
+```
+
