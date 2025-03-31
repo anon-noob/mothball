@@ -429,8 +429,10 @@ class MainNotebookGUI(tk.Tk, tk.Frame):
         try:
             response = requests.get("https://api.github.com/repos/anon-noob/mothball/releases")
             if response.status_code == 200:
-                latest_release = response.json()[0]
-                latest_version = latest_release.get("tag_name")
+                releases = response.json()
+                releases = sorted(releases, key=lambda r: r["tag_name"], reverse=True)
+                latest_version = releases[0]["tag_name"]
+
                 if latest_version != MainNotebookGUI.VERSION:
                     showinfo("Update found", text + f"The new update {latest_version} can be found on Github.")
                     
@@ -441,7 +443,7 @@ class MainNotebookGUI(tk.Tk, tk.Frame):
                 showerror("Unable to check for updates.")
         except Exception as e:
             if show_message:
-                showerror("Unable to check for updates.")
+                showerror("Unable to connect.")
     
     def change_font_size(self, e, change: int):
         self.fontsize += change
