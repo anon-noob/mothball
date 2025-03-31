@@ -4,6 +4,8 @@ import json
 from tkinter import colorchooser
 import FileHandler
 
+# REWRITE TIME
+
 class ChangeColorDialog:
     default_text = """version(1.21) 
 sprint(8, slow=3) sprintair.wd walk.s water(3) stop stopair
@@ -27,14 +29,21 @@ hello(mothballer)
         tk.Label(self.top, text="Change Output Colors").grid(row=0, column=4)
         self.side_display = Cell(self.top, 'xz', options)
         self.side_display.configure(width=100)
+        self.side_display.grid(row=1, column=2, rowspan=20)
         self.side_display.eval_button.destroy()
-        self.side_display.label.destroy()
+        self.side_display.add_cell.destroy()
+        self.side_display.add_cell_y.destroy()
+        self.side_display.delete_cell.destroy()
+        self.side_display.title_frame.destroy()
         self.side_display.text.insert("1.0", ChangeColorDialog.default_text)
-        self.side_display.text.configure(width=60)
         self.side_display.evaluate()
+        self.side_display.text.configure(width=60)
+        self.side_display.label2.configure(width=60)
+        self.side_display.output.configure(width=60)
         self.side_display.text.insert(tk.END, "# parenthesis # (( { ( {{}} ) } ))\n( 4..5 #ERRORS#")
         self.side_display.colorize_code()
         self.side_display.adjust_height()
+        self.side_display.adjust_height(self.side_display.output)
         self.side_display.text.configure(state="disabled")
         self.side_display.text.tag_configure("bold", background="gray")
         self.side_display.output.tag_configure("bold", background="gray")
@@ -42,10 +51,10 @@ hello(mothballer)
         self.side_display.label2.delete("1.0", tk.END)
         self.side_display.label2.insert("1.0", "Output is shown below (Executed at <time goes here>)")
         self.side_display.label2.configure(state="disabled")
+        self.side_display.colorize_output()
 
         self.options = options
 
-        self.side_display.grid(row=1, column=2, rowspan=20)
         tag_names = ["fast-movers", "slow-movers", "stoppers", "setters", "inputs", "returners", "calculators", "numbers", "comment", "keyword", "string", "custom-function", "custom-function-parameter","error", "nest-mod1", "nest-mod2", "nest-mod0"]
         code_label_names = ["Fast movement", "Slow movement", "Stop movement", "Setters", "inputs", "Returners", "Calculators", "Numbers", "Comments", "Keyword arguments", "Strings", "Defined functions", "Defined Function Parameters", "Errors", "Brackets 1", "Brackets 2", "Brackets 3"]
         i = 1
@@ -80,12 +89,6 @@ hello(mothballer)
             c.grid(row=i, column=3)
 
             i += 1
-        
-        # tk.Label(self.top, text="Change Font").grid(row=8, column=4)
-        # tk.Label(self.top, text="Font").grid(row=9, column=3)
-        # tk.Entry(self.top, width=5).grid(row=9, column=4)
-        # tk.Label(self.top, text="Size").grid(row=10, column=3)
-        # tk.Entry(self.top, width=5).grid(row=10, column=4)
 
         self.theme_selected = tk.StringVar()
         self.theme_selected.set(self.options["Current-theme"]["Name"])
@@ -165,7 +168,6 @@ hello(mothballer)
     
     def save_theme(self):
         theme = self.options["Current-theme"]
-        # print(self.theme_selected.get(), type(self.theme_selected.get()))
         if self.theme_selected.get() != "Default":
             theme["Name"] = "Custom"
             print(f"TRUE {self.theme_selected.get()} TRUE")
@@ -173,7 +175,6 @@ hello(mothballer)
             self.options["Current-theme"] = theme
             self.side_display.options = self.options
         else:
-            # print(f"FALSE {self.theme_selected.get()} FALSE")
             self.options["Current-theme"] = theme
             self.side_display.options = self.options
 
