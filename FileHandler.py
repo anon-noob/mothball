@@ -70,7 +70,8 @@ options = {"Current-theme":
     }
 }, 
 "Settings": {"Ask before deleting a cell": False},
-"Show-tutorial": True
+"Show-tutorial": True,
+"Default-Font-Size": 12
 }
 
 def get_path_to_options():
@@ -83,39 +84,39 @@ def get_path_to_options():
         return os.path.join(os.path.expanduser("~"), ".config", "Mothball", "Mothball Settings", "Options.json")
         
 
-def create_directories():
+def create_directories(force_update = False):
     operating_system = platform.system()
     if operating_system == "Windows":
-        create_windows_directories()
+        create_windows_directories(force_update)
     elif operating_system == "Darwin":
-        create_mac_directories()
+        create_mac_directories(force_update)
     elif operating_system == "Linux":
-        create_linux_directories()
+        create_linux_directories(force_update)
 
-def create_windows_directories():
+def create_windows_directories(force_update = False):
     user_directory = os.path.expanduser("~")
     os.makedirs(os.path.join(user_directory, "AppData", "Roaming", "Mothball", "Mothball Settings"), exist_ok=True)
     os.makedirs(os.path.join(user_directory, "Documents", "Mothball", "Notebooks"), exist_ok=True)
 
-    if not os.path.exists(os.path.join(user_directory, "AppData" ,"Roaming", "Mothball", "Mothball Settings", "Options.json")):
+    if not os.path.exists(os.path.join(user_directory, "AppData" ,"Roaming", "Mothball", "Mothball Settings", "Options.json")) or force_update:
         with open(os.path.join(user_directory, "AppData", "Roaming", "Mothball", "Mothball Settings", "Options.json"), "w") as file:
             json.dump(options, file)   
 
-def create_mac_directories():
+def create_mac_directories(force_update = False):
     user_directory = os.path.expanduser("~")
     os.makedirs(os.path.join(user_directory, "Library", "Application Support", "Mothball", "Mothball Settings"), exist_ok=True)
     os.makedirs(os.path.join(user_directory, "Documents", "Mothball", "Notebooks"), exist_ok=True)
 
-    if not os.path.exists(os.path.join(user_directory, "Library" ,"Application Support", "Mothball", "Mothball Settings", "Options.json")):
+    if not os.path.exists(os.path.join(user_directory, "Library" ,"Application Support", "Mothball", "Mothball Settings", "Options.json")) or force_update:
         with open(os.path.join(user_directory, "Library" ,"Application Support", "Mothball", "Mothball Settings" ,"Options.json"), "w") as file:
             json.dump(options, file)
 
-def create_linux_directories():
+def create_linux_directories(force_update = False):
     user_directory = os.path.expanduser("~")
     os.makedirs(os.path.join(user_directory, ".config", "Mothball" ,"Mothball Settings"), exist_ok=True)
     os.makedirs(os.path.join(user_directory, "Documents", "Mothball", "Notebooks"), exist_ok=True)
 
-    if not os.path.exists(os.path.join(user_directory, ".config", "Mothball", "Mothball Settings", "Options.json")):
+    if not os.path.exists(os.path.join(user_directory, ".config", "Mothball", "Mothball Settings", "Options.json")) or force_update:
         with open(os.path.join(user_directory, ".config", "Mothball", "Mothball Settings", "Options.json"), "w") as file:
             json.dump(options, file)
 
