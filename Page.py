@@ -24,7 +24,8 @@ class Page(tk.Frame):
         self.pos = TkinterPosition(1,0)
         self.matches = []
         self.text.bind("<Configure>", self.resize_image_on_resize)
-
+        self.text.bind("<Control-equal>", lambda e, x=2: self.change_font_size(e, x))
+        self.text.bind("<Control-minus>", lambda e, x=-2: self.change_font_size(e, x))
         self.tags = []
 
         self.images: dict[str, tuple[str, ImageTk.PhotoImage]] = {} # string is a path to source
@@ -50,6 +51,7 @@ class Page(tk.Frame):
 
         self.headings = {} # Name: (index, depth)
         self.text.bind("<Control-f>", self.open_search_widget)
+        self.master.pack_propagate(False)
 
     def reset_code_processor(self):
         self.CodeCell.text.delete("1.0", tk.END)
@@ -408,12 +410,13 @@ class Page(tk.Frame):
 
     def parse_text(self, text):
         # Regex to match different components in the markdown
-        pattern = r'([#]+ .+?\n)|(```.*?```\n)|(`.*?`)|(\[.*?\]\(.*?\))|([^#`\[\]]+)'
+        pattern = r'([#]+ .+?\n)|(```.*?```\n)|(`.*?`)|(\[.+?\]\(.+?\))|([^#`\[]+)'
 
         # TEMPORARY FIX: ([^#\[\]`]+) ignores brackets
         
         # Find all the components using regex
         components = re.findall(pattern, text, re.DOTALL)
+
 
         # Extract the non-empty matches
         result = [match[0] or match[1] or match[2] or match[3] or match[4] for match in components]
@@ -497,20 +500,32 @@ class Page(tk.Frame):
             self.images[index] = (src, image)
             del old_image
             self.text.image_configure(index, image=image)
+
+    def change_font_size(self, e, change:int):
+        current_font = self.text.cget("font")
+        font_family, font_size = current_font.rsplit(" ", 1)
+        font_family = font_family.strip("{}")
+        new_font_size = int(font_size) + change
+        self.text.configure(font=(font_family, new_font_size))
+        return "break"
         
+        for tag in ["code", "inline code", "header", "header2", "header3"]:
+            font,size = self.text.tag_cget(tag, "font").rsplit(" ", 1)
+            self.text.tag_configure(tag, font=(font, int(size) + change))
 
 
 if __name__ == "__main__":
     r = tk.Tk()
     a = Page()
 
-    a.parse_text("""# If you see this...
-Just know that you're amazing!
 
-```mothball
-Hope all goes well!
-```
+
+    a.parse_text("""# Testing an image
+If this goes through, the image should show.
+
+[e]  (example.com) and 
+
+How does it look?
 """)
     print(a.tags)
     r.mainloop()
-
