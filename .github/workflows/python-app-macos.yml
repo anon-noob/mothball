@@ -4,7 +4,9 @@
 name: Macos application
 
 on:
-  workflow_dispatch
+  push:
+    branches:
+      ["app"]
 
 permissions:
   contents: read
