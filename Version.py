@@ -15,11 +15,13 @@ class Version(Page.Page):
         try:
             response = requests.get("https://api.github.com/repos/anon-noob/mothball/releases")
             if response.status_code == 200:
-                latest_release = response.json()[0]
-                latest_version = latest_release.get("tag_name")
-                text = latest_release.get('body')
+                releases = response.json()
+                releases = sorted(releases, key=lambda r: r["tag_name"], reverse=True)
+                latest_version = releases[0]
+
+                text = latest_version.get('body')
                 
-            return (latest_version, text)
+            return (latest_version['tag_name'], text)
         except Exception as e:
             return ("Unable to get latest version", "")
         
