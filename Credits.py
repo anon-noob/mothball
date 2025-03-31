@@ -12,7 +12,7 @@ And to you for using Mothball, thank you!
 # Major News
 The latest version of minecraft has released and it has reverted the movement changes, which means that 45 strafing is back, AND sprint sneaking is also back! The inertia changes are still in place, and are now in Mothball by doing `version(1.21.5)`. Few jumps will be affected by this inertia change, but it is important to note that inertia is effectively gone in the sense of technical parkour jumps.
 
-Anyway, I would like to thank everyone helping us convince the development team to revert the necessary changes. I would also like to thank the developers for listening to the community and reverting the changes. Most importantly, I would like to thank the man that started it all, Erasmian (youtube: [https://www.youtube.com/@3rasmian](https://www.youtube.com/@3rasmian)), for making the video and creating the petition that started it all. Thank you, keep 45 strafing, keep sprint sneaking, and let's continue to celebrate the world of minecraft parkour!
+Thank you to the developers for listening to the community and reverting the changes. Most importantly, I would like to thank the man that started it all, Erasmian (youtube: [https://www.youtube.com/@3rasmian](https://www.youtube.com/@3rasmian)), for making the video and creating the petition that started it all.
 """
     def __init__(self, master=None):
         self.top = tk.Toplevel(master)
