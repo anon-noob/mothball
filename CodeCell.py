@@ -10,10 +10,10 @@ import datetime
     
 
 class Cell(tk.Frame):
-    def __init__(self, parent, mode: str, options: dict, grandparent = None, *args, **kwargs):
+    def __init__(self, parent, mode: str, options: dict, grandparent = None, fontsize = 12, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
-        self.width = 500
-        self.mode = mode # Either "xz" or "y"
+        # self.width = 500
+        self.mode = mode # Either "xz" or "/y"
         self.FUNCTIONS_TO_TYPE = {} # Combines all of the mappings of FUNCTIONS_BY_TYPE so it maps a function ailas to the appropiate type
         self.parent = parent
         self.execution_time = None
@@ -32,40 +32,55 @@ class Cell(tk.Frame):
                 for func_alias in func_aliases:
                     self.FUNCTIONS_TO_TYPE[func_alias] = func_type
         
+        self.fontsize = fontsize
 
         self._pos = TkinterPosition(1,0)
 
         self.configure(background="gray12", border=5)
-        self.label = ttk.Label(self, text=f"Code Cell {mode.upper()}", background="gray12", foreground="white", font=("Ariel",12))
-        self.label.grid(row=1, column=1, columnspan=4)
+        self.title_frame = tk.Frame(self, background="gray12")
+        self.title_frame.pack()
+        self.label = ttk.Label(self.title_frame, text=f"Code Cell {mode.upper()}", background="gray12", foreground="white", font=("Ariel",self.fontsize))
+        self.label.pack()
         
-        self.text = tk.Text(self, state='normal', bg="gray12", fg="white", font=("Courier", 12), wrap=tk.WORD, undo=True, maxundo=-1)
-        self.text.grid(row=2, column=1, columnspan=4, sticky="nsew")
+        self.text = tk.Text(self, state='normal', bg="gray12", fg="white", font=("Courier", self.fontsize), wrap=tk.WORD, undo=True, maxundo=-1)
+        self.text.pack()
         self.text.bind('<KeyPress>', lambda event: self.timed(event))
-        # self.text.bind('<KeyPress>', self.timed)
 
-        self.label2 = tk.Text(self, background="gray12", foreground="white", height = 1, font=("Courier", 12), wrap=tk.WORD)
+        self.label2 = tk.Text(self, background="gray12", foreground="white", height = 1, font=("Courier", self.fontsize), wrap=tk.WORD)
         self.label2.insert("1.0", "Output is shown below ")
         self.label2.configure(state="disabled")
         self.label2.tag_configure("grayed", foreground="gray")
-        self.label2.grid(row=3, column=1, columnspan=4, sticky="nsew")
+        self.label2.pack()
         
-        self.output = tk.Text(self, bg="gray12", fg="white", font=("Courier", 12), wrap=tk.WORD)
+        self.output = tk.Text(self, bg="gray12", fg="white", font=("Courier", self.fontsize), wrap=tk.WORD)
         self.output.insert("1.0", "Run some functions and the output will show here!")
         self.output.configure(state="disabled")
-        self.output.grid(row=4, column=1, columnspan=4, sticky="nsew")
+        self.output.pack()
 
         self.raw_output = []
 
-        self.eval_button = tk.Button(self, text="Run", command=self.evaluate, foreground="white", background="gray12")
+
+        button_frame = tk.Frame(self, background="gray12")
+        button_frame.pack(side="bottom", fill="x")
+
+        self.eval_button = tk.Button(button_frame, text="Run", command=self.evaluate, background="gray12", font=("Ariel", 10, "bold"))
+        self.add_cell = tk.Button(button_frame, text="Add Cell XZ", background="gray12", font=("Ariel", 10, "bold"))
+        self.add_cell_y = tk.Button(button_frame, text="Add Cell Y", background="gray12", font=("Ariel", 10, "bold"))
+        self.delete_cell = tk.Button(button_frame, text="Delete", background="gray12", font=("Ariel", 10, "bold"))
         self.bind_hover(self.eval_button)
-        self.eval_button.grid(row=5, column=1)
-        self.bind_all("<Control-r>", lambda x: self.evaluate())
+        self.bind_hover(self.add_cell)
+        self.bind_hover(self.add_cell_y)
+        self.bind_hover(self.delete_cell)
+        self.eval_button.pack(side="left", expand=True, fill="x")
+        self.add_cell.pack(side="left", expand=True, fill="x")
+        self.delete_cell.pack(side="right", expand=True, fill="x")
+        self.add_cell_y.pack(side="right", expand=True, fill="x")
 
         self.adjust_height()        
         self.adjust_height(widget=self.output)
 
         self.options = options
+        self.bind_all("<Control-r>", lambda x: self.evaluate())
 
         # Linter
         for tag_name, foreground_color in self.options["Current-theme"]["Code"].items():
@@ -115,27 +130,32 @@ class Cell(tk.Frame):
         }
 
         self.text.bind("<Control-o>", lambda e: self.grandparent.load())
-        self.label.bind("<Double-1>", lambda e: self.edit_cell_name())
+        self.label.bind("<Double-1>", self.edit_cell_name)
     
-    def edit_cell_name(self):
-        self.label.grid_forget()
-        self.entry = tk.Entry(self, background="gray12", foreground="white", font=("Ariel",12))
+    def edit_cell_name(self, e):
+        self.label.pack_forget()
+        self.entry = tk.Entry(self.title_frame, background="gray12", foreground="white", font=("Ariel",12))
         old = self.label.cget("text")
         self.entry.insert(0, old)
-        self.entry.grid(row=1, column=1, columnspan=4)
+        self.entry.pack(side="left")
         self.entry.bind("<Return>", lambda e: self.set_cell_name(old, self.entry.get()))
+        self.accept = tk.Button(self.title_frame, background="gray12", foreground="green", font=("Ariel",8), text="Save", command=lambda: self.set_cell_name(old, self.entry.get()))
+        self.cancel = tk.Button(self.title_frame, background="gray12", foreground="red", font=("Ariel",8), text="Cancel", command= lambda: self.set_cell_name(old, None))
+        self.cancel.pack(side="right")
+        self.accept.pack(side="right")
     
     def set_cell_name(self, old_name, new_name):
-        self.entry.grid_forget()
+        self.entry.pack_forget()
+        self.accept.pack_forget()
+        self.cancel.pack_forget()
         if not new_name or new_name.isspace():
             new_name = old_name
-        self.label = ttk.Label(self, text=new_name, background="gray12", foreground="white", font=("Ariel",12))
-        self.label.grid(row=1, column=1, columnspan=4)
-        self.label.bind("<Double-1>", lambda e: self.edit_cell_name())
+        self.label = ttk.Label(self.title_frame, text=new_name, background="gray12", foreground="white", font=("Ariel",self.fontsize))
+        self.label.pack(side="top")
+        self.label.bind("<Double-1>", lambda e: self.edit_cell_name(e))
         if self.grandparent: self.grandparent.has_unsaved_changes = True
 
     def adjust_width(self, width: int):
-        self.width = width
         self.text.configure(width=width)
         self.output.configure(width=width)
         self.label2.configure(width=width)
@@ -144,7 +164,7 @@ class Cell(tk.Frame):
         if not widget:
             widget = self.text
         
-        widget.config(height=widget.count('1.0', 'end', 'displaylines')[0])
+        widget.configure(height=widget.count('1.0', 'end', 'displaylines')[0])
 
         self.update_idletasks() 
     
@@ -153,7 +173,8 @@ class Cell(tk.Frame):
             self.after_cancel(self.timer_id)
         
         if event and event.keysym not in ["Control_L", "Control_R", "Shift_L", "Shift_R", "Caps_Lock", "Escape", "Down", "Up", "Left", "Right", "Alt_R", "Alt_L"]:
-            self.after("idle",self.adjust_height)
+            # self.after("idle",self.adjust_height)
+            self.after_idle(self.adjust_height)
             self.timer_id = self.after(250, self.colorize_code)
             if not self.has_changed:
                 self.has_changed = True
