@@ -1907,9 +1907,14 @@ water.w(7) stw(3) # the player still moves a bit after the water.w(7)
             raise ValueError(f"precision() only takes integers between 0 to 16 inclusive, got {decimal_places} instead.")
         self.precision = decimal_places
     
-    def inertia(self, value: f32, /):
+    def inertia(self, value: f32, /, single_axis: str = "true"):
         "Sets the player's inertia threshold"
         self.inertia_threshold = value
+        toggle = single_axis.lower().strip()
+        if toggle == "false":
+            self.inertia_axis = 2
+        else:
+            self.inertia_axis = 1
     
     def toggle(self, ticks: int, *functions: str):
         for function in functions:
@@ -1968,7 +1973,7 @@ water.w(7) stw(3) # the player still moves a bit after the water.w(7)
         components = string.split(".")
         try:
             one, version_number = components
-            patch_number = None
+            patch_number = 0
         except:
             try:
                 one, version_number, patch_number = components
@@ -1980,9 +1985,12 @@ water.w(7) stw(3) # the player still moves a bit after the water.w(7)
             raise ValueError(f"{string} is not a valid version")
         if int(version_number) > 8:
             self.inertia(0.003)
-        if int(version_number) > 19:
-            self.sprintairdelay("false")
+        if int(version_number) > 13:
             self.sneakdelay("true")
+        if int(version_number) > 19 or (int(version_number) == 19 and patch_number > 3):
+            self.sprintairdelay("false")
+        if int(version_number) == 21 and int(patch_number) >= 5:
+            self.inertia_axis = 2
     
     def speed(self, multiplier: int, /):
         """
@@ -2883,17 +2891,27 @@ self.local_funcs['{name}'] = {name}
 
 
     ## TEST ZONE
-    # def sneaktap(self, count: int = 1, duration: int = 1):
-    #     for i in range(count):
-    #         self.simulate(f"sn{f'.{self.inputs}' if self.inputs else ''}({duration})", return_defaults=False)
-    #         while self.vz != 0 or self.vx != 0:
-    #             self.simulate("st", return_defaults=False)
+    def sneaktap(self, count: int = 1, duration: int = 1):
+        for i in range(count):
+            self.simulate(f"sn{f'.{self.inputs}' if self.inputs else ''}({duration})", return_defaults=False)
+            while self.vz != 0 or self.vx != 0:
+                self.simulate("st", return_defaults=False)
 
-    # _can_have_input.append("sneaktap")
-    # add_alias(sneaktap, "snt")
+    _can_have_input.append("sneaktap")
+    add_alias(sneaktap, "snt")
 
 if __name__ == "__main__":
     a = Player()
 
-    # a.simulate("snt(1,1) s(5) outz(1-2*px)") # equivalent to sn st(10) s(5) ... (top secret test)
-    # a.show_output()
+    # a.simulate("snt(1,1) s(5) outz(1-2*px)") # equivalent to sn st(10) s(5) ...
+    # a.simulate("r(sn st(9),3) s(5) outz(1)")
+    # a.simulate("sn(3) s(5) outz(1)")
+    a.simulate("""version(1.21) 
+sprint(8, slow=3) sprintair.wd walk.s water(3) stop stopair
+outx(0.03125, label=hey I'm an x axis output) vec
+wall(1.8125, repeat(sprintjump.wa(4), 2)) zb(2.2, z output)
+var(new_var, 37) print(new_var: {new_var})
+print(help\, its been 4 years) # comments are \# cool #
+func(hello, param, code=print(hello {param} {new_var} times))
+hello(mothballer)""")
+    a.show_output()
