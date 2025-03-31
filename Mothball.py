@@ -2,10 +2,10 @@ import FileHandler
 if __name__ == "__main__":
     FileHandler.create_directories()
 
-import webbrowser
+import requests
 import tkinter as tk
 from tkinter import ttk
-from tkinter.messagebox import askyesnocancel
+from tkinter.messagebox import askyesnocancel, showinfo, showerror
 import json
 import os
 from ChangeColorDialog import ChangeColorDialog
@@ -22,7 +22,7 @@ import Version
 class MainNotebookGUI(tk.Tk, tk.Frame):
 
     FRAMES: dict[int, Cell] = {}
-    VERSION: str = "v0.2-alpha"
+    VERSION: str = "v0.3-alpha"
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -48,7 +48,13 @@ class MainNotebookGUI(tk.Tk, tk.Frame):
 
         self.file_name = ""
 
-        self.options = FileHandler.get_options()            
+        self.options = FileHandler.get_options()
+        try:
+            self.fontsize = self.options["Default-Font-Size"]
+            # print(self.fontsize)
+        except KeyError:
+            self.fontsize = 12
+            FileHandler.create_directories(force_update=True)
 
         self.canvas = tk.Canvas(self, background="gray12")
         self.canvas.pack(side='right', fill='both', expand=True)
@@ -123,11 +129,16 @@ class MainNotebookGUI(tk.Tk, tk.Frame):
         menubar.add_cascade(label="Help", menu=helpMenu)
 
         updateMenu = tk.Menu(menubar, tearoff=False)
-        updateMenu.add_command(label="Current Version", command=self.show_version)
-        updateMenu.add_command(label="Check For Updates", command=TEST)
+        updateMenu.add_command(label="Changelog", command=self.show_current_version_changelog)
+        updateMenu.add_command(label="Check For Updates", command=lambda x=True: self.check_updates(x))
         menubar.add_cascade(label="Update", menu=updateMenu)
 
         self.protocol("WM_DELETE_WINDOW", self.on_destroy)
+
+        self.canvas.bind_all("<Control-equal>", lambda e, x=2: self.change_font_size(e, x))
+        self.canvas.bind_all("<Control-minus>", lambda e, x=-2: self.change_font_size(e, x))
+
+        # self.after("idle",self.check_updates)
 
     def _on_configure(self, event: tk.Event, widget_id, delay = 500):
         if event.type == tk.EventType.Configure:
@@ -137,10 +148,11 @@ class MainNotebookGUI(tk.Tk, tk.Frame):
 
     def _resize_widgets(self, event, widget_id):
         if event is not None:
+            # print(self.current_width)
             event.widget.itemconfigure(widget_id, width=event.width-8)
             self.current_width = event.width
         for widget in MainNotebookGUI.FRAMES.values():
-            widget.adjust_width((self.current_width//10)-2)
+            widget.adjust_width(self.current_width)
             self.update_idletasks()
             widget.adjust_height()
             widget.adjust_height(widget=widget.output)
@@ -152,23 +164,22 @@ class MainNotebookGUI(tk.Tk, tk.Frame):
             MainNotebookGUI.FRAMES[0].destroy()
             del MainNotebookGUI.FRAMES[0]
 
-        new_cell = Cell(self.scrollable_content, mode=mode, options=self.options, grandparent=self)
+        new_cell = Cell(self.scrollable_content, mode=mode, options=self.options, grandparent=self, fontsize=self.fontsize)
+
+        # Add a frame to hold the buttons
+        button_frame = tk.Frame(new_cell, background="gray12")
+        button_frame.pack(side="bottom", fill="x")
 
         # Add and Delete buttons
-        new_cell.add_cell = tk.Button(new_cell, text="Add Cell XZ", command=lambda a = row + 1: self.createbox(a, "xz"), background="gray12", foreground="white")
-        new_cell.bind_hover(new_cell.add_cell)
-        new_cell.add_cell.grid(row=5, column=2)
+        new_cell.eval_button.pack_configure(expand=True, fill="x")
 
-        new_cell.add_cell_y = tk.Button(new_cell, text="Add Cell Y", command=lambda a = row + 1: self.createbox(a, "y"), background="gray12", foreground="white")
-        new_cell.bind_hover(new_cell.add_cell_y)
-        new_cell.add_cell_y.grid(row=5, column=3)
+        new_cell.add_cell.configure(command=lambda a=row + 1: self.createbox(a, "xz"))
 
-        new_cell.delete_cell = tk.Button(new_cell, text="Delete", command=lambda a = row + 1: self.deletecell(a), background="gray12", foreground="white")
-        new_cell.bind_hover(new_cell.delete_cell)
-        new_cell.delete_cell.grid(row=5, column=4)
+        new_cell.add_cell_y.configure(command=lambda a=row + 1: self.createbox(a, "y"))
 
+        new_cell.delete_cell.configure(command=lambda a=row + 1: self.deletecell(a))
 
-        new_cell.grid(row = row + 1, sticky="nswe")
+        new_cell.grid(row=row + 1, sticky="nswe")
 
         # Update the scroll region of the canvas
         self.update_idletasks()
@@ -179,16 +190,15 @@ class MainNotebookGUI(tk.Tk, tk.Frame):
         frames[len(frames) + 1] = []
 
         for i in range(len(frames), row + 1, -1):
-            frames[i] = frames[i-1]
-    
-        # Represents changing the datas manually
-            frames[i].add_cell.configure(command = lambda a = i: self.createbox(a,"xz"))
-            frames[i].add_cell_y.configure(command = lambda a = i: self.createbox(a,"y"))
-            frames[i].delete_cell.configure(command = lambda a = i: self.deletecell(a))
+            frames[i] = frames[i - 1]
+
+            # Represents changing the data manually
+            frames[i].add_cell.configure(command=lambda a=i: self.createbox(a, "xz"))
+            frames[i].add_cell_y.configure(command=lambda a=i: self.createbox(a, "y"))
+            frames[i].delete_cell.configure(command=lambda a=i: self.deletecell(a))
             frames[i].grid(row=i)
-    
+
         frames[row + 1] = new_cell
-        # self.canvas.event_generate("<Configure>", width=self.current_width)
         self._resize_widgets(None, self.id)
         self.update_idletasks()
     
@@ -381,7 +391,7 @@ class MainNotebookGUI(tk.Tk, tk.Frame):
         else:
             self.credits_window.top.focus()
     
-    def show_version(self):
+    def show_current_version_changelog(self):
         if not self.version_window:
             self.version_window = Version.Version(self.VERSION, None)
             self.version_window.top.bind("<Destroy>", func= self.o)
@@ -408,8 +418,43 @@ class MainNotebookGUI(tk.Tk, tk.Frame):
                 self.save()
             elif a is None:
                 return
+
+        with open(FileHandler.get_path_to_options(), "w+") as file:
+            json.dump(self.options, file, indent=4)
+
         self.destroy()
     
+    def check_updates(self, show_message = False):
+        text = f"You're using Mothball version {MainNotebookGUI.VERSION}. "
+        try:
+            response = requests.get("https://api.github.com/repos/anon-noob/mothball/releases")
+            if response.status_code == 200:
+                latest_release = response.json()[0]
+                latest_version = latest_release.get("tag_name")
+                if latest_version != MainNotebookGUI.VERSION:
+                    showinfo("Update found", text + f"The new update {latest_version} can be found on Github.")
+                    
+                elif show_message:
+                    showinfo("No updates found", "You are on the latest version.")
+
+            elif show_message:
+                showerror("Unable to check for updates.")
+        except Exception as e:
+            if show_message:
+                showerror("Unable to check for updates.")
+    
+    def change_font_size(self, e, change: int):
+        self.fontsize += change
+        self.options["Default-Font-Size"] = self.fontsize
+        for frame in MainNotebookGUI.FRAMES.values():
+            for text_widget in (frame.label, frame.text, frame.label2, frame.output):
+                current_font = str(text_widget.cget("font"))
+                font_family, font_size = current_font.rsplit(" ", 1)
+                font_family = font_family.strip("{}")
+                new_font_size = min(max(4, int(font_size) + change), 40)
+                text_widget.configure(font=(font_family, new_font_size))
+            frame.adjust_height(e)
+            frame.adjust_height(e, frame.output)
     
 class StarterFrame(tk.Frame):
     def __init__(self, *args, **kwargs):
@@ -423,8 +468,8 @@ class StarterFrame(tk.Frame):
     def adjust_width(self, event):
         pass
 
-def TEST():
-    webbrowser.open_new("https://github.com/anon-noob/mothball/releases/tag/v0.1-alpha")
+
+        
 
 if __name__ == "__main__":
     app = MainNotebookGUI()
