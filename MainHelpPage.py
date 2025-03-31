@@ -45,6 +45,10 @@ with open(os.path.join(base_path, "Mothball_Pages/WelcomePage.txt")) as f:
     welcomePage = f.read()
     welcomePageHEADINGS = Page.Page.get_headings(welcomePage)
 
+with open(os.path.join(base_path, "Mothball_Pages/UsingTheIDE.txt")) as f:
+    usingTheIDE = f.read()
+    usingTheIDEHEADINGS = Page.Page.get_headings(welcomePage)
+
 
 class MainHelpPage(tk.Frame):
     def __init__(self, master):
@@ -74,6 +78,7 @@ class MainHelpPage(tk.Frame):
         self.tree.insert("", "end",iid=1, text="Learn the Basics")
         self.tree.insert("", "end",iid=2, text="Documentation")
 
+        self.add_to_tree(1, 'usage', "Using the IDE", introductionHEADINGS)
         self.add_to_tree(1, 'intro', "Introduction", introductionHEADINGS)
         self.add_to_tree(1, 'movement', "Movement", movementHelpHEADINGS)
         self.add_to_tree(1, 'setters', "Setters", setterHelpHEADINGS)
@@ -128,7 +133,6 @@ class MainHelpPage(tk.Frame):
         self.current_page.pos = self.current_page.pos.reset_column()
         self.current_page.images = {}
         
-    
     def show(self, page_name):
         if self.current_page_name == page_name:
             return
@@ -152,9 +156,10 @@ class MainHelpPage(tk.Frame):
                 self.current_page.parse_text(documentationIntro)
             case "movementdocumentation":
                 self.current_page.parse_text(movementDocumentation)
+            case "usage":
+                self.current_page.parse_text(usingTheIDE)
         self.current_page_name = page_name
         self.current_page.text.configure(state="disabled")
-
 
 
 if __name__ == "__main__":
