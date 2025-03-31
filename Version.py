@@ -7,26 +7,23 @@ class Version(Page.Page):
     def __init__(self, version, master=None):
         self.top = tk.Toplevel(master)
         super().__init__(self.top)
-        self.version = version
-        a = self.check_for_update()
-        self.parse_text(f"Mothball version {version}" + "\n" + a)
+        a,b = self.check_updates()
+        self.parse_text(f"""You are on Mothball version {version}\nLatest version {a} changelog:\n{b}""")
         self.finalize()
 
-    def check_for_update(self):
+    def check_updates(self):
         try:
             response = requests.get("https://api.github.com/repos/anon-noob/mothball/releases")
             if response.status_code == 200:
-                latest_version = response.json()[0].get("tag_name")
-                if latest_version != self.version:
-                    return f"Update available: {latest_version}"
-                else:
-                    return "You are using the latest version."
-            else:
-                return "Failed to check for updates."
+                latest_release = response.json()[0]
+                latest_version = latest_release.get("tag_name")
+                text = latest_release.get('body')
+                
+            return (latest_version, text)
         except Exception as e:
-            return f"Error checking for updates: {e}"
+            return ("Unable to get latest version", "")
         
 if __name__ == "__main__":
     root = tk.Tk()
-    Version("VERSION HERE", root)
+    Version("BETA", root)
     root.mainloop()
