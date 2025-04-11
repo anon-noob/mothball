@@ -39,12 +39,14 @@ async def help(ctx):
 
 @bot.command()
 async def version(ctx):
-    v = "2.2.0"
+    v = "2.2.1"
     s = f"""Mothball version {v}
 Recent Additions:
 - 1.21.5 is out, which means inertia has changed! Do `help(inertia)` to see the changes
 - For versions 1.14+, sneaking is now 1t delayed. Use `version` or `sneakdelay` to toggle it.
+  - Added `sneakstop` and `sneakstopjump`
 - `version()` has been updated to account for these changes.
+- Thank you Jack for becoming Steve
 """
     await ctx.send(s)
 
