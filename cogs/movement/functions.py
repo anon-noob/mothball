@@ -2058,7 +2058,19 @@ def help(ctx: Context, cmd_name = 'help'):
     """
 
     if cmd_name not in commands_by_name:
-        raise SimError(f'Command `{cmd_name}` not found.')
+        error_msg = f'Command `{cmd_name}` not found. '
+        l = parsers.get_suggestions(ctx, cmd_name)
+        if l:
+            suggestion_count = min(4, len(l))
+            suggestion = []
+            for i in range(suggestion_count):
+                suggestion.append(f"`{l[i]}`")
+
+            if suggestion_count > 1:
+                error_msg += f"Did you mean any of the following: {', '.join(suggestion)}?"
+            else:
+                error_msg += f"Did you mean {suggestion[0]}?"
+        raise SimError(error_msg)
 
     cmd = commands_by_name[cmd_name]
     cmd_name = cmd._aliases[0]
