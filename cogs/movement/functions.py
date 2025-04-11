@@ -717,6 +717,22 @@ def stopjump(ctx: Context, duration = 1):
     "Inputless jump, `stj(x)` being equivalent to `st sta(x-1)`"
     jump(ctx)
 
+@command(aliases=['snst'])
+def sneakstop(ctx: Context, duration = 1):
+    "Sneak without moving, useful for mimicking 1.14+ sneaking"
+    ctx.args.setdefault('sneaking', True)
+    move(ctx)
+
+@command(aliases=['snstj'])
+def sneakstopjump(ctx: Context, duration = 1):
+    "Sneak and jump without moving horizontally, useful for mimicking 1.14+ sneaking"
+    ctx.args.setdefault('sneaking', True)
+
+    def update():
+        ctx.args['sneaking'] = True
+        
+    jump(ctx, after_jump_tick = update)
+
 @command(aliases=['stfj'])
 def sprintstrafejump(ctx: Context, duration = 1, rotation: f32 = None):
     """
@@ -727,7 +743,6 @@ def sprintstrafejump(ctx: Context, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('sprinting', True)
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(1))
-    # ctx.args['function_offset'] = f32(17.4786857811690446)
     ctx.args['function_offset'] = get_optimal_sprint_strafe_jump_angle(ctx)
 
     def update():
@@ -746,7 +761,6 @@ def sprintstrafejump45(ctx: Context, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('sprinting', True)
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(1))
-    # ctx.args['function_offset'] = f32(17.4786857811690446)
     ctx.args['function_offset'] = get_optimal_sprint_strafe_jump_angle(ctx)
 
     def update():
