@@ -73,14 +73,15 @@ def execute_string(context, text):
         commands_args = string_to_args(text)
     except SimError:
         raise
-    except Exception:
+    except Exception as e:
         if context.is_dev:
             raise
+        print(e)
         raise SimError('Something went wrong while parsing.')
 
-    for command, args in commands_args:
+    for command, mods, args in commands_args:
         try:
-            execute_command(context, command, args)
+            execute_command(context, command, mods, args)
         except SimError:
             raise
         except Exception as e:
@@ -93,7 +94,7 @@ def string_to_args(text):
     commands_args = [argumentatize_command(command) for command in commands_str_list]
     return commands_args
 
-def execute_command(context: Context, command, args):
+def execute_command(context: Context, command, mods, args):
     if context.simulation_axis == "xz":
         cmds = commands_by_name
     elif context.simulation_axis == "y":
@@ -111,6 +112,15 @@ def execute_command(context: Context, command, args):
             modifiers['prev_slip'] = fl(1.0)
         
         key_modifier = search(r'\.([ws]?[ad]?){1,2}(\.|$)', command)
+
+        for m in mods:
+            n = alias_to_modifier.get(m)
+            if n is None:
+                raise SimError(f"Invalid modifier {m}\nValid modifiers: `water`, `lava`, `blocking`, `web`, `ladder`")
+            modifiers.setdefault(n, True)
+                
+            
+
         if key_modifier:
             keys = key_modifier.group(0)[1:]
 
@@ -164,6 +174,10 @@ def execute_command(context: Context, command, args):
             execute_command(context, command, args)
             context.envs.pop()
 
+def matches_parenthesis_stack(stack, parenthesis_char):
+    a = stack[-1]
+    return (parenthesis_char == ")" and a == "(") or (parenthesis_char == "]" and a == "[")
+
 def separate_commands(text):
     
     # States:
@@ -176,8 +190,9 @@ def separate_commands(text):
     comment_state = None
     start = 0
     depth = 0
+    bracket_stack = []
     player_commands = []
-
+    text += " "
     for i in range(len(text)):
         char = text[i]
 
@@ -195,19 +210,26 @@ def separate_commands(text):
                 state = 1
 
         elif state == 1:
-            if char == '(':
+            if char in '([':
                 depth = 1
                 state = 2
+                bracket_stack.append(char)
             elif not match(r'[\w_\|\-\.]', char):
                 player_commands.append(text[start:i])
                 state = 0
 
         elif state == 2:
-            if char == '(':
+            if char in '([':
                 depth += 1
-            if  char == ')':
+                bracket_stack.append(char)
+            if char in '])':
+                if not bracket_stack:
+                    raise SimError('Isolated closing parenthesis')
+                if not matches_parenthesis_stack(bracket_stack, char):
+                    raise SimError("Open and close parenthesis not matching")
+                bracket_stack.pop()
                 depth -= 1
-                if depth == 0:
+                if depth == 0 and text[i+1].isspace():
                     player_commands.append(text[start:i + 1])
                     state = 0
 
@@ -222,35 +244,53 @@ def separate_commands(text):
 def argumentatize_command(command):
     # Handle argumentless commands
     try:
-        divider = command.index('(')
+        arg_divider = command.index('(')
     except ValueError:
-        return (command.lower(), [])
+        arg_divider = None
+
+    try:
+        modifier_divider = command.index('[')
+        modifier_end = command.index(']')
+    except ValueError:
+        modifier_divider = None
+
+    if arg_divider is None and modifier_divider is None:
+        return (command.lower(), [], [])
 
     after_backslash = False # tracks any '\' character
 
     args = []
-    start = divider + 1
-    depth = 0
-    for i in range(divider + 1, len(command) - 1):
-        char = command[i]
-        if char == "\\" and not after_backslash:
-            after_backslash = True
-            continue
-        elif depth == 0 and char == ',' and not after_backslash:
-            args.append(command[start:i].strip())
-            start = i + 1
-        elif char == '(':
-            depth += 1
-        elif char == ')':
-            depth -= 1
-        after_backslash = False
+    if arg_divider:
+        start = arg_divider + 1
+        depth = 0
+        # Inside parenthesis
+        for i in range(arg_divider + 1, len(command) - 1):
+            char = command[i]
+            if char == "\\" and not after_backslash:
+                after_backslash = True
+                continue
+            elif depth == 0 and char == ',' and not after_backslash:
+                args.append(command[start:i].strip())
+                start = i + 1
+            elif char == '(':
+                depth += 1
+            elif char == ')':
+                depth -= 1
+            after_backslash = False
 
-    command_name = command[:divider].lower()
-    final_arg = command[start:-1].strip()
-    if len(final_arg) > 0:
-        args.append(final_arg)
+        command_name = command[:arg_divider].lower()
+        final_arg = command[start:-1].strip()
+        if len(final_arg) > 0:
+            args.append(final_arg)
+    
+    mods = []
+    if modifier_divider:
+        # Inside brackets
+        mods = [x.strip() for x in command[modifier_divider + 1: modifier_end].split(",")]
+        if arg_divider is None or modifier_divider < arg_divider:
+            command_name = command[:modifier_divider].lower()
 
-    return (command_name, args)
+    return (command_name, mods, args)
 
 def dictize_args(envs, command, str_args, axis = "xz"):
     args = {}
@@ -422,3 +462,17 @@ y_aliases = functionsY.aliases
 y_commands_by_name = functionsY.commands_by_name
 y_types_by_command = functionsY.types_by_command
 y_types_by_arg = functionsY.types_by_arg
+
+alias_to_modifier = {
+    'water': 'water',
+    'wt': 'water',
+    'lava': 'lava',
+    'lv': 'lava',
+    'web': 'web',
+    'block': 'blocking',
+    'bl': 'blocking',
+    'blocking': 'blocking',
+    'ladder': 'ladder',
+    'ld': 'ladder',
+    'vine': 'vine'
+}
