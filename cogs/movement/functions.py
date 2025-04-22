@@ -42,8 +42,10 @@ register_arg('water', bool, ['water'])
 register_arg('speed', int, ['spd'])
 register_arg('slowness', int, ['slow', 'sl'])
 register_arg('soulsand', int, ['ss'])
-register_arg('blocking', bool, ['blocking']) # (New) added sword blocks (1.8)
-register_arg('web', bool, ['web']) # For web movement
+register_arg('blocking', bool, ['blocking']) 
+register_arg('web', bool, ['web']) 
+register_arg('lava', bool, ['lava']) 
+register_arg('ladder', bool, ['ld']) 
 
 def command(name=None, aliases=[]):
     def deco(f):
@@ -230,10 +232,11 @@ def repeat(ctx: Context, inputs: str = '', n: int = 1):
     if ("print" in inputs or "println" in inputs) and n > 100:
         raise SimError(f"Looks like you're trying to do some heavy duty printing. Unfortunately we are low on electrons, so until then, we can't print this many times.")
     commands_args = parsers.string_to_args(inputs)
+    print(commands_args)
 
     for _ in range(n):
-        for command, cmd_args in commands_args:
-            parsers.execute_command(ctx, command, cmd_args)
+        for command, cmd_mods, cmd_args in commands_args:
+            parsers.execute_command(ctx, command, cmd_mods, cmd_args)
 
 @command(aliases=['def'])
 def define(ctx: Context, name = '', input = ''):
@@ -717,22 +720,6 @@ def stopjump(ctx: Context, duration = 1):
     "Inputless jump, `stj(x)` being equivalent to `st sta(x-1)`"
     jump(ctx)
 
-@command(aliases=['snst'])
-def sneakstop(ctx: Context, duration = 1):
-    "Sneak without moving, useful for mimicking 1.14+ sneaking"
-    ctx.args.setdefault('sneaking', True)
-    move(ctx)
-
-@command(aliases=['snstj'])
-def sneakstopjump(ctx: Context, duration = 1):
-    "Sneak and jump without moving horizontally, useful for mimicking 1.14+ sneaking"
-    ctx.args.setdefault('sneaking', True)
-
-    def update():
-        ctx.args['sneaking'] = True
-        
-    jump(ctx, after_jump_tick = update)
-
 @command(aliases=['stfj'])
 def sprintstrafejump(ctx: Context, duration = 1, rotation: f32 = None):
     """
@@ -743,6 +730,7 @@ def sprintstrafejump(ctx: Context, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('sprinting', True)
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(1))
+    # ctx.args['function_offset'] = f32(17.4786857811690446)
     ctx.args['function_offset'] = get_optimal_sprint_strafe_jump_angle(ctx)
 
     def update():
@@ -761,402 +749,13 @@ def sprintstrafejump45(ctx: Context, duration = 1, rotation: f32 = None):
     ctx.args.setdefault('sprinting', True)
     ctx.args.setdefault('forward', f32(1))
     ctx.args.setdefault('strafe', f32(1))
+    # ctx.args['function_offset'] = f32(17.4786857811690446)
     ctx.args['function_offset'] = get_optimal_sprint_strafe_jump_angle(ctx)
 
     def update():
         ctx.args['function_offset'] = f32(45)
     
     jump(ctx, after_jump_tick = update)
-
-##### New water stuff ##### If anything goes wrong blame physiq not me :D
-@command(aliases=['wwt', 'wt', 'water'])
-def walkwater(ctx: Context, duration = 1, rotation: f32 = None):
-    """
-    `walkwater` and `sprintwater` are equivalent while in water, but beware of sprint air delay when exiting water.
-    """
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('water', True)
-    move(ctx)
-
-@command(aliases=['swt'])
-def sprintwater(ctx: Context, duration = 1, rotation: f32 = None):
-    """
-    `walkwater` and `sprintwater` are equivalent while in water, but beware of sprint air delay when exiting water.
-    """
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('water', True)
-    ctx.args.setdefault('sprinting', True)
-    move(ctx)
-
-@command(aliases=['stwt'])
-def stopwater(ctx: Context, duration = 1):
-    "Inputless tick while in water"
-    ctx.args.setdefault('water', True)
-    move(ctx)
-
-@command(aliases=['wwt45', 'water45', 'wt45'])
-def walkwater45(ctx: Context, duration = 1, rotation: f32 = None):
-    """
-    `walkwater45` and `sprintwater45` are equivalent while in water, but beware of sprint air delay when exiting water.
-    """
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('strafe', f32(1))
-    ctx.args.setdefault('water', True)
-    ctx.args['function_offset'] = f32(45)
-
-@command(aliases=['swt45'])
-def sprintwater45(ctx: Context, duration = 1, rotation: f32 = None):
-    """
-    `waterwalk45` and `watersprint45` are equivalent while in water, but beware of sprint air delay when exiting water.
-    """
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('strafe', f32(1))
-    ctx.args.setdefault('water', True)
-    ctx.args.setdefault('sprinting', True)
-    ctx.args['function_offset'] = f32(45)
-    move(ctx)
-
-@command(aliases=['snwt'])
-def sneakwater(ctx: Context, duration = 1, rotation: f32 = None):
-    "Sneak while in water"
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('water', True)
-    ctx.argd.setdefault('sneaking', True)
-    move(ctx)
-
-@command(aliases=['snwt45'])
-def sneakwater45(ctx: Context, duration = 1, rotation: f32 = None):
-    "Sneak and 45 while in water"
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('strafe', f32(1))
-    ctx.args.setdefault('water', True)
-    ctx.args['function_offset'] = f32(45)
-    ctx.argd.setdefault('sneaking', True)
-    move(ctx)
-
-@command(aliases=['snswt'])
-def sneaksprintwater(ctx: Context, duration = 1, rotation: f32 = None):
-    """
-    Sneak and sprint while in water
-
-    Only works for versions 1.14+. The player can only sneak sprint if the tick before was sprinted. 
-    
-    That also means you must be outside of water in order to be able to snesk sprint in water.
-    """
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('water', True)
-    ctx.args.setdefault('sprinting', True)
-    ctx.args.setdefault('sneaking', True)
-    move(ctx)
-
-@command(aliases=['snswt45'])
-def sneaksprintwater45(ctx: Context, duration = 1, rotation: f32 = None):
-    """
-    Sneak, sprint, and 45 strafe while in water
-
-    Only works for versions 1.14+. The player can only sneak sprint if the tick before was sprinted. 
-    
-    That also means you must be outside of water in order to be able to snesk sprint in water.
-    """
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('strafe', f32(1))
-    ctx.args.setdefault('water', True)
-    ctx.args.setdefault('sprinting', True)
-    ctx.args['function_offset'] = f32(45)
-    ctx.argd.setdefault('sneaking', True)
-    move(ctx)
-##### End of new water stuff ######
-##### Begin of new sword block stuff #####
-@command(aliases=['bl', 'sbl'])
-def swordblock(ctx: Context, duration = 1, rotation: f32 = None):
-    "Sword block while on the ground"
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('blocking', True)
-    move(ctx)
-
-@command(aliases = ['bla', 'sbla','sblawt', 'blawt'])
-def swordblockair(ctx: Context, duration = 1, rotation: f32 = None):
-    "Swrod block while midair or in water"
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('blocking', True)
-    ctx.args.setdefault('airborne', True)
-    move(ctx)
-    
-@command(aliases=['bl45', 'sbl45'])
-def swordblock45(ctx: Context, duration = 1, rotation: f32 = None):
-    "Sword block and 45 while on the ground"
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('strafe', f32(1))
-    ctx.args.setdefault('blocking', True)
-    ctx.args['function_offset'] = f32(45)
-    move(ctx)
-
-@command(aliases = ['bla45', 'sbla45', 'sblawt45', 'blawt45'])
-def swordblockair45(ctx: Context, duration = 1, rotation: f32 = None):
-    "Sword block and 45 while midair or in water"
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('strafe', f32(1))
-    ctx.args.setdefault('blocking', True)
-    ctx.args.setdefault('airborne', True)
-    ctx.args['function_offset'] = f32(45)
-    move(ctx)
-
-@command(aliases = ['snbl', 'snsbl'])
-def sneakswordblock(ctx: Context, duration = 1, rotation: f32 = None):
-    "Sword block and sneaking on the ground"
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('blocking', True)
-    ctx.args.setdefault('sneaking', True)
-    move(ctx)
-    
-@command(aliases = ['snbl45', 'snsbl45'])
-def sneakswordblock45(ctx: Context, duration = 1, rotation: f32 = None):
-    "Sword block, sneaking, and 45 strafing on the ground"
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('strafe', f32(1))
-    ctx.args.setdefault('blocking', True)
-    ctx.args.setdefault('sneaking', True)
-    ctx.args['function_offset'] = f32(45)
-    move(ctx)
-    
-@command(aliases = ['snbla', 'snsbla', 'snsblawt', 'snblawt'])
-def sneakswordblockair(ctx: Context, duration = 1, rotation: f32 = None):
-    "Sword block and sneaking while midair or in water"
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('blocking', True)
-    ctx.args.setdefault('sneaking', True)
-    ctx.args.setdefault('airborne', True)
-    move(ctx)
-    
-@command(aliases = ['snbla45', 'snsbla45', 'snwtsbla45', 'snwtbla45'])
-def sneakswordblockair45(ctx: Context, duration = 1, rotation: f32 = None):
-    "Sword block, sneaking, and 45 strafing while midair or in water"
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('strafe', f32(1))
-    ctx.args.setdefault('blocking', True)
-    ctx.args.setdefault('sneaking', True)
-    ctx.args.setdefault('airborne', True)
-    ctx.args['function_offset'] = f32(45)
-    move(ctx)
-
-@command(aliases = ['sblj', 'blj'])
-def swordblockjump(ctx: Context, duration = 1, rotation: f32 = None):
-    "Sword block and jump"
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('blocking', True)
-    jump(ctx)
-    
-@command(aliases = ['sblj45', 'blj45'])
-def swordblockjump45(ctx: Context, duration = 1, rotation: f32 = None):
-    "Sword block and jump with 45"
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('strafe', f32(1))
-    ctx.args.setdefault('blocking', True)
-    ctx.args['function_offset'] = f32(45)
-    jump(ctx)
-    
-@command(aliases = ['snsblj', 'snblj'])
-def sneakswordblockjump(ctx: Context, duration = 1, rotation: f32 = None):
-    "Sword block, sneak, and jump"
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('blocking', True)
-    ctx.args.setdefault('sneaking', True)
-    jump(ctx)
-    
-@command(aliases = ['snsblj45', 'snblj45'])
-def sneakswordblockjump45(ctx: Context, duration = 1, rotation: f32 = None):
-    "Sword block, sneak, and jump with 45"
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('strafe', f32(1))
-    ctx.args.setdefault('blocking', True)
-    ctx.args['function_offset'] = f32(45)
-    ctx.args.setdefault('sneaking', True)
-    jump(ctx)
-
-##### End of new sword block stuff #####
-
-##### New web movement #####
-@command()
-def web(ctx: Context, duration = 1, rotation: f32 = None):
-    "Walk while inside a web"
-    ctx.args.setdefault('web', True)
-    ctx.args.setdefault('forward', f32(1))
-    move(ctx)
-
-@command()
-def web45(ctx: Context, duration = 1, rotation: f32 = None):
-    "Walk while 45 strafing and also while inside a web"
-    ctx.args.setdefault('web', True)
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('strafe', f32(1))
-    ctx.args['function_offset'] = f32(45)
-    move(ctx)
-
-@command(aliases=['sweb'])
-def sprintweb(ctx: Context, duration = 1, rotation: f32 = None):
-    "Sprint while inside a web"
-    ctx.args.setdefault('web', True)
-    ctx.args.setdefault('sprinting', True)
-    ctx.args.setdefault('forward', f32(1))
-    move(ctx)
-
-@command(aliases=['sweb45'])
-def sprintweb45(ctx: Context, duration = 1, rotation: f32 = None):
-    "Sprint while inside a web"
-    ctx.args.setdefault('web', True)
-    ctx.args.setdefault('sprinting', True)
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('strafe', f32(1))
-    ctx.args['function_offset'] = f32(45)
-    move(ctx)
-
-@command(aliases = ['aweb', 'waweb'])
-def airweb(ctx: Context, duration = 1, rotation: f32 = None):
-    "Move (without sprint) in midair while inside a web"
-    ctx.args.setdefault('web', True)
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('airborne', True)
-    move(ctx)
-
-@command(aliases=["aweb45", "waweb45"])
-def airweb45(ctx: Context, duration = 1, rotation: f32 = None):
-    "Move (without sprint) while 45 strafing in midair inside a web"
-    ctx.args.setdefault('web', True)
-    ctx.args.setdefault('airborne', True)
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('strafe', f32(1))
-    ctx.args['function_offset'] = f32(45)
-    move(ctx)
-
-@command(aliases=["saweb"])
-def sprintairweb(ctx: Context, duration = 1, rotation: f32 = None):
-    "Move with sprint in midair while inside a web"
-    ctx.args.setdefault('web', True)
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('airborne', True)
-    ctx.args.setdefault('sprinting', True)
-    move(ctx)
-
-@command(aliases=["saweb45"])
-def sprintairweb45(ctx: Context, duration = 1, rotation: f32 = None):
-    "Move with sprint while 45 strafing in midair inside a web"
-    ctx.args.setdefault('web', True)
-    ctx.args.setdefault('airborne', True)
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('strafe', f32(1))
-    ctx.args['function_offset'] = f32(45)
-    ctx.args.setdefault('sprinting', True)
-    move(ctx)
-
-@command(aliases=["wjweb", "jweb"])
-def jumpweb(ctx: Context, duration = 1, rotation: f32 = None):
-    "Jump (without sprint) inside a web"
-    ctx.args.setdefault('web', True)
-    ctx.args.setdefault('forward', f32(1))
-    jump(ctx)
-
-@command(aliases=["sjweb"])
-def sprintjumpweb(ctx: Context, duration = 1, rotation: f32 = None):
-    "Jump with sprint inside a web"
-    ctx.args.setdefault('web', True)
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('sprinting', True)
-    jump(ctx)
-
-@command(aliases=["wjweb45", "jweb45"])
-def jumpweb45(ctx: Context, duration = 1, rotation: f32 = None):
-    "Jump (without sprint) and 45 strafe inside a web"
-    ctx.args.setdefault('web', True)
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('strafe', f32(1))
-    ctx.args['function_offset'] = f32(45)
-    jump(ctx)
-
-@command(aliases=["sjweb45"])
-def sprintjumpweb45(ctx: Context, duration = 1, rotation: f32 = None):
-    "Jump with sprint and 45 strafe inside a web"
-    ctx.args.setdefault('web', True)
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('sprinting', True)
-
-    def update():
-        ctx.args.setdefault('strafe', f32(1))
-        ctx.args['function_offset'] = f32(45)
-    
-    jump(ctx, after_jump_tick = update)
-
-@command(aliases=["stweb"])
-def stopweb(ctx: Context, duration = 1):
-    "Inputless ticks while on ground and inside a web"
-    ctx.args.setdefault('web', True)
-    move(ctx)
-
-@command(aliases=["staweb"])
-def stopwebair(ctx: Context, duration = 1):
-    "Inputless ticks while midair and inside a web"
-    ctx.args.setdefault('web', True)
-    ctx.args.setdefault('airborne', True)
-    move(ctx)
-
-@command(aliases=['snweb'])
-def sneakweb(ctx: Context, duration = 1, rotation: f32 = None):
-    "Sneak on the ground while inside a web"
-    ctx.args.setdefault('web', True)
-    ctx.args.setdefault('sneaking', True)
-    ctx.args.setdefault('forward', f32(1))
-    move(ctx)
-
-@command(aliases=['snweb45'])
-def sneakweb45(ctx: Context, duration = 1, rotation: f32 = None):
-    "Sneak on the ground and 45 strafe while inside a web"
-    ctx.args.setdefault('web', True)
-    ctx.args.setdefault('sneaking', True)
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('strafe', f32(1))
-    ctx.args['function_offset'] = f32(45)
-    move(ctx)
-
-@command(aliases=['snaweb'])
-def sneakairweb(ctx: Context, duration = 1, rotation: f32 = None):
-    "Sneak midair while inside a web"
-    ctx.args.setdefault('web', True)
-    ctx.args.setdefault('sneaking', True)
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('airborne', True)
-    move(ctx)
-
-@command(aliases=['snaweb45'])
-def sneakairweb45(ctx: Context, duration = 1, rotation: f32 = None):
-    "Sneak and 45 strafe midair while inside a web"
-    ctx.args.setdefault('web', True)
-    ctx.args.setdefault('sneaking', True)
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('strafe', f32(1))
-    ctx.args['function_offset'] = f32(45)
-    ctx.args.setdefault('airborne', True)
-    move(ctx)
-
-@command(aliases=['snjweb'])
-def sneakjumpweb(ctx: Context, duration = 1, rotation: f32 = None):
-    "Sneak and jump while inside a web"
-    ctx.args.setdefault('web', True)
-    ctx.args.setdefault('sneaking', True)
-    ctx.args.setdefault('forward', f32(1))
-    jump(ctx)
-
-@command(aliases=['snjweb45'])
-def sneakjumpweb45(ctx: Context, duration = 1, rotation: f32 = None):
-    "Sneak, jump, and 45 strafe while inside a web"
-    ctx.args.setdefault('web', True)
-    ctx.args.setdefault('sneaking', True)
-    ctx.args.setdefault('forward', f32(1))
-    ctx.args.setdefault('strafe', f32(1))
-    ctx.args['function_offset'] = f32(45)
-    jump(ctx)
-
-
-##### To add: Sneak sprint web if exists #####
-#### End of web #####
 
 @command(name='|')
 def reset_position(ctx: Context):
@@ -1292,7 +891,7 @@ def sneak_delay(ctx: Context, sneak_delay = False):
     """
     Toggles sneak delay, which is present in 1.14 and above
     
-    If air sprint delay is toggled on, activating and deactivating sneak is 1 tick delayed.
+    If air sprint delay is toggled on, activating and deactivating sprint in midair is 1 tick delayed.
 
     To toggle on, use sndel(true), sndel(t), or sndel(1)
     """
@@ -1582,8 +1181,8 @@ def possibilities(ctx: Context, inputs = 'sj45(100)', mindistance: float = 0.01,
     ctx.uncolored_out += '```'
     
     commands_args = parsers.string_to_args(inputs)
-    for command, cmd_args in commands_args:
-        parsers.execute_command(ctx, command, cmd_args)
+    for command, cmd_mods, cmd_args in commands_args:
+        parsers.execute_command(ctx, command, cmd_mods, cmd_args)
     
     ctx.uncolored_out += '```'
     ctx.player.move = old_move
@@ -1646,8 +1245,8 @@ def xpossibilities(ctx: Context, inputs = 'sj45(100)', mindistance: float = 0.01
     ctx.uncolored_out += '```'
     
     commands_args = parsers.string_to_args(inputs)
-    for command, cmd_args in commands_args:
-        parsers.execute_command(ctx, command, cmd_args)
+    for command, cmd_mods, cmd_args in commands_args:
+        parsers.execute_command(ctx, command, cmd_mods, cmd_args)
     
     ctx.uncolored_out += '```'
     ctx.player.move = old_move
