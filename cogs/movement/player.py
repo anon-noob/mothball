@@ -61,11 +61,18 @@ class Player:
         blocking = args.get('blocking', self.blocking)
         sprintjump_boost = fl(0.2)
         web = args.get('web', False)
+        lava = args.get('lava', False)
+        ladder = args.get('ladder', False)
+
+        if ((sneaking and not self.sneak_delay) or (self.prev_sneak and self.sneak_delay)) and ladder:
+            airborne = True
 
         if airborne:
             slip = fl(1)
         elif water: # The slip for water mathematically turns out to be 0.8/0.91 and is treated similar to air movement.
             slip = fl(0.8/0.91)
+        elif lava: # The slip for water mathematically turns out to be 0.5/0.91 and is treated similar to air movement.
+            slip = fl(0.5/0.91)
         else:
             slip = args.get('slip', self.ground_slip)
         
@@ -115,7 +122,7 @@ class Player:
             # Sprinting start/stop is (by default) delayed by a tick midair
             if (self.air_sprint_delay and self.prev_sprint) or (not self.air_sprint_delay and sprinting):
                 movement = fl(movement + movement * 0.3)
-        elif water:
+        elif water or lava:
             movement = fl(0.02)
         else: # ground and jumping
             movement = fl(0.1)
@@ -172,6 +179,9 @@ class Player:
         if web:
             self.vx = self.vx / 4
             self.vz = self.vz / 4
+        if ladder:
+            self.vx = min(max(self.vx, -0.15),0.15)
+            self.vz = min(max(self.vz, -0.15),0.15)
 
         self.prev_slip = slip
         self.prev_sprint = sprinting
