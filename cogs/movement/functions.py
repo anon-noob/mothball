@@ -42,7 +42,7 @@ register_arg('water', bool, ['water'])
 register_arg('speed', int, ['spd'])
 register_arg('slowness', int, ['slow', 'sl'])
 register_arg('soulsand', int, ['ss'])
-register_arg('blocking', bool, ['blocking']) 
+register_arg('blocking', bool, ['block']) 
 register_arg('web', bool, ['web']) 
 register_arg('lava', bool, ['lava']) 
 register_arg('ladder', bool, ['ld']) 
@@ -232,7 +232,6 @@ def repeat(ctx: Context, inputs: str = '', n: int = 1):
     if ("print" in inputs or "println" in inputs) and n > 100:
         raise SimError(f"Looks like you're trying to do some heavy duty printing. Unfortunately we are low on electrons, so until then, we can't print this many times.")
     commands_args = parsers.string_to_args(inputs)
-    print(commands_args)
 
     for _ in range(n):
         for command, cmd_mods, cmd_args in commands_args:
@@ -1701,6 +1700,66 @@ def println(ctx: Context, string: str = ""):
     """
     # ctx.out += string + "\n"
     add_to_output_as_normal_string(ctx, string)
+
+@command()
+def taps(ctx: Context, string: str = ""):
+    def isfloat(val):
+        try:
+            float(val)
+            return True
+        except ValueError:
+            return False
+
+    d = {}
+    last_seq = ""
+    after_num = False
+    for i in ctx.pos_args:
+        
+        if i.isnumeric():
+            if after_num or not d:
+                raise SyntaxError(f"Numbers must follow after a sequence. {f'{i} comes after a number' if d else f'{i} has no sequence to follow'}.")
+            d[last_seq] = int(i)
+            after_num = True
+        elif isfloat(i):
+            raise TypeError(f"Number should be an integer, not a float ({i})")
+        else:
+            last_seq = i
+            d[last_seq] = 1
+            after_num = False
+    
+    had_sneak_delay = ctx.player.sneak_delay
+    ctx.player.sneak_delay = False
+    for k,v in d.items():
+        for _ in range(v):
+            commands_args = parsers.string_to_args(k)
+
+            for command, cmd_mods, cmd_args in commands_args:
+                parsers.execute_command(ctx, command, cmd_mods, cmd_args)
+
+            l = []
+            if ctx.player.prev_water:
+                l.append('water')
+            if ctx.player.prev_lava:
+                l.append('lava')
+            if ctx.player.prev_web:
+                l.append('web')
+            if ctx.player.prev_blocking:
+                l.append('block')
+            if ctx.player.prev_ladder:
+                l.append('ladder')
+
+
+            modifiers = ",".join(l)
+            while ctx.player.vx != 0 or ctx.player.vz != 0:
+
+                commands_args = parsers.string_to_args(f'stop[{modifiers}]')
+
+                for command, cmd_mods, cmd_args in commands_args:
+                    parsers.execute_command(ctx, command, cmd_mods, cmd_args)
+
+
+    if had_sneak_delay:
+        ctx.player.sneak_delay = True
 
 @command(aliases=['ver','v'])
 def version(ctx: Context, string: str = "1.8"):
