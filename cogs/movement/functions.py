@@ -1702,7 +1702,25 @@ def println(ctx: Context, string: str = ""):
     add_to_output_as_normal_string(ctx, string)
 
 @command()
-def taps(ctx: Context, string: str = ""):
+def taps(ctx: Context, sequences_and_numbers: str = ""):
+    """
+    Syntax: taps(seq1[, count1], seq2[, count2], ...)
+
+    Runs each sequence until the player fully stops **on the ground**, or based on the modifiers of the last function.
+        
+    Sequences can be provided as standalone arguments which will run once, or it can have a number following it, indicating how many times to execute it.
+
+    NOTE 1: Sneak delay is toggled off while executing taps.
+
+    NOTE 2: To do air taps, provide all necessary air ticks, for example `taps(stj sa sta(10))` is not the same as `taps(sa)`
+
+    Example: `taps(sneak, 3)`. Execute `sneak` and stop moving until the player is stationary, for a total of 3 times. In parkour notation, this is equivalent to "3st W" or "3 shift tap W"
+
+    Example: `taps(walk, stj sneakair sta(10), 2)` executes `walk` once and `stj sneakair sta(10)` twice. In parkour notation, "1ut W 2ast W".
+    
+    Example: `taps(walk[water](5))` walk while in water for 5t, then stops in water since the player was in water.
+    
+    """
     def isfloat(val):
         try:
             float(val)
@@ -1819,3 +1837,4 @@ def language(ctx: Context, string: str = "english"):
         raise SimError(f"╎ϟ ▭ ╎ᒣ ▭ リᒍᒣ ▭ ᒍ⎓ ▭ ┤∷ᒷᖋᒣ ▭ ⋮ᒍ॥ ▭ ᒣᒍ ▭ ᕊᒷ ▭ ᒷリᔮ⍑ᖋリᒣᒷ↸ ▭ ∴╎ᒣ⍑ ▭ ᒣ⍑ᒷ ▭ ⎓ᖋリᒣᖋϟ॥ ▭ ᒍ⎓ ▭ ϟᒍ|:⍊╎リ┤ ▭ ᖋリ॥ ▭ i!ᖋ∷·ǀ·ᒍ⚍∷ ▭ ⋮⚍ᒲi! ▭ ∴╎ᒣ⍑ ▭ ᒲᒍᒣ⍑ᕊᖋ|:|:․ﺭ․")
     else:
         raise SimError(f"Sorry but `{string}` not supported, we only have: \n`english, parkour, enchanting_table`\n")
+    
