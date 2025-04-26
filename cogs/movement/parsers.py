@@ -95,6 +95,7 @@ def string_to_args(text):
     return commands_args
 
 def execute_command(context: Context, command, mods, args):
+    # print("EXECUTE CMD recieved args:", args)
     if context.simulation_axis == "xz":
         cmds = commands_by_name
     elif context.simulation_axis == "y":
@@ -178,121 +179,137 @@ def matches_parenthesis_stack(stack, parenthesis_char):
     a = stack[-1]
     return (parenthesis_char == ")" and a == "(") or (parenthesis_char == "]" and a == "[")
 
-def separate_commands(text):
-    
-    # States:
-    # 0: Looking for a function
-    # 1: Scanning for the opening parenthesis or whitespace
-    # 2: Scanning for the closing parenthesis
-    # 3: In a comment
+def remove_comments(string: str):
+    "Removes comments delimited by `#`"
+    result = ""
+    in_comment = False
+    follows_slash = False
 
-    state = 0
-    comment_state = None
-    start = 0
-    depth = 0
-    bracket_stack = []
-    player_commands = []
-    text += " "
-    for i in range(len(text)):
-        char = text[i]
-
-        if char == '#':
-            if state != 3:
-                comment_state = state
-                state = 3
-            else:
-                state = comment_state
+    for char in string:
+        if char == "#" and not follows_slash:
+            in_comment = not in_comment
             continue
 
-        if state == 0:
-            if match(r'[\w_\|\-\.]', char):
-                start = i
-                state = 1
+        if not in_comment:
+            result += char
 
-        elif state == 1:
-            if char in '([':
-                depth = 1
-                state = 2
-                bracket_stack.append(char)
-            elif not match(r'[\w_\|\-\.]', char):
-                player_commands.append(text[start:i])
-                state = 0
+        if char == "\\" and not follows_slash:
+            follows_slash = True
+            
+        
+        else:
+            follows_slash = False
+    
+    return result
+def separate_commands(string: str, splitters: tuple = ("\n", " ", "\r", "\t")) -> list: 
 
-        elif state == 2:
-            if char in '([':
-                depth += 1
-                bracket_stack.append(char)
-            if char in '])':
-                if not bracket_stack:
-                    raise SimError('Isolated closing parenthesis')
-                if not matches_parenthesis_stack(bracket_stack, char):
-                    raise SimError("Open and close parenthesis not matching")
-                bracket_stack.pop()
-                depth -= 1
-                if depth == 0 and text[i+1].isspace():
-                    player_commands.append(text[start:i + 1])
-                    state = 0
 
-    # Handle unfinished parsing of argumentless commands
-    if state == 1:
-        player_commands.append(text[start:])
-    elif state == 2:
-        raise SimError('Unmatched opening parenthesis')
+        result = []
+        token = ""
+        stack = []
+        
+        matches_next_element = lambda e: ((e == ")" and stack[-1] == "(") or (e == "]" and stack[-1] == "["))
 
-    return player_commands
+        follows_slash = False
+
+        # Delete comments
+        string = remove_comments(string)
+
+        # Regex to change '|' into 'x(0) z(0)'
+        replace_bar_regex = r"(\|)"
+        string = re.sub(replace_bar_regex, "x(0) z(0)", string)
+        
+        for char in string + splitters[0]:
+
+            if char == "\\":
+                follows_slash = True
+                token += char
+                continue
+
+            elif (char == "(" or char == "[") and not follows_slash:
+                stack.append(char)
+            elif (char == ")" or char == "]") and not follows_slash:
+                if not stack:
+                    raise SyntaxError("Unopened brackets")
+                if not matches_next_element(char):
+                    raise SyntaxError("Unmatched brackets")
+                stack.pop()
+
+            
+            if char in splitters and not stack and not follows_slash:
+                token = token.strip()
+                result.append(token) if token else None
+                token = ""
+
+            else:
+                token += char
+
+            follows_slash = False
+        
+        if stack:
+            raise SyntaxError("Unclosed open parethesis")
+
+        # print(f"{string=} gave {result=}")
+        # print("SEPARATED CMDS:", result)
+        return result
+
 
 def argumentatize_command(command):
-    # Handle argumentless commands
-    try:
-        arg_divider = command.index('(')
-    except ValueError:
-        arg_divider = None
 
-    try:
-        modifier_divider = command.index('[')
-        modifier_end = command.index(']')
-    except ValueError:
-        modifier_divider = None
+    e1 = r"(\W)?"
+    func = r"([^.\[\(\-\)\]]+)"
+    inputs = r"(?:\.([wasdWASD]+))?"
+    modifiers = r"(?:\[(.*)\])?"
+    args = r"(?:\((.*)\))?"
+    e2 = r"(.+)?"
 
-    if arg_divider is None and modifier_divider is None:
-        return (command.lower(), [], [])
+    tokenize_regex = e1 + func + inputs + modifiers + args + e2 
 
-    after_backslash = False # tracks any '\' character
+    error1, func_name, inputs, modifiers, args, error2 = re.findall(tokenize_regex, command, flags=re.DOTALL)[0]
+    if error1 and error1 != "-":
+        
+        raise SyntaxError(f"Unknown item {error1} in {command}")
+    elif error2:
+        raise SyntaxError(f"Unknown item {error2} in {command}")
 
-    args = []
-    if arg_divider:
-        start = arg_divider + 1
+    # print("MODIFIERS:", modifiers)
+    # print("ARGS:", args)
+    if not modifiers or modifiers.isspace():
+        modifiers = []
+    else:
+        modifiers = [x.strip() for x in modifiers.split(",")]
+    # print("regex args:", args)
+    if not args or args.isspace():
+        args_list = []
+    else: # PARSE
+        arg = ""
+        args_list = []
         depth = 0
-        # Inside parenthesis
-        for i in range(arg_divider + 1, len(command) - 1):
-            char = command[i]
-            if char == "\\" and not after_backslash:
-                after_backslash = True
-                continue
-            elif depth == 0 and char == ',' and not after_backslash:
-                args.append(command[start:i].strip())
-                start = i + 1
-            elif char == '(':
+        for char in args:
+            if char in "[(":
                 depth += 1
-            elif char == ')':
+            elif char in ")]":
                 depth -= 1
-            after_backslash = False
+            elif char == "," and depth == 0:
+                args_list.append(arg.strip()) if arg else None 
+                arg = ''
+                continue
+            arg += char
+        else:
+            args_list.append(arg.strip()) if arg else None
+        # print("LOOP:", args_list)
 
-        command_name = command[:arg_divider].lower()
-        final_arg = command[start:-1].strip()
-        if len(final_arg) > 0:
-            args.append(final_arg)
+    if not inputs:
+        cmd = func_name.lower()
+    else:
+        cmd = (func_name + "." + inputs).lower()
     
-    mods = []
-    if modifier_divider:
-        # Inside brackets
-        mods = [x.strip() for x in command[modifier_divider + 1: modifier_end].split(",")]
-        if arg_divider is None or modifier_divider < arg_divider:
-            command_name = command[:modifier_divider].lower()
-
-    return (command_name, mods, args)
+    # print("Command:", command)
+    # print("Bundled:", (cmd, modifiers, args_list), "\n")
+    return (cmd, modifiers, args_list)
 
 def dictize_args(envs, command, str_args, axis = "xz"):
+    # print("Dictize recieved args:", str_args)
     args = {}
     pos_args = []
     if axis == "xz":
