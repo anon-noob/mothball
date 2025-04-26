@@ -39,13 +39,11 @@ async def help(ctx):
 
 @bot.command()
 async def version(ctx):
-    v = "2.3"
+    v = "2.3.1"
     s = f"""Mothball version {v}
 Recent Additions:
-- Added lava and ladder movement.
-- Syntax changes! Modify a movement using `[]` and placing any combination of these modifiers: `water`, `lava`, `web`, `blocking`, `ladder`.
-- Removed any water, web, and blocking function in favor of the new syntax
-- The new syntax is as follows: `function.inputs[modifiers](args)`. For example, `sprint[water, blocking](3)`.
+- Fixed issue with nested functions failing to parse movement with new `[]` syntax
+- New `taps` function
 """
     await ctx.send(s)
 
