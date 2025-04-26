@@ -26,8 +26,10 @@ class Player:
         self.soulsand = 0
         self.speed = 0
         self.slowness = 0
-        self.water = 0
-        self.blocking = 0
+        self.prev_water = 0
+        self.prev_lava = 0
+        self.prev_blocking = 0
+        self.prev_ladder = 0
         self.last_turn = 0
         self.last_rotation = 0
         self.prev_web = 0
@@ -57,8 +59,8 @@ class Player:
         speed = args.get('speed', self.speed)
         slowness = args.get('slowness', self.slowness)
         soulsand = args.get('soulsand', self.soulsand)
-        water = args.get('water', self.water)
-        blocking = args.get('blocking', self.blocking)
+        water = args.get('water', False)
+        blocking = args.get('blocking', False)
         sprintjump_boost = fl(0.2)
         web = args.get('web', False)
         lava = args.get('lava', False)
@@ -187,6 +189,10 @@ class Player:
         self.prev_sprint = sprinting
         self.prev_web = web
         self.prev_sneak = sneaking
+        self.prev_water = water
+        self.prev_lava = lava
+        self.prev_ladder = ladder
+        self.prev_blocking = blocking
         
         ctx.history.append((self.x, self.z, self.vx, self.vz))
         ctx.input_history.append([forward, strafe, sprinting, sneaking, jumping, rotation])
