@@ -170,9 +170,9 @@ def execute_command(context: Context, command, mods, args):
         
         new_env = dict([(var, val) for var, val in zip(user_func.arg_names, args)])
 
-        for command, args in user_func.args:
+        for command, modifiers, args in user_func.args:
             context.envs.append(new_env)
-            execute_command(context, command, args)
+            execute_command(context, command, modifiers, args)
             context.envs.pop()
 
 def matches_parenthesis_stack(stack, parenthesis_char):
@@ -267,7 +267,6 @@ def argumentatize_command(command):
 
     error1, func_name, inputs, modifiers, args, error2 = re.findall(tokenize_regex, command, flags=re.DOTALL)[0]
     if error1 and error1 != "-":
-        
         raise SyntaxError(f"Unknown item {error1} in {command}")
     elif error2:
         raise SyntaxError(f"Unknown item {error2} in {command}")
@@ -364,6 +363,8 @@ def convert(envs, command, arg_name, val, axis = "xz"):
     try:
         return cast(envs, command, type, val) # if normal value
     except Exception as e:
+
+
         if "Node type 'Call'" in str(e): # Expected int or float, got function call instead
             e = f"Argument type should be `{type.__name__}`, not a function call."
         elif "Node type 'Pow'" in str(e): # Exponents are not allowed
@@ -389,7 +390,10 @@ def cast(envs, command, type, val):
             try:
                 local_env[k] = type(v)
             except:
-                continue
+                try:
+                    local_env[k] = local_env[local_env[k]]
+                except:
+                    continue
         return type(safe_eval(val, local_env))
     
     # Do not format the string immediately if it is inside these functions
