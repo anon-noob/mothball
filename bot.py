@@ -39,10 +39,10 @@ async def help(ctx):
 
 @bot.command()
 async def version(ctx):
-    v = "2.3.1"
+    v = "2.3.2"
     s = f"""Mothball version {v}
 Recent Additions:
-- Fixed issue with nested functions failing to parse movement with new `[]` syntax
+- Fixed issue with custom defined functions failing to parse when inputting variables defined from outside
 - New `taps` function
 """
     await ctx.send(s)
