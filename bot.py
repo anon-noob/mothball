@@ -43,6 +43,7 @@ async def version(ctx):
     s = f"""Mothball version {v}
 Recent Additions:
 - Fixed issue with custom defined functions failing to parse when inputting variables defined from outside
+- Fixed air movement with modifiers acting like normal air movement
 - New `taps` function
 """
     await ctx.send(s)
