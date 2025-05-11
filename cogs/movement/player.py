@@ -69,12 +69,12 @@ class Player:
         if ((sneaking and not self.sneak_delay) or (self.prev_sneak and self.sneak_delay)) and ladder:
             airborne = True
 
-        if airborne:
-            slip = fl(1)
-        elif water: # The slip for water mathematically turns out to be 0.8/0.91 and is treated similar to air movement.
+        if water: # The slip for water mathematically turns out to be 0.8/0.91 and is treated similar to air movement.
             slip = fl(0.8/0.91)
         elif lava: # The slip for water mathematically turns out to be 0.5/0.91 and is treated similar to air movement.
             slip = fl(0.5/0.91)
+        elif airborne:
+            slip = fl(1)
         else:
             slip = args.get('slip', self.ground_slip)
         
@@ -118,14 +118,14 @@ class Player:
                 self.vz = 0.0
 
         # Calculating movement multiplier
-        if airborne:
+        if water or lava:
+            movement = fl(0.02)
+        elif airborne:
             movement = fl(0.02)
             
             # Sprinting start/stop is (by default) delayed by a tick midair
             if (self.air_sprint_delay and self.prev_sprint) or (not self.air_sprint_delay and sprinting):
                 movement = fl(movement + movement * 0.3)
-        elif water or lava:
-            movement = fl(0.02)
         else: # ground and jumping
             movement = fl(0.1)
             if speed > 0:
