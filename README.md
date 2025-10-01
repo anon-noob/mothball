@@ -1,5 +1,5 @@
 # Mothball
-The most up to date Discord bot for simulating Minecraft movement to high accuracy, used for parkour among other minecraft fields of research involving movement. Credits to [CyrenArkade](https://github.com/CyrenArkade/mothball) for making the original mothball.
+The most, but also somehow the least up to date Discord bot for simulating Minecraft movement to high accuracy, used for parkour among other minecraft fields of research involving movement. Credits to [CyrenArkade](https://github.com/CyrenArkade/mothball) for making the original mothball.
 
 ## Commands
 `;[simulate | sim | s]`​`functions` Simulates the provided functions and displays the final result.  
