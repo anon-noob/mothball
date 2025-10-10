@@ -28,6 +28,8 @@ class Context():
 
         self.adding_output = False # marker bool for formatting standard outputs
         self.adding_pre_output = False # marker bool for formatting pre-outputs (top priority outputs)
+
+        self.last_returned_value = 0 # for storing output values in vars
     
     def child(self):
         "Returns a deepcopy of a `Context` object"
