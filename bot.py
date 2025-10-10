@@ -39,12 +39,12 @@ async def help(ctx):
 
 @bot.command()
 async def version(ctx):
-    v = "2.3.2"
+    v = "2.4.0"
     s = f"""Mothball version {v}
 Recent Additions:
-- Fixed issue with custom defined functions failing to parse when inputting variables defined from outside
-- Fixed air movement with modifiers acting like normal air movement
-- New `taps` function
+- New `addx`, `addvx`, `addz`, `addvz` functions
+- New `xinertialistener` and `zinertialistener` functions to auto detect inertia hits or near misses
+- `var()` can now store values of label outputs. See `help(var)` for an example.
 """
     await ctx.send(s)
 
