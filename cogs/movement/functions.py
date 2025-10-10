@@ -247,14 +247,19 @@ def define(ctx: Context, name = '', input = ''):
     lowest_env[name] = new_function
 
 @command()
-def var(ctx: Context, name = '', input = ''):
+def var(ctx: Context, name = '', input: str = None):
     """
     Assigns `input` to `name`
     
     A valid variable `name` is any sequence of alphabet letters a-z or A-Z, numerical digits (0-9), an underscore `_`, and any combination of them with only one restriction. \\
     A number cannot be the first character in the variable name.
 
-    `var()` will attempt to convert the value to the appropiate datatype, which only supports integers, floats, or strings
+    `var()` will attempt to convert the value to the appropiate datatype, which only supports integers, floats, or strings.
+
+    (NEW) If `input` is not given, it will assign it to the value of the last output (only works for outz, zb, zmm, outvz, its x facing counterpart, outangle, and outturn). Alternatively, set `input` to be the mothball sequence to run for the same result.
+
+    Example: `walk.s[water](5) outvz(-0.0615) var(spd)` is the same as `walk.s[water](5) var(spd, outvz(-0.0615))`
+
     """
     var_regex = r"^([a-zA-Z_][a-zA-Z0-9_]*)$"
     if not re.findall(var_regex, name): # Either has one match or no matches
@@ -265,11 +270,19 @@ def var(ctx: Context, name = '', input = ''):
     local_env = {}
     for env in ctx.envs:
         local_env.update(env)
+    
+    if input is None:
+        lowest_env[name] = ctx.last_returned_value
+        return
 
     try:
         input = parsers.safe_eval(input, local_env)
     except:
-        input = parsers.formatted(local_env, input)
+        try:
+            parsers.execute_string(ctx, input)
+            input = ctx.last_returned_value
+        except:
+            input = parsers.formatted(local_env, input)
 
     lowest_env[name] = input
 
@@ -813,6 +826,16 @@ def setvz(ctx: Context, vz = 0.0):
     "Sets the player's z velocity"
     ctx.player.vz = vz
 
+@command()
+def addvx(ctx: Context, vx = 0.0):
+    "Adds the player's x velocity"
+    ctx.player.vx += vx
+
+@command()
+def addvx(ctx: Context, vz = 0.0):
+    "Adds the player's z velocity"
+    ctx.player.vz += vz
+
 @command(aliases = ['pos', 'xz'])
 def setpos(ctx: Context, x = 0.0, z = 0.0):
     "Sets the player's position"
@@ -828,6 +851,16 @@ def setposx(ctx: Context, x = 0.0):
 def setposz(ctx: Context, z = 0.0):
     "Sets the player's z position"
     ctx.player.z = z
+
+@command(aliases = ['addx'])
+def addposx(ctx: Context, x = 0.0):
+    "Adds the player's x position"
+    ctx.player.x += x
+
+@command(aliases = ['addz'])
+def addposz(ctx: Context, z = 0.0):
+    "Adds the player's z position"
+    ctx.player.z += z
 
 @command()
 def setvec(ctx: Context, speed = 0.0, angle = 0.0):
@@ -950,9 +983,11 @@ def macro(ctx: Context, name = 'macro', format = 'mpk'):
 
 def zeroed_formatter(ctx: Context, num, zero):
     if zero is None or zero == 0:
+        ctx.last_returned_value = num
         return ctx.format(num)
     
     formatted_offset = ctx.format(num - zero, sign=True)
+    ctx.last_returned_value = num - zero
     if any([formatted_offset.startswith(s) for s in ('+', '-')]):
         formatted_offset = f'{formatted_offset[0:1]} {formatted_offset[1:]}'
     else:
@@ -1121,6 +1156,76 @@ def air_sprint_delay(ctx: Context, sprint_delay = True):
     To toggle off, use sdel(false), sdel(f), or sdel(0)
     """
     ctx.player.air_sprint_delay = sprint_delay
+
+@command(aliases = ['xil'])
+def xinertialistener(ctx: Context, inputs = 'sj45(12)', tolerance: float = 0.002):
+    """
+    Performs `inputs` and displays ticks where vx hits inertia or is within tolerance near inertia. In other words, display vx if |inertia - vx| < tolerance
+    """
+    
+    old_move = ctx.player.move
+
+    tolerance = abs(tolerance)
+    tick = 1
+    def move(self:Player, ctx):
+        nonlocal tick, old_move
+
+        sign = copysign(1, self.vx)
+
+        old_move(ctx)
+        inertia_speed = abs(self.inertia_threshold / f32(0.91) / self.prev_slip)
+
+        if abs(self.vx) <= inertia_speed:
+            add_to_output(ctx, f"Tick {tick} vx (hit)", zeroed_formatter(ctx, ctx.player.vx, inertia_speed*sign), label_color="yellow")
+        elif abs(self.vx) <= inertia_speed+tolerance:
+            add_to_output(ctx, f"Tick {tick} vx (miss)", zeroed_formatter(ctx, ctx.player.vx, inertia_speed*sign), label_color="yellow")
+        
+        tick += 1
+    
+    ctx.player.move = MethodType(move, ctx.player)
+    ctx.uncolored_out += '```'
+    
+    commands_args = parsers.string_to_args(inputs)
+    for command, cmd_mods, cmd_args in commands_args:
+        parsers.execute_command(ctx, command, cmd_mods, cmd_args)
+    
+    ctx.uncolored_out += '```'
+    ctx.player.move = old_move
+
+@command(aliases = ['zil'])
+def zinertialistener(ctx: Context, inputs = 'sj45(12)', tolerance: float = 0.002):
+    """
+    Performs `inputs` and displays ticks where vz hits inertia or is within tolerance near inertia. In other words, display vz if |inertia - vz| < tolerance
+    """
+    
+    old_move = ctx.player.move
+
+    tolerance = abs(tolerance)
+    tick = 1
+    def move(self:Player, ctx):
+        nonlocal tick, old_move
+
+        sign = copysign(1, self.vz)
+
+        old_move(ctx)
+        inertia_speed = abs(self.inertia_threshold / f32(0.91) / self.prev_slip)
+
+        if abs(self.vz) <= inertia_speed:
+            add_to_output(ctx, f"Tick {tick} vz (hit)", zeroed_formatter(ctx, ctx.player.vz, inertia_speed*sign), label_color="yellow")
+        elif abs(self.vz) <= inertia_speed+tolerance:
+            add_to_output(ctx, f"Tick {tick} vz (miss)", zeroed_formatter(ctx, ctx.player.vz, inertia_speed*sign), label_color="yellow")
+        
+        tick += 1
+    
+    ctx.player.move = MethodType(move, ctx.player)
+    ctx.uncolored_out += '```'
+    
+    commands_args = parsers.string_to_args(inputs)
+    for command, cmd_mods, cmd_args in commands_args:
+        parsers.execute_command(ctx, command, cmd_mods, cmd_args)
+    
+    ctx.uncolored_out += '```'
+    ctx.player.move = old_move
 
 @command(aliases = ['poss', 'zposs'])
 def possibilities(ctx: Context, inputs = 'sj45(100)', mindistance: float = 0.01, offset:f32 = f32(0.6), miss: float = None):
