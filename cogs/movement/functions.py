@@ -832,7 +832,7 @@ def addvx(ctx: Context, vx = 0.0):
     ctx.player.vx += vx
 
 @command()
-def addvx(ctx: Context, vz = 0.0):
+def addvz(ctx: Context, vz = 0.0):
     "Adds the player's z velocity"
     ctx.player.vz += vz
 
