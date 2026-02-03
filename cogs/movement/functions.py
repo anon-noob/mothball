@@ -1126,7 +1126,7 @@ def outangle(ctx: Context):
 
     >>> Facing: 6
     """
-    add_to_output(ctx, "Facing", ctx.format(ctx.player.last_rotation), label_color="blue")
+    add_to_output(ctx, "Facing", zeroed_formatter(ctx, ctx.player.last_rotation, 0), label_color="blue")
 
 @command(aliases = ['outt'])
 def outturn(ctx: Context):
@@ -1143,7 +1143,7 @@ def outturn(ctx: Context):
 
     >>> Last Turn: 13
     """
-    add_to_output(ctx, "Last Turn", ctx.format(ctx.player.last_turn), label_color="blue")
+    add_to_output(ctx, "Last Turn", zeroed_formatter(ctx, ctx.player.last_turn, 0), label_color="blue")
     
 
 @command(aliases = ['sprintdelay', 'sdel'])
