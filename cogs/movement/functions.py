@@ -1893,9 +1893,11 @@ def version(ctx: Context, string: str = "1.8"):
     Version 1.19.3 and older has sprint air delay while later versions don't. \
     Version 1.21.4 and older has single axis inertia while later versions use multi axis inertia.
     
-    The version should be either in the form `major.minor` or `major.minor.patch`. For example, `1.21.4` (DO NOT PLAY THIS VERSION EVER)
+    For versions 1.8 to 1.21, version should be either in the form `major.minor` or `major.minor.patch`. For example, `1.21.4` (DO NOT PLAY THIS VERSION EVER)
 
-    Pro tip: `major` will always be 1 unless some update happens (Minecraft 2 confirmed omg!!!).
+    !! IMPORTANT UPDATE !!
+    Since Mojang has recently changed its versioning semantics (https://www.minecraft.net/en-us/article/minecraft-new-version-numbering-system), in order to use newer versions, simply input the newer version with the new semantics.
+    The new semantic follows a `year.major.patch`. For example, the first version using this naming scheme is `26.1`, which means "drop #1 of 2026".
     """
     # Code modified by ducky (currn)
     versioning_regex = r"(\d+)\.(\d+)(?:\.(\d+))?(.*)?" 
@@ -1904,12 +1906,12 @@ def version(ctx: Context, string: str = "1.8"):
         raise SimError(f"Invalid version string {string}")
 
     major, minor, patch, error = result[0]
-    if major != "1":
-        raise SimError(f"The `major` number (`major.minor.patch`) should be `1`, not {major}.")
+    if major != "1" or int(major) < 26:
+        raise SimError(f"The `major` number (`major.minor.patch`) should either be `1`, or the last two digits of a year, not {major}.")
     if error:
         raise SimError(f"Invalid version string {string}")
 
-    if 9 <= int(minor) <= 21: # Deal with inertia of 0.003
+    if int(major) >= 26 or (major == "1" and 9 <= int(minor) <= 21): # Deal with inertia of 0.003
         ctx.player.inertia_threshold = 0.003
     elif int(minor) > 21:
         raise SimError(f"The `minor` number (`major.minor.patch`) should be `21` or less, not {minor}.")
@@ -1917,14 +1919,14 @@ def version(ctx: Context, string: str = "1.8"):
     if patch == "": # Dealing with patch being left blank
         patch = 0
 
-    if (int(minor) >= 14): # Dealing with 1t delayed sneaking
+    if (int(major) >= 26 or (major == "1" and int(minor) >= 14)): # Dealing with 1t delayed sneaking
         ctx.player.sneak_delay = True
         
-    if (int(minor) == 19 and int(patch) > 3) or (int(minor) > 19): # Dealing with air sprint delay
+    if int(major) >= 26 or (major == "1" and (int(minor) == 19 and int(patch) > 3) or (int(minor) > 19)): # Dealing with air sprint delay
         ctx.player.air_sprint_delay = False
 
 
-    if (int(minor) == 21 and int(patch) > 4) or (int(minor) > 21): # Dealing with single axis inertia
+    if int(major) >= 26 or (major == "1" and (int(minor) == 21 and int(patch) > 4) or (int(minor) > 21)): # Dealing with single axis inertia
         ctx.player.single_axis_inertia = False
 
 @command(aliases=["lang"])
